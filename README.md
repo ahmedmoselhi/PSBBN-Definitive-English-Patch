@@ -61,7 +61,7 @@ There are two ways to install this English patch:
 ### PS2 HDD RAW Image Install
 
 #### What You Will Need
-- Any fat model PS2 console
+- Any fat model PS2 console**
 - An official Sony Network Adapter
 - A compatible HDD or SSD (IDE or SATA with an adapter). The drive must be 120 GB or larger
 - A way to connect the PS2 HDD to a PC
@@ -159,4 +159,4 @@ Before installing the English patch, you **must** power off your console to stan
 ---
 
 \* Instances in feega where some Japanese text could not be translated because it is hard coded, most likely in an encrypted file. Atok software has not been translated. You might have to manually change the title of your "Favorite" folders if they were created before running this patch.  
-\** Patching an existing PSBBN install is not supported on early model PS2 consoles with an external HDD due to incompatibility with Kloader. The PS2 HDD RAW Image should work with all fat model PS2 consoles.
+\** Not compatible with early model PS2 consoles that have an external HDD.
