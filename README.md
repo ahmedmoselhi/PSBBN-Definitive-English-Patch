@@ -159,4 +159,4 @@ Before installing the English patch, you **must** power off your console to stan
 ---
 
 \* Instances in feega where some Japanese text could not be translated because it is hard coded, most likely in an encrypted file. Atok software has not been translated. You might have to manually change the title of your "Favorite" folders if they were created before running this patch.  
-\** **PS2 HDD RAW Image Install** - not compatible with early model PS2 consoles that have an external HDD due to space limitations. **Patch an existing PSBBN install** - there might be compatibility issues with kloader.
+\** **PS2 HDD RAW Image Install** - not compatible with early model Japanese PS2 consoles that have an external HDD due to space limitations. **Patch an existing PSBBN install** - Kloader might have compatibility issues with early model Japanese PS2 consoles.
