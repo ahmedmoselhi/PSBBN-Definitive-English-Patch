@@ -478,7 +478,6 @@ function_apa_checksum_fix
 
 function_clear_temp
 
-unset DEVICE
 unset LBA_GPT_BUP
 unset LBA_MAX
 unset MAGIC_NUMBER
@@ -510,7 +509,7 @@ else
 fi
 
 # Check if 'OPL' is found in the 'lsblk' output and if it matches the device
-if ! lsblk -p -o NAME,LABEL | grep "OPL" | grep -q "${DEVICE}"; then
+if ! lsblk -p -o NAME,LABEL | grep -q "${DEVICE}3"; then
     echo "Error: APA-Jail failed on ${DEVICE}." | tee -a ${INSTALL_LOG}
     read -p "Press any key to exit..."
     exit 1
