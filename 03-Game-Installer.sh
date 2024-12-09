@@ -457,6 +457,10 @@ for item in "$ICONS_DIR"/*; do
   fi
 done
 
+rm "${TOOLKIT_PATH}/package.json" &> /dev/null
+rm "${TOOLKIT_PATH}/package-lock.json" &> /dev/null
+
+
 echo | tee -a ${LOG_FILE}
 echo "Game installer script complete" | tee -a ${LOG_FILE}
 echo
