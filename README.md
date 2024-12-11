@@ -76,7 +76,7 @@ By default the `games` folder is located in the same directory you installed the
 ### Notes on APA-Jail:
 APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. The remaining space on the drive is formatted as an exFAT partition, which can be accessed directly on a PC and by a [custom build of Open PS2 Loader](https://github.com/CosmicScale/Open-PS2-Loader-Retro-GEM/tree/psbbn-definitive-ver) on PS2. PS2 games in the ISO and ZSO format are stored on the exFAT partition.
 
-![APA-Jail](https://user-images.githubusercontent.com/33134408/131233166-9527f892-40bb-4a83-a528-6b733087cf33.png)
+![APA-Jail Type-A](https://github.com/user-attachments/assets/c1a29371-d0ff-431e-8b86-df8337ddf966)
 
 An application called [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) resides on the APA partitions, along with a [custom build of Open PS2 Loader](https://github.com/CosmicScale/Open-PS2-Loader-Retro-GEM/tree/psbbn-definitive-ver).
  
