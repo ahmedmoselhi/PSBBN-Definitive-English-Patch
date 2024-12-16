@@ -91,7 +91,7 @@ An application called [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Laun
 - Online channels resurrected, translated, maintained and hosted by vitas155 at [psbbn.ru](https://psbbn.ru/)
 - PlayStation Now! and Konami online channels re-translated by [CosmicScale](https://github.com/CosmicScale)
 - `01-Setup.sh`, `02-PSBBN-Installer.sh`, `03-Game-Installer.sh`, `art_downloader.js` written by [CosmicScale](https://github.com/CosmicScale)
-- Contains code from `list_builder.py` from [XEB+ neutrino Launcher Plugin](https://github.com/MegaBitmap/UDPBD-for-XEBP) by [MegaBitmap](https://github.com/MegaBitmap), modified by [CosmicScale](https://github.com/CosmicScale)
+- Contains code from `list_builder.py` from [XEB+ neutrino Launcher Plugin](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin) by [sync-on-luma](https://github.com/sync-on-luma), modified by [CosmicScale](https://github.com/CosmicScale)
 - Contains data from `TitlesDB_PS1_English.txt` and `TitlesDB_PS2_English.txt` from the [Title Database Scrapper](https://github.com/GDX-X/Title-Database-Scrapper), modified by [CosmicScale](https://github.com/CosmicScale)
 - [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) written by [CosmicScale](https://github.com/CosmicScale)
 - Custom build of [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) with BDM contributions from [KrahJohlito](https://github.com/KrahJohlito)
