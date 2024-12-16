@@ -17,7 +17,7 @@ echo "Press any key to continue..."
 read -n 1 -s
 
 # Update package list and install necessary packages
-sudo apt update && sudo apt install -y axel imagemagick python3-venv python3-pip nodejs npm
+sudo apt update && sudo apt install -y axel imagemagick xxd python3-venv python3-pip nodejs npm
 if [ $? -ne 0 ]; then
     echo
     echo "Error: Package installation failed."
