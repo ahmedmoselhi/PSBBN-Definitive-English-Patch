@@ -4,6 +4,8 @@ This is the definitive English patch of Sony's "PlayStation Broadband Navigator"
 
 You can find out more about the PSBBN software on [Wikipedia](https://en.wikipedia.org/wiki/PlayStation_Broadband_Navigator).
 
+If you appreciate my work and want to support the continued development of the "PSBBN Definitive English Patch 2.0" and other PS2-related projects, you can now do so via [Ko-fi](https://ko-fi.com/cosmicscale)
+
 ## Patch Features
 - A full English translation of the stock Japanese BB Navigator version 0.32
 - All binaries, XML files, textures, and pictures have been translated*
