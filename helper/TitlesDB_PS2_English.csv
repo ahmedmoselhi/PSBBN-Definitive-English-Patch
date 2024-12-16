@@ -1,7 +1,7 @@
 SLPS_251.43|.hack//Akusei Hen'i Vol. 2|Bandai
 SLPS_732.31|.hack//Akusei Hen'i Vol. 2|Bandai
-SLPM_685.21|.hack//Frägment|Bandai
-SLPS_255.27|.hack//Frägment|Bandai
+SLPM_685.21|.hack//Fragment|Bandai
+SLPS_255.27|.hack//Fragment|Bandai
 SLPS_256.52|.hack//G.U. Terminal Disc: The End of ;The World;|Bandai
 SLPS_257.56|.hack//G.U. Terminal Disc: The End of ;The World;|Bandai
 SLUS_212.58|.hack//G.U. Vol. 1: Rebirth|Namco Bandai Games
@@ -1865,7 +1865,7 @@ SLPM_650.39|Densha de Go! Shinkansen: San'you Shinkansen-hen|
 SLPM_744.03|Densha de Go! Shinkansen: San'you Shinkansen-hen|
 SLPM_620.50|Densha de Go! Shinkansen: San'you Shinkansen-hen (Taikenban)|
 SLES_528.03|Der Herr der Ringe: Das dritte Zeitalter|
-SLES_520.18|Der Herr der Ringe: Die Rückkehr des Königs|
+SLES_520.18|Der Herr der Ringe: Die Rückkehr des Konigs|
 SLES_512.54|Der Herr der Ringe: Die zwei Türme|
 SLES_539.69|Der Pate|
 SLPS_253.21|Derby Stallion 04|
@@ -1942,7 +1942,7 @@ SLPM_662.46|Devil Summoner: Kuzunoha Raidou tai Chouriki Heidan|
 SLPM_653.95|Di Gi Charat Fantasy Excellent|M2
 SLPM_653.96|Di Gi Charat Fantasy Excellent|M2
 SLES_552.74|Diabolik: The Original Sin|Artematica
-SLES_537.07|Die Chroniken von Narnia: Der König von Narnia|
+SLES_537.07|Die Chroniken von Narnia: Der Konig von Narnia|
 SLES_513.47|Die Hard: Vendetta|NDA Productions
 SLES_513.48|Die Hard: Vendetta|NDA Productions
 SLES_550.20|Die Simpsons: Das Spiel|
@@ -2084,96 +2084,96 @@ SCUS_971.46|Disney's Treasure Planet|Disney Interactive Studios
 SLUS_210.54|Disney's Treasure Planet|Disney Interactive Studios
 SLES_528.89|Disney's Winnie the Pooh's Rumbly Tumbly Adventure|Disney Interactive Studios
 SLUS_210.84|Disney's Winnie the Pooh's Rumbly Tumbly Adventure|Disney Interactive Studios
-SLES_519.07|Disney/Pixar Alla Ricerca di Nemo|Disney Interactive Studios
-SLES_540.11|Disney/Pixar Bilar|Disney Interactive Studios
-SCKA_200.68|Disney/Pixar Cars|Disney Interactive Studios
-SLES_536.24|Disney/Pixar Cars|Disney Interactive Studios
-SLES_540.04|Disney/Pixar Cars|Disney Interactive Studios
-SLES_540.06|Disney/Pixar Cars|Disney Interactive Studios
-SLES_540.07|Disney/Pixar Cars|Disney Interactive Studios
-SLES_540.10|Disney/Pixar Cars|Disney Interactive Studios
-SLES_540.12|Disney/Pixar Cars|Disney Interactive Studios
-SLES_540.15|Disney/Pixar Cars|Disney Interactive Studios
-SLPM_664.62|Disney/Pixar Cars|Disney Interactive Studios
-SLUS_211.51|Disney/Pixar Cars|Disney Interactive Studios
-SLUS_215.11|Disney/Pixar Cars|Disney Interactive Studios
-SLES_550.27|Disney/Pixar Cars: Hook International|Disney Interactive Studios
-SLES_550.29|Disney/Pixar Cars: La Copa Internacional de Mate|Disney Interactive Studios
-SLES_550.28|Disney/Pixar Cars: La Coppa Internazionale di Carl Attrezzi|Disney Interactive Studios
-SLES_550.25|Disney/Pixar Cars: Mater-National Championship|Disney Interactive Studios
-SLES_550.26|Disney/Pixar Cars: Mater-National Championship|Disney Interactive Studios
-SLES_550.30|Disney/Pixar Cars: Mater-National Championship|Disney Interactive Studios
-SLUS_216.37|Disney/Pixar Cars: Mater-National Championship|Disney Interactive Studios
-SLES_555.36|Disney/Pixar Cars: Race-O-Rama|Disney Interactive Studios
-SLUS_218.83|Disney/Pixar Cars: Race-O-Rama|Disney Interactive Studios
-SCES_506.00|Disney/Pixar Die Monster AG: Schreckens-Insel|Disney Interactive Studios
-SLES_528.15|Disney/Pixar Die Unglaublichen|Disney Interactive Studios
-SLES_517.55|Disney/Pixar Finding Nemo|Disney Interactive Studios
-SLES_518.70|Disney/Pixar Finding Nemo|Disney Interactive Studios
-SLES_518.71|Disney/Pixar Finding Nemo|Disney Interactive Studios
-SLES_518.72|Disney/Pixar Finding Nemo|Disney Interactive Studios
-SLKA_250.56|Disney/Pixar Finding Nemo|Disney Interactive Studios
-SLPM_656.55|Disney/Pixar Finding Nemo|Disney Interactive Studios
-SLPS_253.10|Disney/Pixar Finding Nemo|Disney Interactive Studios
-SLUS_206.28|Disney/Pixar Finding Nemo|Disney Interactive Studios
-SLES_528.14|Disney/Pixar Gli Incredibili|Disney Interactive Studios
-SLES_556.23|Disney/Pixar Istoriya Igrushek: Bol'shoj Pobeg|Disney Interactive Studios
-SLES_528.16|Disney/Pixar Los Increíbles|Disney Interactive Studios
-SCES_506.02|Disney/Pixar Monsterbedriften: Skrekkøya|Disney Interactive Studios
-SCES_505.98|Disney/Pixar Monsterit Oy: Säikkysaari|Disney Interactive Studios
-SCES_506.01|Disney/Pixar Monsters & Co.: L'Isola dello Spavento|Disney Interactive Studios
-SCES_505.97|Disney/Pixar Monsters en Co.: Schrik Eiland|Disney Interactive Studios
-SCUS_210.52|Disney/Pixar Monsters, Inc.|Disney Interactive Studios
-SCUS_971.23|Disney/Pixar Monsters, Inc.|Disney Interactive Studios
-SCES_506.05|Disney/Pixar Monsters, Inc.: Monstros e Companhia: Ilha Assustadora|Disney Interactive Studios
-SCES_505.95|Disney/Pixar Monsters, Inc.: Scare Island (Limited Edition)|Disney Interactive Studios
-SCES_506.04|Disney/Pixar Monsters, Inc.: Skrämmarön|Disney Interactive Studios
-SCES_505.96|Disney/Pixar Monsters, Inc.: Skræmmeøen|Disney Interactive Studios
-SCES_505.99|Disney/Pixar Monstres & Cie: L'ile de l'Épouvante|Disney Interactive Studios
-SCES_506.03|Disney/Pixar Monstruos, S.A.: Isla de los Sustos|Disney Interactive Studios
-SLES_555.25|Disney/Pixar Oben|Disney Interactive Studios
-SLES_555.26|Disney/Pixar Psila ston Ourano|Disney Interactive Studios
-SCKA_200.93|Disney/Pixar Ratatouille|Disney Interactive Studios
-SLES_547.33|Disney/Pixar Ratatouille|Disney Interactive Studios
-SLES_547.34|Disney/Pixar Ratatouille|Disney Interactive Studios
-SLES_547.35|Disney/Pixar Ratatouille|Disney Interactive Studios
-SLES_547.36|Disney/Pixar Ratatouille|Disney Interactive Studios
-SLES_547.37|Disney/Pixar Ratatouille|Disney Interactive Studios
-SLES_547.44|Disney/Pixar Ratatouille|Disney Interactive Studios
-SLES_547.45|Disney/Pixar Ratatouille|Disney Interactive Studios
-SLES_547.46|Disney/Pixar Ratatouille|Disney Interactive Studios
-SLES_547.47|Disney/Pixar Ratatouille|Disney Interactive Studios
-SLUS_215.41|Disney/Pixar Ratatouille|Disney Interactive Studios
-SLPM_668.07|Disney/Pixar Remy no Oishii Restaurant|Disney Interactive Studios
-SLES_528.12|Disney/Pixar The Incredibles|Disney Interactive Studios
-SLES_528.13|Disney/Pixar The Incredibles|Disney Interactive Studios
-SLES_528.20|Disney/Pixar The Incredibles|Disney Interactive Studios
-SLKA_252.26|Disney/Pixar The Incredibles|Disney Interactive Studios
-SLUS_209.05|Disney/Pixar The Incredibles|Disney Interactive Studios
-SLES_534.73|Disney/Pixar The Incredibles: Rise of the Underminer|Disney Interactive Studios
-SLES_534.74|Disney/Pixar The Incredibles: Rise of the Underminer|Disney Interactive Studios
-SLES_536.58|Disney/Pixar The Incredibles: Rise of the Underminer|Disney Interactive Studios
-SLKA_253.16|Disney/Pixar The Incredibles: Rise of the Underminer|Disney Interactive Studios
-SLUS_212.17|Disney/Pixar The Incredibles: Rise of the Underminer|Disney Interactive Studios
-SCUS_901.74|Disney/Pixar Toy Story 3|Disney Interactive Studios
-SLES_556.22|Disney/Pixar Toy Story 3|Disney Interactive Studios
-SLUS_219.31|Disney/Pixar Toy Story 3|Disney Interactive Studios
-SLES_555.22|Disney/Pixar Up|Disney Interactive Studios
-SLES_555.23|Disney/Pixar Up|Disney Interactive Studios
-SLES_555.24|Disney/Pixar Up|Disney Interactive Studios
-SLES_555.31|Disney/Pixar Up|Disney Interactive Studios
-SLUS_218.64|Disney/Pixar Up|Disney Interactive Studios
-SLES_551.84|Disney/Pixar WALL-E|Disney Interactive Studios
-SLES_551.85|Disney/Pixar WALL-E|Disney Interactive Studios
-SLES_551.86|Disney/Pixar WALL-E|Disney Interactive Studios
-SLES_551.87|Disney/Pixar WALL-E|Disney Interactive Studios
-SLES_551.93|Disney/Pixar WALL-E|Disney Interactive Studios
-SLES_551.94|Disney/Pixar WALL-E|Disney Interactive Studios
-SLES_551.95|Disney/Pixar WALL-E|Disney Interactive Studios
-SLES_551.96|Disney/Pixar WALL-E|Disney Interactive Studios
-SLUS_217.36|Disney/Pixar WALL-E|Disney Interactive Studios
-SLES_551.88|Disney/Pixar WALL-E: Der Letzte räumt die Erde auf|Disney Interactive Studios
-SLES_519.60|Disney/Pixar À Procura de Nemo|Disney Interactive Studios
+SLES_519.07|Disney's Pixar Alla Ricerca di Nemo|Disney Interactive Studios
+SLES_540.11|Disney's Pixar Bilar|Disney Interactive Studios
+SCKA_200.68|Disney's Pixar Cars|Disney Interactive Studios
+SLES_536.24|Disney's Pixar Cars|Disney Interactive Studios
+SLES_540.04|Disney's Pixar Cars|Disney Interactive Studios
+SLES_540.06|Disney's Pixar Cars|Disney Interactive Studios
+SLES_540.07|Disney's Pixar Cars|Disney Interactive Studios
+SLES_540.10|Disney's Pixar Cars|Disney Interactive Studios
+SLES_540.12|Disney's Pixar Cars|Disney Interactive Studios
+SLES_540.15|Disney's Pixar Cars|Disney Interactive Studios
+SLPM_664.62|Disney's Pixar Cars|Disney Interactive Studios
+SLUS_211.51|Disney's Pixar Cars|Disney Interactive Studios
+SLUS_215.11|Disney's Pixar Cars|Disney Interactive Studios
+SLES_550.27|Disney's Pixar Cars: Hook International|Disney Interactive Studios
+SLES_550.29|Disney's Pixar Cars: La Copa Internacional de Mate|Disney Interactive Studios
+SLES_550.28|Disney's Pixar Cars: La Coppa Internazionale di Carl Attrezzi|Disney Interactive Studios
+SLES_550.25|Disney's Pixar Cars: Mater-National Championship|Disney Interactive Studios
+SLES_550.26|Disney's Pixar Cars: Mater-National Championship|Disney Interactive Studios
+SLES_550.30|Disney's Pixar Cars: Mater-National Championship|Disney Interactive Studios
+SLUS_216.37|Disney's Pixar Cars: Mater-National Championship|Disney Interactive Studios
+SLES_555.36|Disney's Pixar Cars: Race-O-Rama|Disney Interactive Studios
+SLUS_218.83|Disney's Pixar Cars: Race-O-Rama|Disney Interactive Studios
+SCES_506.00|Disney's Pixar Die Monster AG: Schreckens-Insel|Disney Interactive Studios
+SLES_528.15|Disney's Pixar Die Unglaublichen|Disney Interactive Studios
+SLES_517.55|Disney's Pixar Finding Nemo|Disney Interactive Studios
+SLES_518.70|Disney's Pixar Finding Nemo|Disney Interactive Studios
+SLES_518.71|Disney's Pixar Finding Nemo|Disney Interactive Studios
+SLES_518.72|Disney's Pixar Finding Nemo|Disney Interactive Studios
+SLKA_250.56|Disney's Pixar Finding Nemo|Disney Interactive Studios
+SLPM_656.55|Disney's Pixar Finding Nemo|Disney Interactive Studios
+SLPS_253.10|Disney's Pixar Finding Nemo|Disney Interactive Studios
+SLUS_206.28|Disney's Pixar Finding Nemo|Disney Interactive Studios
+SLES_528.14|Disney's Pixar Gli Incredibili|Disney Interactive Studios
+SLES_556.23|Disney's Pixar Istoriya Igrushek: Bol'shoj Pobeg|Disney Interactive Studios
+SLES_528.16|Disney's Pixar Los Increíbles|Disney Interactive Studios
+SCES_506.02|Disney's Pixar Monsterbedriften: Skrekkøya|Disney Interactive Studios
+SCES_505.98|Disney's Pixar Monsterit Oy: Saikkysaari|Disney Interactive Studios
+SCES_506.01|Disney's Pixar Monsters & Co.: L'Isola dello Spavento|Disney Interactive Studios
+SCES_505.97|Disney's Pixar Monsters en Co.: Schrik Eiland|Disney Interactive Studios
+SCUS_210.52|Disney's Pixar Monsters, Inc.|Disney Interactive Studios
+SCUS_971.23|Disney's Pixar Monsters, Inc.|Disney Interactive Studios
+SCES_506.05|Disney's Pixar Monsters, Inc.: Monstros e Companhia: Ilha Assustadora|Disney Interactive Studios
+SCES_505.95|Disney's Pixar Monsters, Inc.: Scare Island (Limited Edition)|Disney Interactive Studios
+SCES_506.04|Disney's Pixar Monsters, Inc.: Skrammaron|Disney Interactive Studios
+SCES_505.96|Disney's Pixar Monsters, Inc.: Skræmmeøen|Disney Interactive Studios
+SCES_505.99|Disney's Pixar Monstres & Cie: L'ile de l'Épouvante|Disney Interactive Studios
+SCES_506.03|Disney's Pixar Monstruos, S.A.: Isla de los Sustos|Disney Interactive Studios
+SLES_555.25|Disney's Pixar Oben|Disney Interactive Studios
+SLES_555.26|Disney's Pixar Psila ston Ourano|Disney Interactive Studios
+SCKA_200.93|Disney's Pixar Ratatouille|Disney Interactive Studios
+SLES_547.33|Disney's Pixar Ratatouille|Disney Interactive Studios
+SLES_547.34|Disney's Pixar Ratatouille|Disney Interactive Studios
+SLES_547.35|Disney's Ratatouille|Disney Interactive Studios
+SLES_547.36|Disney's Ratatouille|Disney Interactive Studios
+SLES_547.37|Disney's Ratatouille|Disney Interactive Studios
+SLES_547.44|Disney's Ratatouille|Disney Interactive Studios
+SLES_547.45|Disney's Ratatouille|Disney Interactive Studios
+SLES_547.46|Disney's Ratatouille|Disney Interactive Studios
+SLES_547.47|Disney's Ratatouille|Disney Interactive Studios
+SLUS_215.41|Disney's Ratatouille|Disney Interactive Studios
+SLPM_668.07|Disney's Remy no Oishii Restaurant|Disney Interactive Studios
+SLES_528.12|Disney's The Incredibles|Disney Interactive Studios
+SLES_528.13|Disney's The Incredibles|Disney Interactive Studios
+SLES_528.20|Disney's The Incredibles|Disney Interactive Studios
+SLKA_252.26|Disney's The Incredibles|Disney Interactive Studios
+SLUS_209.05|Disney's The Incredibles|Disney Interactive Studios
+SLES_534.73|Disney's The Incredibles: Rise of the Underminer|Disney Interactive Studios
+SLES_534.74|Disney's The Incredibles: Rise of the Underminer|Disney Interactive Studios
+SLES_536.58|Disney's The Incredibles: Rise of the Underminer|Disney Interactive Studios
+SLKA_253.16|Disney's The Incredibles: Rise of the Underminer|Disney Interactive Studios
+SLUS_212.17|Disney's The Incredibles: Rise of the Underminer|Disney Interactive Studios
+SCUS_901.74|Disney's Toy Story 3|Disney Interactive Studios
+SLES_556.22|Disney's Toy Story 3|Disney Interactive Studios
+SLUS_219.31|Disney's Toy Story 3|Disney Interactive Studios
+SLES_555.22|Disney's Up|Disney Interactive Studios
+SLES_555.23|Disney's Up|Disney Interactive Studios
+SLES_555.24|Disney's Up|Disney Interactive Studios
+SLES_555.31|Disney's Up|Disney Interactive Studios
+SLUS_218.64|Disney's Up|Disney Interactive Studios
+SLES_551.84|Disney's WALL-E|Disney Interactive Studios
+SLES_551.85|Disney's WALL-E|Disney Interactive Studios
+SLES_551.86|Disney's WALL-E|Disney Interactive Studios
+SLES_551.87|Disney's WALL-E|Disney Interactive Studios
+SLES_551.93|Disney's WALL-E|Disney Interactive Studios
+SLES_551.94|Disney's WALL-E|Disney Interactive Studios
+SLES_551.95|Disney's WALL-E|Disney Interactive Studios
+SLES_551.96|Disney's WALL-E|Disney Interactive Studios
+SLUS_217.36|Disney's WALL-E|Disney Interactive Studios
+SLES_551.88|Disney's WALL-E: Der Letzte raumt die Erde auf|Disney Interactive Studios
+SLES_519.60|Disney's À Procura de Nemo|Disney Interactive Studios
 SLES_516.58|Disneys Ferkels grosses Abenteuer-Spiel|Disney Interactive Studios
 SLES_537.40|Disneys Himmel und Huhn|Disney Interactive Studios
 SLES_544.51|Disneys Himmel und Huhn: Ace in Action|Disney Interactive Studios
@@ -5235,7 +5235,7 @@ SCES_541.45|Lemmings|Team 17
 SLES_528.10|Lemony Snicket Una Serie di Sfortunati Eventi|
 SLES_528.07|Lemony Snicket's A Series of Unfortunate Events|Amaze Entertainment
 SLUS_210.78|Lemony Snicket's A Series of Unfortunate Events|Amaze Entertainment
-SLES_528.09|Lemony Snicket: Rätselhafte Ereignisse|
+SLES_528.09|Lemony Snicket: Ratselhafte Ereignisse|
 SLES_520.15|Les Chevaliers de Baphomet: Le Manuscrit de Voynich|
 SLES_528.08|Les Désastreuses Aventures des Orphelins Baudelaire: D'Apres Lemony Snicket|Amaze Entertainment
 SLES_549.05|Les Simpson: Le Jeu|
@@ -6627,90 +6627,90 @@ SLES_551.89|Nick Jr. Go Diego Go! Safari Rescue|
 SLES_552.89|Nick Jr. Go Diego Go! Safari Rescue|
 SLUS_217.18|Nick Jr. Go Diego Go! Safari Rescue|
 SLES_543.77|Nick: Der tierisch verrückte Bauernhof|
-SLUS_213.95|Nickelodeon Avatar: The Last Airbender|
-SLUS_218.04|Nickelodeon Avatar: The Last Airbender: Into the Inferno|
-SLUS_215.88|Nickelodeon Avatar: The Last Airbender: The Burning Earth|
-SLES_541.88|Nickelodeon Avatar: The Legend of Aang|
-SLES_552.63|Nickelodeon Avatar: The Legend of Aang: Into the Inferno|
-SLES_552.64|Nickelodeon Avatar: The Legend of Aang: Into the Inferno|
-SLES_548.40|Nickelodeon Avatar: The Legend of Aang: The Burning Earth|
-SCKA_200.96|Nickelodeon Barnyard|
-SLES_543.76|Nickelodeon Barnyard|
-SLES_543.78|Nickelodeon Barnyard|
-SLUS_212.77|Nickelodeon Barnyard|
-SLES_529.86|Nickelodeon Bob Esponja: La Película|
-SLES_534.98|Nickelodeon Bob Esponja: ¡Luces, Cámara, Esponja!|
-SLES_536.23|Nickelodeon Bob L'éponge: La Bataille de Bikini Bottom|
-SLES_534.95|Nickelodeon Bob L'éponge: Silence on Tourne!|
-SLUS_219.23|Nickelodeon Dora the Explorer: Dora Saves the Crystal Kingdom|
-SLES_552.81|Nickelodeon Dora the Explorer: Dora Saves the Snow Princess|2K Games
-SLES_554.68|Nickelodeon Dora the Explorer: Dora Saves the Snow Princess|2K Games
-SLUS_217.96|Nickelodeon Dora the Explorer: Dora Saves the Snow Princess|2K Games
-SLUS_219.44|Nickelodeon Dora's Big Birthday Adventure|
-SLES_551.38|Nickelodeon El Tigre: The Adventures of Manny Rivera|
-SLUS_217.32|Nickelodeon El Tigre: The Adventures of Manny Rivera|
-SLES_552.84|Nickelodeon Go Diego Go! Great Dinosaur Rescue|
-SLUS_217.94|Nickelodeon Go Diego Go! Great Dinosaur Rescue|
-SLES_512.98|Nickelodeon Jimmy Neutron: Boy Genius|
-SLUS_205.37|Nickelodeon Jimmy Neutron: Boy Genius|
-SLES_527.00|Nickelodeon Jimmy Neutron: Boy Genius: Attack of the Twonkies|THQ
-SLUS_208.87|Nickelodeon Jimmy Neutron: Boy Genius: Attack of the Twonkies|THQ
-SLUS_206.96|Nickelodeon Jimmy Neutron: Boy Genius: Jet Fusion|
-SLES_513.00|Nickelodeon Jimmy Neutron: Der mutige Erfinder|
-SLES_513.12|Nickelodeon Les Razmoket: La Rançon Royale|
-SLUS_219.26|Nickelodeon Ni Hao, Kai-Lan: Super Game Day|
-SLES_511.88|Nickelodeon Rocket Power: Beach Bandits|
-SLUS_204.73|Nickelodeon Rocket Power: Beach Bandits|
-SLES_513.85|Nickelodeon Rugrats: Rescate Real|
-SLES_513.11|Nickelodeon Rugrats: Royal Ransom|
-SLUS_204.43|Nickelodeon Rugrats: Royal Ransom|
-SLES_529.85|Nickelodeon SpongeBob Schwammkopf: Der Film|
-SLES_534.97|Nickelodeon SpongeBob Schwammkopf: Film ab!|
-SLES_519.70|Nickelodeon SpongeBob Schwammkopf: Schlacht um Bikini Bottom|
-SLPM_666.94|Nickelodeon SpongeBob SquarePants|
-SLES_535.63|Nickelodeon SpongeBob SquarePants and Friends Unite!|
-SLES_552.71|Nickelodeon SpongeBob SquarePants featuring Nicktoons: Globs of Doom|
-SLES_552.72|Nickelodeon SpongeBob SquarePants featuring Nicktoons: Globs of Doom|
-SLES_554.02|Nickelodeon SpongeBob SquarePants featuring Nicktoons: Globs of Doom|
-SLUS_218.18|Nickelodeon SpongeBob SquarePants featuring Nicktoons: Globs of Doom|
-SLES_519.68|Nickelodeon SpongeBob SquarePants: Battle for Bikini Bottom|
-SLUS_206.80|Nickelodeon SpongeBob SquarePants: Battle for Bikini Bottom|
-SCKA_200.98|Nickelodeon SpongeBob SquarePants: Creature from the Krusty Krab|
-SLES_544.00|Nickelodeon SpongeBob SquarePants: Creature from the Krusty Krab|
-SLUS_213.91|Nickelodeon SpongeBob SquarePants: Creature from the Krusty Krab|
-SLES_534.99|Nickelodeon SpongeBob SquarePants: Licht uit, Camera aan!|
-SLES_534.94|Nickelodeon SpongeBob SquarePants: Lights, Camera, Pants!|
-SLKA_253.19|Nickelodeon SpongeBob SquarePants: Lights, Camera, Pants!|
-SLUS_212.52|Nickelodeon SpongeBob SquarePants: Lights, Camera, Pants!|
-SLES_529.06|Nickelodeon SpongeBob SquarePants: Movin' with Friends|
-SLES_529.07|Nickelodeon SpongeBob SquarePants: Movin' with Friends|
-SLKA_252.45|Nickelodeon SpongeBob SquarePants: Movin' with Friends|
-SLES_512.85|Nickelodeon SpongeBob SquarePants: Revenge of the Flying Dutchman|
-SLUS_204.25|Nickelodeon SpongeBob SquarePants: Revenge of the Flying Dutchman|
-SLES_549.91|Nickelodeon SpongeBob and Friends: Attack of the Toybots|
-SLES_545.21|Nickelodeon SpongeBob and Friends: Battle for Volcano Island|
-SLES_545.22|Nickelodeon SpongeBob and Friends: Battle for Volcano Island|
-SLES_550.24|Nickelodeon SpongeBob's Atlantis SquarePantis|
-SLES_550.80|Nickelodeon SpongeBob's Atlantis SquarePantis|
-SLUS_216.44|Nickelodeon SpongeBob's Atlantis SquarePantis|
-SLES_534.96|Nickelodeon SpongeBob: Ciak si Gira!|
-SLES_528.97|Nickelodeon SpongeBob: Il Film|
-SLES_535.00|Nickelodeon Svampbob Fyrkant: Tystnad, Tagning, Tvättsvamp!|
-SLES_530.36|Nickelodeon Tak 2: The Staff of Dreams|Avalanche Software
-SLES_531.29|Nickelodeon Tak 2: The Staff of Dreams|Avalanche Software
-SLKA_252.72|Nickelodeon Tak 2: The Staff of Dreams|Avalanche Software
-SLUS_209.52|Nickelodeon Tak 2: The Staff of Dreams|Avalanche Software
-SLES_553.76|Nickelodeon Tak and the Guardians of Gross|THQ
-SLUS_217.97|Nickelodeon Tak and the Guardians of Gross|THQ
-SLES_534.18|Nickelodeon Tak: The Great Juju Challenge|Avalanche Software
-SLES_536.95|Nickelodeon Tak: The Great Juju Challenge|Avalanche Software
-SLUS_212.18|Nickelodeon Tak: The Great Juju Challenge|Avalanche Software
-SLES_519.32|Nickelodeon The Adventures of Jimmy Neutron: Boy Genius: Jet Fusion|
-SLES_554.04|Nickelodeon The Naked Brothers Band: The Video Game|
-SLUS_218.02|Nickelodeon The Naked Brothers Band: The Video Game|
-SLES_528.95|Nickelodeon The SpongeBob SquarePants Movie|
-SLES_528.96|Nickelodeon The SpongeBob SquarePants Movie|
-SLUS_209.04|Nickelodeon The SpongeBob SquarePants Movie|
+SLUS_213.95|Avatar: The Last Airbender|
+SLUS_218.04|Avatar: The Last Airbender: Into the Inferno|
+SLUS_215.88|Avatar: The Last Airbender: The Burning Earth|
+SLES_541.88|Avatar: The Legend of Aang|
+SLES_552.63|Avatar: The Legend of Aang: Into the Inferno|
+SLES_552.64|Avatar: The Legend of Aang: Into the Inferno|
+SLES_548.40|Avatar: The Legend of Aang: The Burning Earth|
+SCKA_200.96|Barnyard|
+SLES_543.76|Barnyard|
+SLES_543.78|Barnyard|
+SLUS_212.77|Barnyard|
+SLES_529.86|Bob Esponja: La Película|
+SLES_534.98|Bob Esponja: ¡Luces, Cámara, Esponja!|
+SLES_536.23|Bob L'éponge: La Bataille de Bikini Bottom|
+SLES_534.95|Bob L'éponge: Silence on Tourne!|
+SLUS_219.23|Dora the Explorer: Dora Saves the Crystal Kingdom|
+SLES_552.81|Dora the Explorer: Dora Saves the Snow Princess|2K Games
+SLES_554.68|Dora the Explorer: Dora Saves the Snow Princess|2K Games
+SLUS_217.96|Dora the Explorer: Dora Saves the Snow Princess|2K Games
+SLUS_219.44|Dora's Big Birthday Adventure|
+SLES_551.38|El Tigre: The Adventures of Manny Rivera|
+SLUS_217.32|El Tigre: The Adventures of Manny Rivera|
+SLES_552.84|Go Diego Go! Great Dinosaur Rescue|
+SLUS_217.94|Go Diego Go! Great Dinosaur Rescue|
+SLES_512.98|Jimmy Neutron: Boy Genius|
+SLUS_205.37|Jimmy Neutron: Boy Genius|
+SLES_527.00|Jimmy Neutron: Boy Genius: Attack of the Twonkies|THQ
+SLUS_208.87|Jimmy Neutron: Boy Genius: Attack of the Twonkies|THQ
+SLUS_206.96|Jimmy Neutron: Boy Genius: Jet Fusion|
+SLES_513.00|Jimmy Neutron: Der mutige Erfinder|
+SLES_513.12|Les Razmoket: La Rançon Royale|
+SLUS_219.26|Ni Hao, Kai-Lan: Super Game Day|
+SLES_511.88|Rocket Power: Beach Bandits|
+SLUS_204.73|Rocket Power: Beach Bandits|
+SLES_513.85|Rugrats: Rescate Real|
+SLES_513.11|Rugrats: Royal Ransom|
+SLUS_204.43|Rugrats: Royal Ransom|
+SLES_529.85|SpongeBob Schwammkopf: Der Film|
+SLES_534.97|SpongeBob Schwammkopf: Film ab!|
+SLES_519.70|SpongeBob Schwammkopf: Schlacht um Bikini Bottom|
+SLPM_666.94|SpongeBob SquarePants|
+SLES_535.63|SpongeBob SquarePants and Friends Unite!|
+SLES_552.71|SpongeBob SquarePants featuring Nicktoons: Globs of Doom|
+SLES_552.72|SpongeBob SquarePants featuring Nicktoons: Globs of Doom|
+SLES_554.02|SpongeBob SquarePants featuring Nicktoons: Globs of Doom|
+SLUS_218.18|SpongeBob SquarePants featuring Nicktoons: Globs of Doom|
+SLES_519.68|SpongeBob SquarePants: Battle for Bikini Bottom|
+SLUS_206.80|SpongeBob SquarePants: Battle for Bikini Bottom|
+SCKA_200.98|SpongeBob SquarePants: Creature from the Krusty Krab|
+SLES_544.00|SpongeBob SquarePants: Creature from the Krusty Krab|
+SLUS_213.91|SpongeBob SquarePants: Creature from the Krusty Krab|
+SLES_534.99|SpongeBob SquarePants: Licht uit, Camera aan!|
+SLES_534.94|SpongeBob SquarePants: Lights, Camera, Pants!|
+SLKA_253.19|SpongeBob SquarePants: Lights, Camera, Pants!|
+SLUS_212.52|SpongeBob SquarePants: Lights, Camera, Pants!|
+SLES_529.06|SpongeBob SquarePants: Movin' with Friends|
+SLES_529.07|SpongeBob SquarePants: Movin' with Friends|
+SLKA_252.45|SpongeBob SquarePants: Movin' with Friends|
+SLES_512.85|SpongeBob SquarePants: Revenge of the Flying Dutchman|
+SLUS_204.25|SpongeBob SquarePants: Revenge of the Flying Dutchman|
+SLES_549.91|SpongeBob and Friends: Attack of the Toybots|
+SLES_545.21|SpongeBob and Friends: Battle for Volcano Island|
+SLES_545.22|SpongeBob and Friends: Battle for Volcano Island|
+SLES_550.24|SpongeBob's Atlantis SquarePantis|
+SLES_550.80|SpongeBob's Atlantis SquarePantis|
+SLUS_216.44|SpongeBob's Atlantis SquarePantis|
+SLES_534.96|SpongeBob: Ciak si Gira!|
+SLES_528.97|SpongeBob: Il Film|
+SLES_535.00|Svampbob Fyrkant: Tystnad, Tagning, Tvattsvamp!|
+SLES_530.36|Tak 2: The Staff of Dreams|Avalanche Software
+SLES_531.29|Tak 2: The Staff of Dreams|Avalanche Software
+SLKA_252.72|Tak 2: The Staff of Dreams|Avalanche Software
+SLUS_209.52|Tak 2: The Staff of Dreams|Avalanche Software
+SLES_553.76|Tak and the Guardians of Gross|THQ
+SLUS_217.97|Tak and the Guardians of Gross|THQ
+SLES_534.18|Tak: The Great Juju Challenge|Avalanche Software
+SLES_536.95|Tak: The Great Juju Challenge|Avalanche Software
+SLUS_212.18|Tak: The Great Juju Challenge|Avalanche Software
+SLES_519.32|The Adventures of Jimmy Neutron: Boy Genius: Jet Fusion|
+SLES_554.04|The Naked Brothers Band: The Video Game|
+SLUS_218.02|The Naked Brothers Band: The Video Game|
+SLES_528.95|The SpongeBob SquarePants Movie|
+SLES_528.96|The SpongeBob SquarePants Movie|
+SLUS_209.04|The SpongeBob SquarePants Movie|
 SLUS_210.73|Nicktoons Movin'|
 SLES_536.34|Nicktoons Unite!|
 SLUS_212.84|Nicktoons Unite!|
@@ -7781,7 +7781,7 @@ SLES_531.93|Puzzle Party|Phoenix Games
 SLES_549.95|Puzzle Quest: Challenge of the Warlords|D3 Publisher
 SLUS_216.92|Puzzle Quest: Challenge of the Warlords|D3 Publisher
 SLPM_655.33|Pyuu to Fuku! Jaguar: Ashita no Jump (Shokai Genteiban)|
-SLES_541.73|På Andra Sidan Häcken|
+SLES_541.73|På Andra Sidan Hacken|
 SLES_545.92|Pétanque Pro|Mere Mortals
 SLUS_200.70|Q-Ball: Billiards Master|
 SLES_501.26|Quake III: Revolution|Electronic Arts
@@ -9270,7 +9270,7 @@ SCUS_976.51|SingStar Country|Sony Computer Entertainment
 SCES_541.28|SingStar Deutsch Rock-Pop|Sony Computer Entertainment
 SCES_547.41|SingStar Deutsch Rock-Pop Vol. 2|Sony Computer Entertainment
 SCES_546.00|SingStar Die Toten Hosen|Sony Computer Entertainment
-SCES_556.06|SingStar Die größten Solokünstler|Sony Computer Entertainment
+SCES_556.06|SingStar Die großten Solokünstler|Sony Computer Entertainment
 SCES_545.76|SingStar ESKA: Hity na Czasie|Sony Computer Entertainment
 SCES_556.17|SingStar Fussballhits|Sony Computer Entertainment
 SCES_551.60|SingStar Hottest Hits|Sony Computer Entertainment
@@ -9378,7 +9378,7 @@ SCES_551.77|SingStar SuomiRock|Sony Computer Entertainment
 SCES_556.50|SingStar SuomiSuosikit|Sony Computer Entertainment
 SCES_531.85|SingStar Svenska Hits|Sony Computer Entertainment
 SCES_545.98|SingStar Svenska Hits Schlager|Sony Computer Entertainment
-SCES_555.68|SingStar Svenska Stjärnor|Sony Computer Entertainment
+SCES_555.68|SingStar Svenska Stjarnor|Sony Computer Entertainment
 SCES_552.62|SingStar Syng med Disney|Sony Computer Entertainment
 SCES_555.54|SingStar Take That|Sony Computer Entertainment
 SCES_555.57|SingStar Take That|Sony Computer Entertainment
@@ -10033,8 +10033,8 @@ SLPS_258.22|Suzumiya Haruhi no Tomadoi|
 SLPS_732.64|Suzumiya Haruhi no Tomadoi|
 SLPM_680.20|Suzumiya Haruhi no Tomadoi: Uchuu-hatsu! Full CG: Odoru SOS-dan (Chou Eizou-ban)|
 SLPM_552.43|Suzunone Seven! Rebirth Knot|
-SLES_508.52|Sven-Göran Eriksson's World Challenge|
-SLES_507.94|Sven-Göran Eriksson's World Manager 2002|
+SLES_508.52|Sven-Goran Eriksson's World Challenge|
+SLES_507.94|Sven-Goran Eriksson's World Manager 2002|
 SLUS_216.91|Swashbucklers: Blue vs. Grey|1C Company
 SLPM_551.85|Sweet Honey Coming (DX Pack)|Kadokawa Shoten
 SLPS_251.90|Sweet Legacy: Boku to Kanojo no Na mo Nai Okashi|
@@ -11416,8 +11416,8 @@ SLES_538.28|We Love Katamari|Namco
 SLUS_212.30|We Love Katamari|Namco
 SLPM_623.49|Welcome to Universal Studios Japan|
 SCUS_973.94|Welcome to the World of Online Gaming for Your PlayStation 2 (Demo)|
-SLES_504.97|Wer wird Millionär: 2. Edition|
-SLES_548.05|Wer wird Millionär: Party Edition|
+SLES_504.97|Wer wird Millionar: 2. Edition|
+SLES_548.05|Wer wird Millionar: Party Edition|
 SLUS_207.90|Wheel of Fortune|Artech Studios
 SLES_519.58|Whiplash|Eidos Interactive
 SLUS_206.84|Whiplash|Eidos Interactive
@@ -11705,10 +11705,10 @@ SCAJ_200.87|Xenosaga Episode II: Jenseits von Gut und Bose (Disc 2)|Monolith Sof
 SLPS_253.67|Xenosaga Episode II: Jenseits von Gut und Bose (Disc 2)|Monolith Soft
 SLPS_253.69|Xenosaga Episode II: Jenseits von Gut und Bose (Disc 2)|Monolith Soft
 SLPS_732.25|Xenosaga Episode II: Jenseits von Gut und Bose (Disc 2)|Monolith Soft
-SCES_820.34|Xenosaga Episode II: Jenseits von Gut und Böse (Disc 1)|Monolith Soft
-SLUS_208.92|Xenosaga Episode II: Jenseits von Gut und Böse (Disc 1)|Monolith Soft
-SCES_820.35|Xenosaga Episode II: Jenseits von Gut und Böse (Disc 2)|Monolith Soft
-SLUS_211.33|Xenosaga Episode II: Jenseits von Gut und Böse (Disc 2)|Monolith Soft
+SCES_820.34|Xenosaga Episode II: Jenseits von Gut und Bose (Disc 1)|Monolith Soft
+SLUS_208.92|Xenosaga Episode II: Jenseits von Gut und Bose (Disc 1)|Monolith Soft
+SCES_820.35|Xenosaga Episode II: Jenseits von Gut und Bose (Disc 2)|Monolith Soft
+SLUS_211.33|Xenosaga Episode II: Jenseits von Gut und Bose (Disc 2)|Monolith Soft
 SLPS_256.40|Xenosaga Episode III: Also sprach Zarathustra (Disc 1)|Monolith Soft
 SLUS_213.89|Xenosaga Episode III: Also sprach Zarathustra (Disc 1)|Monolith Soft
 SLPS_256.41|Xenosaga Episode III: Also sprach Zarathustra (Disc 2)|Monolith Soft

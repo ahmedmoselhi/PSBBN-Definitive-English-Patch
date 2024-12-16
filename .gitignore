@@ -1,0 +1,7 @@
+venv/
+assets/POPS-binaries-main/
+*.log
+*.gz
+*.zip
+IOPRP252.IMG
+POPS.ELF

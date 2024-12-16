@@ -70,8 +70,8 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
         await page.goto(url, { waitUntil: 'networkidle2' });
 
         // Find the first image with src starting with 'https://assets-prd.ignimgs.com'
-        const imgUrl = await page.evaluate(() => {
-            const img = document.querySelector('img[src^="https://assets-prd.ignimgs.com"]'); // Look for images with this src prefix
+        let imgUrl = await page.evaluate(() => {
+            const img = document.querySelector('img[src^="https://assets-prd.ignimgs.com"]');
 
             if (img) {
                 return img.src.split('?')[0]; // Remove query parameters
@@ -79,18 +79,114 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
             return null;
         });
 
+        // Fallback to 'https://media.ign.com' if no image is found
+        if (!imgUrl) {
+            console.log("No image found on assets-prd.ignimgs.com. Checking media.ign.com...");
+
+            imgUrl = await page.evaluate(() => {
+                const img = document.querySelector('img[src^="https://media.ign.com"]');
+    
+                if (img) {
+                    return img.src;
+                }
+                return null;
+            });
+        }
+
+        // Fallback to 'https://ps2media.ign.com' if no image is found
+        if (!imgUrl) {
+            console.log("No image found on assets-prd.ignimgs.com. Checking ps2media.ign.com...");
+
+            imgUrl = await page.evaluate(() => {
+                const img = document.querySelector('img[src^="https://ps2media.ign.com"]');
+    
+                if (img) {
+                    return img.src;
+                }
+                return null;
+            });
+        }
+
+        // Fallback to 'https://ps3media.ign.com' if no image is found
+        if (!imgUrl) {
+            console.log("No image found on assets-prd.ignimgs.com. Checking ps3media.ign.com...");
+
+            imgUrl = await page.evaluate(() => {
+                const img = document.querySelector('img[src^="https://ps3media.ign.com"]');
+    
+                if (img) {
+                    return img.src;
+                }
+                return null;
+            });
+        }
+
+        // Fallback to 'https://media.gamestats.com' if no image is found
+        if (!imgUrl) {
+            console.log("No image found on assets-prd.ignimgs.com. Checking media.gamestats.com...");
+
+            imgUrl = await page.evaluate(() => {
+                const img = document.querySelector('img[src^="https://media.gamestats.com"]');
+
+                if (img) {
+                    return img.src.split('?')[0]; // Remove query parameters
+                }
+                return null;
+            });
+        }
+
+        // Fallback to 'https://assets1.ignimgs.com' if no image is found
+        if (!imgUrl) {
+            console.log("No image found on assets-prd.ignimgs.com. Checking assets1.ignimgs.com...");
+
+            imgUrl = await page.evaluate(() => {
+                const img = document.querySelector('img[src^="https://assets1.ignimgs.com"]');
+    
+                if (img) {
+                    return img.src;
+                }
+                return null;
+            });
+        }
+
         if (imgUrl) {
             // Get the file extension from the URL
             const fileExtension = path.extname(imgUrl).split('?')[0]; // Ensures query strings don't interfere
-
-            // Save the image in the specified directory with the correct file extension
             const fileName = path.join(outputDir, `${gameId}${fileExtension}`);
+
             console.log(`Downloading image from: ${imgUrl}`);
-            console.log(`Saving as: ${fileName}`);
-            const file = fs.createWriteStream(fileName);
-            https.get(imgUrl, (response) => response.pipe(file));
+
+            // Use https.get for all image downloads
+            const downloadImage = (url, destination) => {
+                return new Promise((resolve, reject) => {
+                    const file = fs.createWriteStream(destination);
+                    const options = {
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+                        }
+                    };
+
+                    https.get(url, options, (response) => {
+                        if (response.statusCode !== 200) {
+                            reject(new Error(`Failed to download image: ${response.statusCode}`));
+                            return;
+                        }
+                        response.pipe(file);
+                        file.on('finish', () => file.close(resolve));
+                    }).on('error', (err) => {
+                        fs.unlink(destination, () => reject(err)); // Delete incomplete file
+                    });
+                });
+            };
+
+            try {
+                await downloadImage(imgUrl, fileName);
+                console.log(`Saved as: ${fileName}`);
+            } catch (downloadError) {
+                console.error(`Error downloading image: ${downloadError.message}`);
+            }
         } else {
-            console.log("No image found with the specified source.");
+            console.log("No image found on either source.");
         }
     } catch (error) {
         console.error(`Failed to fetch the page: ${error.message}`);
