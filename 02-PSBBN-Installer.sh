@@ -3,7 +3,7 @@
 echo -e "\e[8;40;100t"
 
 # Set paths
-TOOLKIT_PATH=$"(pwd)"
+TOOLKIT_PATH="$(pwd)"
 ASSETS_DIR="${TOOLKIT_PATH}/assets"
 INSTALL_LOG="${TOOLKIT_PATH}/PSBBN-installer.log"
 
