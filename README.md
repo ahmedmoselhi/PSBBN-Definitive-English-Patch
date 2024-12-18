@@ -26,8 +26,9 @@ If you appreciate my work and want to support the continued development of the "
 - Bandai and SCEI online channels have been added to the Game Channel
 - Some minor fixes to the English translation
 ### Update:
-- Improved art downloader now grabs significantly more artwork.
-- Improved error handling in the PSBBN installer script.
+- The art downloader has been improved to grab significantly more artwork
+- Improved error handling in the PSBBN installer script
+- The Setup script has been modified to work on live USBs without errors
 
 ## Video demonstrating how PSBBN can be used in 2024:
 
@@ -72,7 +73,6 @@ By default the `games` folder is located in the same directory you installed the
 ### Notes:
 - PSBBN requires a Fat PS2 console with expansion bay and an official Sony Network Adapter
 - I would highly recommend using a **Kaico IDE to SATA Upgrade Kit** and a SATA SSD such as the **Kingston A400 960G**. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface.
-- If you are installing from a Linux live USB, you must edit `/etc/apt/sources.list` to remove the line starting with `deb cdrom` before running `01-Setup.sh`.
 - Delete any existing OPL config files you may have from your memory cards
 - Remove any attached BDM (USB, iLink, MX4ISO) devices from your PS2 console before launching games from the Game Channel
 - Games in the Game Channel listed as "Coming soon..." will launch OPL if selected
