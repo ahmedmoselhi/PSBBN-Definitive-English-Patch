@@ -9,8 +9,18 @@ INSTALL_LOG="${TOOLKIT_PATH}/PSBBN-installer.log"
 
 clear
 
-echo "####################################################################">> "${INSTALL_LOG}";
-date >> "${INSTALL_LOG}"
+# Check if the helper files exists
+if [[ ! -f "${TOOLKIT_PATH}/helper/PFS Shell.elf" || ! -f "${TOOLKIT_PATH}/helper/HDL Dump.elf" ]]; then
+    echo "Required helper files not found. Please make sure you are in the 'PSBBN-Definitive-English-Patch'"
+    echo "directory and try again."
+    exit 1
+else
+    echo "####################################################################">> "${INSTALL_LOG}";
+    date >> "${INSTALL_LOG}"
+    echo >> "${INSTALL_LOG}"
+    echo "Path set to: $TOOLKIT_PATH" >> "${INSTALL_LOG}"
+    echo "Helper files found." >> "${INSTALL_LOG}"
+fi
 
 # Choose the PS2 storage device
 while true; do
@@ -32,6 +42,16 @@ while true; do
     
     # Validate input
     if [[ $DEVICE =~ ^/dev/sd[a-z]$ ]]; then
+        # Check the size of the chosen device
+        SIZE_CHECK=$(lsblk -o NAME,SIZE | grep -w $(basename $DEVICE) | tr -s ' ' | cut -d' ' -f2 | cut -d'.' -f1)
+        
+        if (( SIZE_CHECK < 200 )); then
+            echo
+            echo "Error: Device is $SIZE_CHECK GB. Required minimum is 200 GB."
+            read -p "Press any key to exit."
+            exit 1
+        fi
+
         echo
         echo -e "Are you sure you want to write to ${DEVICE}?" | tee -a "${INSTALL_LOG}"
         read -p "This will erase all data on the drive. (yes/no): " CONFIRM
@@ -42,6 +62,11 @@ while true; do
             read -p "Press any key to exit..."
             exit 1
         fi
+    else
+        echo
+        echo "Error: Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
+        read -p "Press any key to try again..."
+        continue
     fi
 done
 
@@ -109,7 +134,8 @@ done
 
 # Check if the file exists in ${ASSETS_DIR}
 if [[ -f "${ASSETS_DIR}/${LATEST}" && ! -f "${ASSETS_DIR}/${LATEST}.st" ]]; then
-    echo "File ${LATEST} already exists in ${ASSETS_DIR}. Skipping download." | tee -a "${INSTALL_LOG}"
+    echo "File ${LATEST} exists in ${ASSETS_DIR}." | tee -a "${INSTALL_LOG}"
+    echo "Skipping download" | tee -a "${INSTALL_LOG}"
 else
     # Construct the full URL for the .gz file and download it
     ZIP_URL="$URL/$LATEST"
@@ -136,7 +162,8 @@ echo "Checking for POPS binaries..."
 
 # Check POPS files exist
 if [[ -f "${ASSETS_DIR}/POPS-binaries-main/POPS.ELF" && -f "${ASSETS_DIR}/POPS-binaries-main/IOPRP252.IMG" ]]; then
-    echo "Both POPS.ELF and IOPRP252.IMG exist in ${ASSETS_DIR}. Skipping download." | tee -a "${INSTALL_LOG}"
+    echo "Both POPS.ELF and IOPRP252.IMG exist in ${ASSETS_DIR}." | tee -a "${INSTALL_LOG}"
+    echo "Skipping download" | tee -a "${INSTALL_LOG}"
 else
     echo "One or both files are missing in ${ASSETS_DIR}." | tee -a "${INSTALL_LOG}"
     # Check if POPS-binaries-main.zip exists
@@ -501,9 +528,11 @@ if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__.POP
    sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__linux.8' && \
    sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q "PP.${PARTITION_COUNT}" && \
    sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '+OPL'; then
-    echo "All partitions were created successfully." | tee -a "${INSTALL_LOG}"
+   echo "All partitions were created successfully." | tee -a "${INSTALL_LOG}"
+   sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" >> "${INSTALL_LOG}"
 else
     echo "Error: Some partitions are missing on ${DEVICE}." | tee -a "${INSTALL_LOG}"
+    sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" >> "${INSTALL_LOG}"
     read -p "Press any key to exit..."
     exit 1
 fi
@@ -515,5 +544,28 @@ if ! lsblk -p -o NAME,LABEL | grep -q "${DEVICE}3"; then
     exit 1
 fi
 
-echo | tee -a "${INSTALL_LOG}"
-read -p "PSBBN successfully installed. Press any key to exit. " | tee -a "${INSTALL_LOG}"
+OPL_DEVICE="${DEVICE: -3}3"
+
+PHY_SEC=$(lsblk -o NAME,PHY-SEC | grep $OPL_DEVICE | tr -s ' ' | cut -d' ' -f2)
+
+# Check if PHY_SEC is 512
+if [[ "$PHY_SEC" != "512" ]]; then
+    echo "    ##########################################################################################"
+    echo "    #  Unfortunately, your drive is not compatible with OPL.                                 #"
+    echo "    #                                                                                        #"
+    echo "    #  The physical sector size is $PHY_SEC; it must be 512. To resolve this issue, you can:     #"
+    echo "    #                                                                                        #"
+    echo "    #  1. Try connecting the PS2 HDD/SSD directly to your PC via an internal SATA connection #"
+    echo "    #     or use a different USB adapter, and then run the PSBBN installer again.            #"
+    echo "    #                                                                                        #"
+    echo "    #  2. Try a different HDD/SSD and run the PSBBN installer again.                         #"
+    echo "    #                                                                                        #"
+    echo "    ##########################################################################################"
+    echo "Error: Phystical Sector Size is: $PHY_SEC" >> "${INSTALL_LOG}"
+    read -p "Press any key to exit..."
+    exit 1
+else
+    echo "PHY-SEC value for $OPL_DEVICE is $PHY_SEC and valid. PSBBN successfully installed." | tee -a "${INSTALL_LOG}"
+fi
+
+read -p "Press any key to exit. "
