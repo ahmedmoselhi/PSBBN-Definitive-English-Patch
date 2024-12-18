@@ -10,11 +10,25 @@ echo "                                     \____/ \___|\__|\__,_| .__/ ";
 echo "                                                          | |    ";
 echo "                                                          |_|    ";
 echo
-echo "This script installs all dependencies required for the 'PSBBN Installer' and 'Game Installer'."
-echo "It must be run first."
+echo "   This script installs all dependencies required for the 'PSBBN Installer' and 'Game Installer'."
+echo "   It must be run first."
 echo
-echo "Press any key to continue..."
-read -n 1 -s
+read -p "   Press any key to continue..."
+echo
+
+# Path to the sources.list file
+SOURCES_LIST="/etc/apt/sources.list"
+
+# Check if the file exists
+if [[ -f "$SOURCES_LIST" ]]; then
+    # Remove the "deb cdrom" line and store the result
+    if grep -q 'deb cdrom' "$SOURCES_LIST"; then
+        sudo sed -i '/deb cdrom/d' "$SOURCES_LIST"
+        echo "'deb cdrom' line has been removed from $SOURCES_LIST."
+    else
+        echo "No 'deb cdrom' line found in $SOURCES_LIST."
+    fi
+fi
 
 # Update package list and install necessary packages
 sudo apt update && sudo apt install -y axel imagemagick xxd python3-venv python3-pip nodejs npm
