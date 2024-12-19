@@ -43,11 +43,14 @@ while true; do
     # Validate input
     if [[ $DEVICE =~ ^/dev/sd[a-z]$ ]]; then
         # Check the size of the chosen device
-        SIZE_CHECK=$(lsblk -o NAME,SIZE | grep -w $(basename $DEVICE) | tr -s ' ' | cut -d' ' -f2 | cut -d'.' -f1)
+        SIZE_CHECK=$(lsblk -o NAME,SIZE -b | grep -w $(basename $DEVICE) | awk '{print $2}')
+
+        # Convert size to GB (1 GB = 1,000,000,000 bytes)
+        size_gb=$(echo "$SIZE_CHECK / 1000000000" | bc)
         
-        if (( SIZE_CHECK < 200 )); then
+        if (( size_gb < 200 )); then
             echo
-            echo "Error: Device is $SIZE_CHECK GB. Required minimum is 200 GB."
+            echo "Error: Device is $size_gb GB. Required minimum is 200 GB."
             read -p "Press any key to exit."
             exit 1
         fi
