@@ -440,6 +440,12 @@ for ((j = START_PARTITION_NUMBER - i; j >= 1; j--)); do
     COMMANDS+="umount\n"
 done
 
+COMMANDS+="lcd ../assets\n"
+COMMANDS+="mount +OPL\n"
+COMMANDS+="cd ..\n"
+COMMANDS+="rm OPNPS2LD.ELF\n"
+COMMANDS+="put OPNPS2LD.ELF\n"
+COMMANDS+="umount\n"
 COMMANDS+="exit"
 
 # Pipe all commands to PFS Shell for mounting, copying, and unmounting
