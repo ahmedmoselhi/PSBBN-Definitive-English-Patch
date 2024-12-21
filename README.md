@@ -33,7 +33,7 @@ If you appreciate my work and want to support the continued development of the *
 - Added Game ID support for the Pixel FX Retro GEM. Works for both PS1 and PS2 games
 - PS2 games now launch up to 5 seconds faster
 - Resolved conflict with mass storage devices (USB, iLink, MX4SIO). Games now launch without issues if these devices are connected
-- OPL software now automatically updates everytime you sync your games
+- OPL software now automatically updates when you sync your games
 - The art downloader has been improved to grab significantly more artwork
 - Improved error handling in the PSBBN installer script
 - The setup script has been modified to work on live Linux environments without issues
