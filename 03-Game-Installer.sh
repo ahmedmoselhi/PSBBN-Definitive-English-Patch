@@ -17,11 +17,47 @@ GAMES_PATH="${TOOLKIT_PATH}/games"
 POPS_FOLDER="${GAMES_PATH}/POPS"
 ALL_GAMES="${GAMES_PATH}/master.list"
 
-cd "${TOOLKIT_PATH}"
-
 clear
 
-date >> "${LOG_FILE}"
+cd "${TOOLKIT_PATH}"
+
+# Check if the helper files exists
+if [[ ! -f "${TOOLKIT_PATH}/helper/PFS Shell.elf" || ! -f "${TOOLKIT_PATH}/helper/HDL Dump.elf" ]]; then
+    echo "Required helper files not found. Please make sure you are in the 'PSBBN-Definitive-English-Patch'"
+    echo "directory and try again."
+    exit 1
+else
+    echo "####################################################################">> "${LOG_FILE}";
+    date >> "${LOG_FILE}"
+    echo >> "${LOG_FILE}"
+    echo "Path set to: $TOOLKIT_PATH" >> "${LOG_FILE}"
+    echo "Helper files found." >> "${LOG_FILE}"
+fi
+
+echo "####################################################################">> "${LOG_FILE}";
+echo "                  _____                        _____          _        _ _           ";
+echo "                 |  __ \                      |_   _|        | |      | | |          ";
+echo "                 | |  \/ __ _ _ __ ___   ___    | | _ __  ___| |_ __ _| | | ___ ___ ";
+echo "                 | | __ / _\` | '_ \` _ \ / _ \   | || '_ \/ __| __/ _\` | | |/ _ \ __|";
+echo "                 | |_\ \ (_| | | | | | |  __/  _| || | | \__ \ || (_| | | |  __/ |    ";
+echo "                  \____/\__,_|_| |_| |_|\___|  \___/_| |_|___/\__\__,_|_|_|\___|_|    ";
+echo "                                                                      ";
+echo "                                         Written by CosmicScale"
+echo
+echo "   ##############################################################################################"
+echo "   #  This tool synchronizes the games on your PC with those on your PS2's HDD/SSD.             #"
+echo "   #                                                                                            #"
+echo "   #  Ensure the PS2 drive is connected to your PC before proceeding.                           #"
+echo "   #                                                                                            #"
+echo "   #  How Syncing Works:                                                                        #"
+echo "   #                                                                                            #"
+echo "   #  Copying: Games in your PC's 'games' folder that are missing from your PS2 will be added   #"
+echo "   #                                                                                            #"
+echo "   #  Removal: Games on your PS2 that are not in your PC's 'games' folder will be removed.      #"
+echo "   #                                                                                            #"
+echo "   ##############################################################################################"
+echo
+read -p "   Press any key to continue..."
 
 # Choose the PS2 storage device
 while true; do
@@ -46,6 +82,11 @@ echo "                                         Written by CosmicScale"
         echo
         echo -e "Selected drive: \"${DEVICE}\"" | tee -a "${LOG_FILE}"
         break
+    else
+        echo
+        echo "Error: Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
+        read -p "Press any key to try again..."
+        continue
     fi
 done
 
@@ -470,4 +511,4 @@ rm "${TOOLKIT_PATH}/package-lock.json" &> /dev/null
 echo | tee -a "${LOG_FILE}"
 echo "Game installer script complete" | tee -a "${LOG_FILE}"
 echo
-read -p "Press any key to continue..."
+read -p "Press any key to exit..."

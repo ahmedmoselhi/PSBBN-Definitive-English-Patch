@@ -1,6 +1,18 @@
 #!/bin/bash
 echo -e "\e[8;30;100t"
+
+TOOLKIT_PATH="$(pwd)"
+
 clear
+cd "${TOOLKIT_PATH}"
+
+# Check if the helper files exists
+if [[ ! -f "${TOOLKIT_PATH}/helper/PFS Shell.elf" || ! -f "${TOOLKIT_PATH}/helper/HDL Dump.elf" ]]; then
+    echo "Required helper files not found. Please make sure you are in the 'PSBBN-Definitive-English-Patch'"
+    echo "directory and try again."
+    exit 1
+fi
+
 echo "                                      _____      _               ";
 echo "                                     /  ___|    | |              ";
 echo "                                     \ \`--.  ___| |_ _   _ _ __  ";

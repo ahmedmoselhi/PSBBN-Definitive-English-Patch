@@ -9,6 +9,8 @@ INSTALL_LOG="${TOOLKIT_PATH}/PSBBN-installer.log"
 
 clear
 
+cd "${TOOLKIT_PATH}"
+
 # Check if the helper files exists
 if [[ ! -f "${TOOLKIT_PATH}/helper/PFS Shell.elf" || ! -f "${TOOLKIT_PATH}/helper/HDL Dump.elf" ]]; then
     echo "Required helper files not found. Please make sure you are in the 'PSBBN-Definitive-English-Patch'"
@@ -202,6 +204,7 @@ if gunzip -c ${PSBBN_IMAGE} | sudo dd of=${DEVICE} bs=4M status=progress 2>&1 | 
     echo "Verifying installation..."
     if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__common'; then
         echo "Verification successful. PSBBN image installed successfully." | tee -a "${INSTALL_LOG}"
+        read -p "Press any key to continue.."
     else
         echo "Error: Verification failed on ${DEVICE}." | tee -a "${INSTALL_LOG}"
         read -p "Press any key to exit..."
@@ -242,6 +245,7 @@ PP=$(((available - 18560) / 128))
 
 # Loop until the user enters a valid number of partitions
 while true; do
+    clear
     echo | tee -a "${INSTALL_LOG}"
     echo "    #########################################################################################"
     echo "    #  'OPL Launcher' partitions are used to launch games from the 'Game Channel.'          #"
@@ -255,13 +259,26 @@ while true; do
     echo "    #  A good starting point is 200 partitions, but feel free to experiment.                #"
     echo "    #########################################################################################"
     echo
-    read -p "Enter the number of \"OPL Launcher\" partitions you would like (1-$PP): " PARTITION_COUNT
+    read -p "    Enter the number of \"OPL Launcher\" partitions you would like (1-$PP): " PARTITION_COUNT
 
     # Check if input is a valid number within the specified range
     if [[ "$PARTITION_COUNT" =~ ^[0-9]+$ ]] && [ "$PARTITION_COUNT" -ge 1 ] && [ "$PARTITION_COUNT" -le $PP ]; then
-        break  # Exit the loop if the input is valid
+        # Ask the user to confirm the entered number
+        GB=$(((available + 2048 - (PARTITION_COUNT * 128)) / 1024))
+        echo
+        echo "    You entered $PARTITION_COUNT partitions."
+        echo "    This will leave $GB GB to be shared between the Music and POPS partitions."
+        echo
+        read -p "    Do you wish to proceed? (y/n): " CONFIRMATION
+        if [[ "$CONFIRMATION" =~ ^[Yy]$ ]]; then
+            break  # Exit the loop if the user confirms
+        else
+            echo "    Please re-enter the number of partitions." | tee -a "${INSTALL_LOG}"
+        fi
     else
-        echo "Invalid input. Please enter a number between 1 and $PP." | tee -a "${INSTALL_LOG}"
+        echo
+        echo "    Invalid input. Please enter a number between 1 and $PP." | tee -a "${INSTALL_LOG}"
+        read -p "    Press any key to try again..."
     fi
 done
 
@@ -270,23 +287,23 @@ GB=$(((available + 2048 - 10368 - (PARTITION_COUNT * 128)) / 1024))
 # Prompt user for partition size for music, validate input, and keep asking until valid input is provided
 while true; do
   echo | tee -a "${INSTALL_LOG}"
-  echo "What size would you like the \"Music\" partition to be?" | tee -a "${INSTALL_LOG}"
-  echo "Remaining space will be allocated to the __.POPS partition for PS1 games"
-  echo "Minimum 10 GB, Available space: $GB GB" | tee -a "${INSTALL_LOG}"
-  read -p "Enter partition size (in GB): " gb_size
+  echo "    What size would you like the \"Music\" partition to be?" | tee -a "${INSTALL_LOG}"
+  echo "    Remaining space will be allocated to the __.POPS partition for PS1 games"
+  echo "    Minimum 10 GB, Available space: $GB GB" | tee -a "${INSTALL_LOG}"
+  read -p "    Enter partition size (in GB): " gb_size
 
   # Check if the input is a valid number
   if [[ ! "$gb_size" =~ ^[0-9]+$ ]]; then
-    echo "Invalid input. Please enter a valid number." | tee -a "${INSTALL_LOG}"
+    echo "    Invalid input. Please enter a valid number." | tee -a "${INSTALL_LOG}"
     continue
   fi
 
   # Check if the value is within the valid range
   if (( gb_size >= 10 && gb_size <= GB )); then
-    echo "Valid partition size: $gb_size GB" | tee -a "${INSTALL_LOG}"
+    echo "    Valid partition size: $gb_size GB" | tee -a "${INSTALL_LOG}"
     break  # Exit the loop if the input is valid
   else
-    echo "Invalid size. Please enter a value between 10 and $GB GB." | tee -a "${INSTALL_LOG}"
+    echo "    Invalid size. Please enter a value between 10 and $GB GB." | tee -a "${INSTALL_LOG}"
   fi
 done
 
@@ -295,7 +312,7 @@ pops_partition=$((available - (PARTITION_COUNT * 128) - music_partition -128))
 GB=$((pops_partition / 1024))
 
 echo | tee -a "${INSTALL_LOG}"
-echo "$GB GB alocated for __.POPS partition." | tee -a "${INSTALL_LOG}"
+echo "    $GB GB alocated for __.POPS partition." | tee -a "${INSTALL_LOG}"
 
 COMMANDS="device ${DEVICE}\n"
 COMMANDS+="mkpart __linux.8 ${music_partition}M REISER\n"
