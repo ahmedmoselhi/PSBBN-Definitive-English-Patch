@@ -67,22 +67,35 @@ These scripts are essential for unlocking all the new features exclusive to vers
 `03-Game-Installer.sh` fully automates the installation of PS1 and PS2 games. In the `games` folder on your computer, simply put your PS2 `ISO` or `ZSO` files in the `CD`/`DVD` folders, and your PS1 `VCD` files in the `POPS` folder.
 
 The script will:
-- Sync all games in those folders with your PS2's drive
+- Synchronise the games on your PC with your PS2's drive
 - Create all game assets
 - Download artwork
 - Install [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) into every game partition, making games bootable from the Game Channel
 
-To add or delete games, simply add or remove them from the `games` folder on your computer, then run the script again to sync. All games are kept in alphabetical order and grouped by series in the Game Channel on PSBBN.
+To add or delete games, simply add or remove them from the `games` folder on your computer, then run the script again to synchronise. All games are kept in alphabetical order and grouped by series in the Game Channel on PSBBN.
 
 By default the `games` folder is located in the same directory you installed the scrips to. If you need to change the location of the `games` folder, edit `03-Game-Installer.sh` and modify the `GAMES_PATH` variable.
 
 
 ### Notes:
 - PSBBN requires a Fat PS2 console** with expansion bay and an official Sony Network Adapter
-- I would highly recommend using a **Kaico IDE to SATA Upgrade Kit** and a SATA SSD such as the **Kingston A400 960G**. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface.
-- Delete any existing OPL configuration files from your memory cards.
-- Games in the Game Channel listed as "Coming soon..." will launch OPL if selected
+- I would highly recommend using a **Kaico IDE to SATA Upgrade Kit** and a SATA SSD. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface.
+- Games in the PSBBN Game Channel listed as "Coming soon..." will launch OPL if selected
 - The `root` password for Linux is `password`. There is also a `ps2` user account with the password set as `password`
+
+### Notes on OPL:
+- If OPL freezes at startup and games fail to launch from the PSBBN Game Channel, delete any existing OPL configuration files from your PS2 Memory Cards or connected USB devices.
+- To display the games list in OPL, adjust the following settings:
+  1. Settings > HDD (APA) Start Mode: Off
+  2. Settings > BDM Start Mode: Auto
+  3. Settings > BDM Devices > HDD (GPT/MBR): On
+- Insert a PS2 memory card, then select `Save Changes` from the main menu.
+
+### If, after trying the above steps, games still do not appear in the OPL games list and fail to launch from the PSBBN Game Channel, your drive may not be compatible with the exFAT version of OPL.
+
+Possible solutions:
+1. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then rerun the PSBBN installer.
+2. Use a different HDD/SSD and rerun the PSBBN installer.
 
 ### Notes on APA-Jail:
 APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. The remaining space on the drive is formatted as an exFAT partition, which can be accessed directly on a PC and by a [custom build of Open PS2 Loader](https://github.com/CosmicScale/Open-PS2-Loader-Retro-GEM/tree/psbbn-definitive-ver) on PS2. PS2 games in the `ISO` or `ZSO` format are stored on the exFAT partition.
