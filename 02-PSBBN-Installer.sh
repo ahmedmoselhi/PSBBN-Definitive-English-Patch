@@ -547,28 +547,6 @@ if ! lsblk -p -o NAME,LABEL | grep -q "${DEVICE}3"; then
     exit 1
 fi
 
-OPL_DEVICE="${DEVICE: -3}3"
-
-PHY_SEC=$(lsblk -o NAME,PHY-SEC | grep $OPL_DEVICE | tr -s ' ' | cut -d' ' -f2)
-
-# Check if PHY_SEC is 512
-if [[ "$PHY_SEC" != "512" ]]; then
-    echo "    ##########################################################################################"
-    echo "    #  Unfortunately, your drive is not compatible with OPL.                                 #"
-    echo "    #                                                                                        #"
-    echo "    #  The physical sector size is $PHY_SEC; it must be 512. To resolve this issue, you can:     #"
-    echo "    #                                                                                        #"
-    echo "    #  1. Try connecting the PS2 HDD/SSD directly to your PC via an internal SATA connection #"
-    echo "    #     or use a different USB adapter, and then run the PSBBN installer again.            #"
-    echo "    #                                                                                        #"
-    echo "    #  2. Try a different HDD/SSD and run the PSBBN installer again.                         #"
-    echo "    #                                                                                        #"
-    echo "    ##########################################################################################"
-    echo "Error: Phystical Sector Size is: $PHY_SEC" >> "${INSTALL_LOG}"
-    read -p "Press any key to exit..."
-    exit 1
-else
-    echo "PHY-SEC value for $OPL_DEVICE is $PHY_SEC and valid. PSBBN successfully installed." | tee -a "${INSTALL_LOG}"
-fi
-
+echo | tee -a "${INSTALL_LOG}"
+echo "PSBBN successfully installed." | tee -a "${INSTALL_LOG}"
 read -p "Press any key to exit. "
