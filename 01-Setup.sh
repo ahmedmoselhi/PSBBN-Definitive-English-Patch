@@ -34,16 +34,20 @@ SOURCES_LIST="/etc/apt/sources.list"
 # Check if the file exists
 if [[ -f "$SOURCES_LIST" ]]; then
     # Remove the "deb cdrom" line and store the result
-    if grep -q 'deb cdrom' "$SOURCES_LIST"; then
+if grep -q 'deb cdrom' "$SOURCES_LIST"; then
         sudo sed -i '/deb cdrom/d' "$SOURCES_LIST"
-        echo "'deb cdrom' line has been removed from $SOURCES_LIST."
-    else
+	echo "'deb cdrom' line has been removed from $SOURCES_LIST."
+else
         echo "No 'deb cdrom' line found in $SOURCES_LIST."
-    fi
 fi
-
-# Update package list and install necessary packages
-sudo apt update && sudo apt install -y axel imagemagick xxd python3-venv python3-pip nodejs npm
+fi
+# Check if user is on Debian-based system
+if [ -x "$(command -v apt)" ]; then
+    sudo apt update && sudo apt install -y axel imagemagick xxd python3-venv python3-pip nodejs npm
+# Or if user is on Arch-based system, do this instead    
+elif [ -x "$(command -v pacman)" ]; then
+    sudo pacman -Sy --needed archlinux-keyring && sudo pacman -S --needed axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync
+fi
 if [ $? -ne 0 ]; then
     echo
     echo "Error: Package installation failed."
@@ -54,14 +58,18 @@ fi
 # Check if mkfs.exfat exists, and install exfat-fuse if not
 if ! command -v mkfs.exfat &> /dev/null; then
     echo
-    echo "mkfs.exfat not found. Installing exfat-fuse..."
+    echo "mkfs.exfat not found. Installing exfat driver..."
+if [ -x "$(command -v apt)" ]; then
     sudo apt install -y exfat-fuse
-    if [ $? -ne 0 ]; then
-        echo
-        echo "Error: Failed to install exfat-fuse."
-        read -p "Press any key to exit..."
-        exit 1
-    fi
+elif [ -x "$(command -v pacman)" ]; then
+	sudo pacman -S exfatprogs
+fi
+if [ $? -ne 0 ]; then
+    	echo
+    	echo "Error: Failed to install exfat driver."
+    	read -p "Press any key to exit..."
+    	exit 1
+fi
 fi
 
 # Setup Python virtual environment and install Python dependencies
