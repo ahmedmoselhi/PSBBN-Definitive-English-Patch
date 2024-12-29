@@ -37,6 +37,7 @@ If you appreciate my work and want to support the continued development of the *
 - The art downloader has been improved to grab significantly more artwork
 - Improved error handling in the PSBBN installer script
 - The setup script has been modified to work on live Linux environments without issues
+- Added support for Arch-based Linux distributions
 
 ### Note on Retro GEM support:
 I would highly recommend that you install the [Retro GEM Game ID Resetter](https://github.com/CosmicScale/Retro-GEM-GameId-Resetter) on your PS2 Memory Card. With this app, when you quit a game, the Game ID is reset, and the Retro GEM settings are returned to global.
