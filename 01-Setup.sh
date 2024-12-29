@@ -43,8 +43,8 @@ fi
 fi
 # Check if user is on Debian-based system
 if [ -x "$(command -v apt)" ]; then
-    sudo apt update && sudo apt install -y axel imagemagick xxd python3-venv python3-pip nodejs npm
-# Or if user is on Arch-based system, do this instead    
+    sudo apt update && sudo apt install -y axel imagemagick xxd python3 python3-venv python3-pip nodejs npm bc rsync
+# Or if user is on Arch-based system, do this instead
 elif [ -x "$(command -v pacman)" ]; then
     sudo pacman -Sy --needed archlinux-keyring && sudo pacman -S --needed axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync
 fi
