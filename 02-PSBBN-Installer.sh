@@ -103,22 +103,26 @@ echo "Checking for latest version of the PSBBN Definitive English patch..." | te
 HTML_FILE=$(mktemp)
 wget -O "$HTML_FILE" "$URL" >> "${INSTALL_LOG}" 2>&1
 
-# Extract .gz links and dates into a combined list
-COMBINED_LIST=$(grep -oP '(?<=<td><a href=")[^"]+\.gz' "$HTML_FILE" | \
-                paste -d' ' <(grep -oP '(?<=<td>)[^<]+(?=</td>)' "$HTML_FILE" | \
-                             grep -E '^\d{2}-\w{3}-\d{4}') -)
+# Extract .gz filenames from the HTML
+COMBINED_LIST=$(grep -oP 'psbbn-definitive-image-v[0-9]+\.[0-9]+\.gz' "$HTML_FILE")
 
-# Sort the combined list by date (most recent first), and get the latest file
-LATEST=$(echo "$COMBINED_LIST" | sort -r | head -n 1 | cut -d' ' -f2)
+# Extract version numbers and sort them
+VERSION_LIST=$(echo "$COMBINED_LIST" | \
+    grep -oP 'v[0-9]+\.[0-9]+' | \
+    sed 's/v//' | \
+    sort -V)
 
-if [ -z "$LATEST" ]; then
-    echo "Cound not find latest version."
-    # If $LATEST is empty, check for psbbn-definitive-image*.gz file
+# Determine the latest version from the sorted list
+LATEST_VERSION=$(echo "$VERSION_LIST" | tail -n 1)
+
+if [ -z "$LATEST_VERSION" ]; then
+    echo "Could not find the latest version." | tee -a "${INSTALL_LOG}"
+    # If $LATEST_VERSION is empty, check for psbbn-definitive-image*.gz files
     IMAGE_FILE=$(ls "${ASSETS_DIR}"/psbbn-definitive-image*.gz 2>/dev/null)
     if [ -n "$IMAGE_FILE" ]; then
-        # If image file exists, set LATEST to the image file name
-        LATEST=$(basename "$IMAGE_FILE")
-        echo "Found local file: ${LATEST}" | tee -a "${INSTALL_LOG}"
+        # If image file exists, set LATEST_FILE to the image file name
+        LATEST_FILE=$(basename "$IMAGE_FILE")
+        echo "Found local file: ${LATEST_FILE}" | tee -a "${INSTALL_LOG}"
     else
         rm "$HTML_FILE"
         echo "Failed to download PSBBN image file. Aborting." | tee -a "${INSTALL_LOG}"
@@ -126,41 +130,40 @@ if [ -z "$LATEST" ]; then
         exit 1
     fi
 else
-    echo "Latest version of PSBBN Definitive English patch is $LATEST"
+    LATEST_FILE="psbbn-definitive-image-v${LATEST_VERSION}.gz"
+    echo "Latest version of PSBBN Definitive English patch is v${LATEST_VERSION}" | tee -a "${INSTALL_LOG}"
 fi
 
-# Check for and delete older 'psbbn-definitive-image*.gz' files
+# Check for and delete older files
 for file in "${ASSETS_DIR}"/psbbn-definitive-image*.gz; do
-    if [[ -f "$file" && "$(basename "$file")" != "$LATEST" ]]; then
+    if [[ -f "$file" && "$(basename "$file")" != "$LATEST_FILE" ]]; then
         echo "Deleting old file: $file" | tee -a "${INSTALL_LOG}"
         rm "$file"
     fi
 done
 
-# Check if the file exists in ${ASSETS_DIR}
-if [[ -f "${ASSETS_DIR}/${LATEST}" && ! -f "${ASSETS_DIR}/${LATEST}.st" ]]; then
-    echo "File ${LATEST} exists in ${ASSETS_DIR}." | tee -a "${INSTALL_LOG}"
+# Check if the latest file exists in ${ASSETS_DIR}
+if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
+    echo "File ${LATEST_FILE} exists in ${ASSETS_DIR}." | tee -a "${INSTALL_LOG}"
     echo "Skipping download" | tee -a "${INSTALL_LOG}"
 else
     # Construct the full URL for the .gz file and download it
-    ZIP_URL="$URL/$LATEST"
-    # Proceed with download
-    echo "Downloading ${LATEST}..." | tee -a "${INSTALL_LOG}"
+    ZIP_URL="$URL/$LATEST_FILE"
+    echo "Downloading ${LATEST_FILE}..." | tee -a "${INSTALL_LOG}"
     axel -n 8 -a "$ZIP_URL" -o "${ASSETS_DIR}"
 
     # Check if the file was downloaded successfully
-    if [[ -f "${ASSETS_DIR}/${LATEST}" && ! -f "${ASSETS_DIR}/${LATEST}.st" ]]; then
-        echo "Download completed: ${LATEST}" | tee -a "${INSTALL_LOG}"
+    if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
+        echo "Download completed: ${LATEST_FILE}" | tee -a "${INSTALL_LOG}"
     else
-        rm "$HTML_FILE"
-        echo "Download failed for ${LATEST}. Please check your internet connection and try again." | tee -a "${INSTALL_LOG}"
+        echo "Download failed for ${LATEST_FILE}. Please check your internet connection and try again." | tee -a "${INSTALL_LOG}"
         read -p "Press any key to exit..."
         exit 1
     fi
-
-    # Clean up
-    rm "$HTML_FILE"
 fi
+
+# Clean up
+rm "$HTML_FILE"
 
 echo | tee -a "${INSTALL_LOG}"
 echo "Checking for POPS binaries..."
@@ -193,7 +196,7 @@ else
     fi
 fi
 
-PSBBN_IMAGE="${ASSETS_DIR}/${LATEST}"
+PSBBN_IMAGE="${ASSETS_DIR}/${LATEST_FILE}"
 
 # Write the PSBBN image
 echo | tee -a "${INSTALL_LOG}"
@@ -218,7 +221,6 @@ fi
 
 # Function to find available space
 function function_space() {
-    
 
 output=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc ${DEVICE} 2>&1)
 
@@ -282,14 +284,14 @@ while true; do
     fi
 done
 
-GB=$(((available + 2048 - 10368 - (PARTITION_COUNT * 128)) / 1024))
-
 # Prompt user for partition size for music, validate input, and keep asking until valid input is provided
 while true; do
+  GB=$(((available + 2048 - 10368 - (PARTITION_COUNT * 128)) / 1024))
+  GB=$(( GB > 40 ? 40 : GB ))
   echo | tee -a "${INSTALL_LOG}"
   echo "    What size would you like the \"Music\" partition to be?" | tee -a "${INSTALL_LOG}"
-  echo "    Remaining space will be allocated to the __.POPS partition for PS1 games"
-  echo "    Minimum 10 GB, Available space: $GB GB" | tee -a "${INSTALL_LOG}"
+  echo "    Remaining space will be allocated to the POPS partition for PS1 games" | tee -a "${INSTALL_LOG}"
+  echo "    Minimum 10 GB, Maximum $GB GB" | tee -a "${INSTALL_LOG}"
   read -p "    Enter partition size (in GB): " gb_size
 
   # Check if the input is a valid number
@@ -300,19 +302,25 @@ while true; do
 
   # Check if the value is within the valid range
   if (( gb_size >= 10 && gb_size <= GB )); then
-    echo "    Valid partition size: $gb_size GB" | tee -a "${INSTALL_LOG}"
-    break  # Exit the loop if the input is valid
+    music_partition=$((gb_size * 1024 - 2048))
+    pops_partition=$((available - (PARTITION_COUNT * 128) - music_partition - 128))
+    GB=$((pops_partition / 1024))
+
+    echo | tee -a "${INSTALL_LOG}"
+    echo "    You have selected $gb_size GB for the \"Music\" partition." | tee -a "${INSTALL_LOG}"
+    echo "    This will leave $GB GB for the POPS partition." | tee -a "${INSTALL_LOG}"
+
+    # Ask for confirmation
+    read -p "    Are you sure you want to proceed? (y/n): " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+      echo
+      echo "    $GB GB alocated for POPS partition." | tee -a "${INSTALL_LOG}"
+      break  # Exit the loop
+    fi
   else
     echo "    Invalid size. Please enter a value between 10 and $GB GB." | tee -a "${INSTALL_LOG}"
   fi
 done
-
-music_partition=$((gb_size * 1024 - 2048))
-pops_partition=$((available - (PARTITION_COUNT * 128) - music_partition -128))
-GB=$((pops_partition / 1024))
-
-echo | tee -a "${INSTALL_LOG}"
-echo "    $GB GB alocated for __.POPS partition." | tee -a "${INSTALL_LOG}"
 
 COMMANDS="device ${DEVICE}\n"
 COMMANDS+="mkpart __linux.8 ${music_partition}M REISER\n"
@@ -325,7 +333,7 @@ echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${INSTALL_
 function_space
 
 echo | tee -a "${INSTALL_LOG}"
-echo "Creating $PARTITION_COUNT \"OPL Launcher\" partitions..." | tee -a "${INSTALL_LOG}"
+echo "    Creating $PARTITION_COUNT \"OPL Launcher\" partitions..." | tee -a "${INSTALL_LOG}"
 
 # Set starting partition number
 START_PARTITION_NUMBER=1
@@ -338,7 +346,7 @@ for ((i = 0; i < PARTITION_COUNT; i++)); do
     # Check if available space is at least 128 MB
     if [ "$available" -lt 128 ]; then
         echo | tee -a "${INSTALL_LOG}"
-        echo "Insufficient space for another partition." | tee -a "${INSTALL_LOG}"
+        echo "    Insufficient space for another partition." | tee -a "${INSTALL_LOG}"
         break
     fi
 
@@ -363,10 +371,10 @@ done
 
 # Display the total number of partitions created successfully
 echo | tee -a "${INSTALL_LOG}"
-echo "$successful_count \"OPL Launcher\" partitions created successfully." | tee -a "${INSTALL_LOG}"
+echo "    $successful_count \"OPL Launcher\" partitions created successfully." | tee -a "${INSTALL_LOG}"
 
 echo | tee -a "${INSTALL_LOG}"
-echo "Modifying partition headers..." | tee -a "${INSTALL_LOG}"
+echo "    Modifying partition headers..." | tee -a "${INSTALL_LOG}"
 
 cd "${TOOLKIT_PATH}/assets/"
 
@@ -377,7 +385,7 @@ for ((i = START_PARTITION_NUMBER; i < START_PARTITION_NUMBER + PARTITION_COUNT; 
 done
 
 echo | tee -a "${INSTALL_LOG}"
-echo "Making \"res\" folders..." | tee -a "${INSTALL_LOG}"
+echo "    Making \"res\" folders..." | tee -a "${INSTALL_LOG}"
 
 # make 'res' directory on all PP partitions
 COMMANDS="device ${DEVICE}\n"
@@ -393,7 +401,7 @@ COMMANDS+="exit"
 echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${INSTALL_LOG}" 2>&1
 
 echo | tee -a "${INSTALL_LOG}"
-echo "Installing POPS and OPL..." | tee -a "${INSTALL_LOG}"
+echo "    Installing POPS and OPL..." | tee -a "${INSTALL_LOG}"
 
 # Copy POPS files and OPL to relevent partitions
 COMMANDS="device ${DEVICE}\n"
@@ -420,15 +428,6 @@ cd "${TOOLKIT_PATH}"
 
 
 #//////////////////////////////////////////////// APA-Jail code by Berion ////////////////////////////////////////////////
-
-function function_disk_size_check() {
-	LBA_MAX=$(sudo blockdev --getsize ${DEVICE})
-	if [ ${LBA_MAX} -gt 4294967296 ]; then
-		echo -e "ERROR: Disk size exceeding 2TiB. Formatting aborted." | tee -a "${INSTALL_LOG}"
-		function_exit
-	fi
-	}
-
 
 function function_apajail_magic_number() {
 	echo ${MAGIC_NUMBER} | xxd -r -p > /tmp/apajail_magic_number.bin
@@ -477,10 +476,7 @@ function function_clear_temp() {
 	}
 
 echo | tee -a "${INSTALL_LOG}"
-echo "Running APA-Jail by Berion..." | tee -a "${INSTALL_LOG}"
-
-# Hashed out for testing. Larger drive support most likley possible when using a restored disc image from a smaller drive
-# function_disk_size_check
+echo "    Running APA-Jail by Berion..." | tee -a "${INSTALL_LOG}"
 
 # Signature injection (type A2):
 MAGIC_NUMBER="4150414A2D413200"
@@ -530,8 +526,6 @@ unset LBA_MAX
 unset MAGIC_NUMBER
 unset PARTITION_NUMBER
 
-
-
 #/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 # Run the command and capture output
@@ -539,31 +533,68 @@ output=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc ${DEVICE} 2>&1)
 
 # Check for the word "aborting" in the output
 if echo "$output" | grep -q "aborting"; then
-    echo "Error: APA partition is broken on ${DEVICE}. Install failed." | tee -a "${INSTALL_LOG}"
-    read -p "Press any key to exit..."
+    echo "    Error: APA partition is broken on ${DEVICE}. Install failed." | tee -a "${INSTALL_LOG}"
+    read -p "    Press any key to exit..."
     exit 1
 fi
 
 if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__.POPS' && \
    sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__linux.8' && \
-   sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q "PP.${PARTITION_COUNT}" && \
    sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '+OPL'; then
-   echo "All partitions were created successfully." | tee -a "${INSTALL_LOG}"
+   echo
+   echo "    POPS, Music and +OPL partitions were created successfully." | tee -a "${INSTALL_LOG}"
    sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" >> "${INSTALL_LOG}"
 else
-    echo "Error: Some partitions are missing on ${DEVICE}." | tee -a "${INSTALL_LOG}"
+    echo
+    echo "    Error: Some partitions are missing on ${DEVICE}. See log for details." | tee -a "${INSTALL_LOG}"
     sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" >> "${INSTALL_LOG}"
-    read -p "Press any key to exit..."
+    read -p "    Press any key to exit..."
+    exit 1
+fi
+
+# Get the list of partition names
+partitions=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc $DEVICE | grep -o 'PP\.[0-9]\+')
+
+# Count detected partitions
+detected_count=$(echo "$partitions" | wc -l)
+
+missing_partitions=()
+
+# Check for each partition from PP.001 to PP.<PARTITION_COUNT> and identify any missing partitions
+for i in $(seq -f "%03g" 1 "$PARTITION_COUNT"); do
+    partition_name="PP.$i"
+    if ! echo "$partitions" | grep -q "$partition_name"; then
+        missing_partitions+=("$partition_name")
+    fi
+done
+
+# Report findings
+if [ ${#missing_partitions[@]} -eq 0 ] && [ "$detected_count" -eq "$PARTITION_COUNT" ]; then
+    echo
+    echo "    All OPL Launcher partitions are present." | tee -a "${INSTALL_LOG}"
+else
+    if [ "$detected_count" -lt "$PARTITION_COUNT" ]; then
+        echo
+        echo "    Warning: Expected $PARTITION_COUNT OPL Launcher partitions but found $detected_count!" | tee -a "${INSTALL_LOG}"
+    fi
+    if [ ${#missing_partitions[@]} -gt 0 ]; then
+        echo
+        echo "    Some OPL Launcher partitions are missing. See log for details." | tee -a "${INSTALL_LOG}"
+        for partition in "${missing_partitions[@]}"; do
+            echo "$partition" >> "${INSTALL_LOG}"
+        done
+    fi
+    read -p "    Press any key to exit..."
     exit 1
 fi
 
 # Check if 'OPL' is found in the 'lsblk' output and if it matches the device
 if ! lsblk -p -o NAME,LABEL | grep -q "${DEVICE}3"; then
-    echo "Error: APA-Jail failed on ${DEVICE}." | tee -a "${INSTALL_LOG}"
-    read -p "Press any key to exit..."
+    echo "    Error: APA-Jail failed on ${DEVICE}." | tee -a "${INSTALL_LOG}"
+    read -p "    Press any key to exit..."
     exit 1
 fi
 
 echo | tee -a "${INSTALL_LOG}"
-echo "PSBBN successfully installed." | tee -a "${INSTALL_LOG}"
-read -p "Press any key to exit. "
+echo "    PSBBN successfully installed." | tee -a "${INSTALL_LOG}"
+read -p "    Press any key to exit. "
