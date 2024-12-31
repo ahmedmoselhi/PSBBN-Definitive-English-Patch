@@ -221,8 +221,12 @@ def sort_games_list(game_path):
         # Normalize the title
         normalized_title = normalize_text(first_field)
 
+        # Remove special characters
+        normalized_title = ''.join(c for c in normalized_title if c.isalnum() or c.isspace())
+
         # Check for special cases like Roman numeral endings
         replacements = {
+            ' I': ' 1',
             ' II': ' 2',
             ' III': ' 3',
             ' IV': ' 4',
