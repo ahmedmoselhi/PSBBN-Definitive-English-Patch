@@ -23,7 +23,7 @@ If you appreciate my work and want to support the continued development of the *
 ## New to version 2.0
 - Large HDD support. No longer limited to 128 GB, now with support for drives up to 128 PB
 - Supports 700 games, all launchable from the Game Channel
-- Set a custom size for your music partition. Original limit of 5 GB allowed the storage of around 7 albums. Now the partition can be up to 97 GB for around 150 albums
+- Set a custom size for your music partition. Original limit of 5 GB allowed the storage of around 7 albums. Now the partition can be up to 40 GB for around 60 albums
 - exFAT partition for easy install of PS2 games
 - wLaunchELF is pre-installed
 - PS2 Linux is pre-installed. Just hold any button on the controller at startup to boot into Linux
@@ -38,9 +38,7 @@ If you appreciate my work and want to support the continued development of the *
 - Improved error handling in the PSBBN installer script
 - The setup script has been modified to work on live Linux environments without issues
 - Added support for Arch-based Linux distributions
-
-### Note on Retro GEM support:
-I would highly recommend that you install the [Retro GEM Game ID Resetter](https://github.com/CosmicScale/Retro-GEM-GameId-Resetter) on your PS2 Memory Card. With this app, when you quit a game, the Game ID is reset, and the Retro GEM settings are returned to global.
+- Added confirmation prompts to the PSBBN installer script when creating partitions
 
 ## New installation scripts
 
@@ -78,11 +76,14 @@ To add or delete games, simply add or remove them from the `games` folder on you
 By default the `games` folder is located in the same directory you installed the scrips to. If you need to change the location of the `games` folder, edit `03-Game-Installer.sh` and modify the `GAMES_PATH` variable.
 
 
-### Notes:
+### General Notes:
 - PSBBN requires a Fat PS2 console** with expansion bay and an official Sony Network Adapter
 - I would highly recommend using a **Kaico IDE to SATA Upgrade Kit** and a SATA SSD. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface.
 - Games in the PSBBN Game Channel listed as "Coming soon..." will launch OPL if selected
 - The `root` password for Linux is `password`. There is also a `ps2` user account with the password set as `password`
+
+### Note on Retro GEM support:
+I would highly recommend that you install the [Retro GEM Game ID Resetter](https://github.com/CosmicScale/Retro-GEM-GameId-Resetter) on your PS2 Memory Card. With this app, when you quit a game, the Game ID is reset, and the Retro GEM settings are returned to global.
 
 ### Notes on OPL:
 - If OPL freezes at startup and games fail to launch from the PSBBN Game Channel, delete any existing OPL configuration files from your PS2 Memory Cards or connected USB devices.
