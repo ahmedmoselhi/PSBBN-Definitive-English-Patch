@@ -195,7 +195,7 @@ for i in $(seq -f "%03g" 1 "$partition_count"); do
 done
 
 if [ ${#missing_partitions[@]} -eq 0 ]; then
-    echo "All partitions (PP.001 to PP.${partition_count}) are present." | tee -a "${LOG_FILE}"
+    echo "All partitions are present." | tee -a "${LOG_FILE}"
 else
     echo "Missing partitions:" | tee -a "${LOG_FILE}"
     for partition in "${missing_partitions[@]}"; do
@@ -204,10 +204,6 @@ else
         exit 1
     done
 fi
-
-# Set the highest starting partition based on available PP partitions
-START_PARTITION_NUMBER=$(echo "$partitions" | grep -o 'PP\.[0-9]*' | sort -V | tail -n 1 | sed 's/PP\.//')
-START_PARTITION_NUMBER=$((START_PARTITION_NUMBER))
 
 echo | tee -a "${LOG_FILE}"
 echo "Ready to install games. Press any key to continue..."
@@ -444,7 +440,7 @@ COMMANDS="device ${DEVICE}\n"
 i=0
 while IFS='|' read -r game_title game_id publisher disc_type file_name; do
     # Calculate the partition label for the current iteration, starting from the highest partition and counting down
-    PARTITION_LABEL=$(printf "PP.%03d" "$((START_PARTITION_NUMBER - i))")
+    PARTITION_LABEL=$(printf "PP.%03d" "$((partition_count - i))")
     COMMANDS+="mount ${PARTITION_LABEL}\n"
     COMMANDS+="cd ..\n"
     COMMANDS+="rm OPL-Launcher-BDM.KELF\n"
@@ -467,7 +463,7 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
 done < "$ALL_GAMES"
 
 # Process remaining partitions after the games
-for ((j = START_PARTITION_NUMBER - i; j >= 1; j--)); do
+for ((j = partition_count - i; j >= 1; j--)); do
     PARTITION_LABEL=$(printf "PP.%03d" "$j")
     COMMANDS+="mount ${PARTITION_LABEL}\n"
     COMMANDS+="cd ..\n"
