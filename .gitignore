@@ -4,5 +4,6 @@ assets/POPS-binaries-main/
 *.log
 *.gz
 *.zip
+*.st
 IOPRP252.IMG
 POPS.ELF
