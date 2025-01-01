@@ -39,6 +39,10 @@ If you appreciate my work and want to support the continued development of the *
 - The setup script has been modified to work on live Linux environments without issues
 - Added support for Arch-based Linux distributions
 - Added confirmation prompts to the PSBBN installer script when creating partitions
+- PSBBN image updated to version 2.01:
+  - Added **Open PS2 Loader** and **Launch Disc** to the Game Channel with a shortcut in the Navigator Menu
+  - Set USB keyboard layout to US English. Press `ALT+~` to toggle between kana and direct input
+  - Minor corrections to the English translation
 
 ## New installation scripts
 
@@ -85,13 +89,29 @@ By default the `games` folder is located in the same directory you installed the
 ### Note on Retro GEM support:
 I would highly recommend that you install the [Retro GEM Game ID Resetter](https://github.com/CosmicScale/Retro-GEM-GameId-Resetter) on your PS2 Memory Card. With this app, when you quit a game, the Game ID is reset, and the Retro GEM settings are returned to global.
 
+### Notes on Launch Disc:
+**Launch Disc** loads the [Retro GEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher) application.
+
+For physical PlayStation game discs:
+- Sets the Retro GEM Game ID
+- Adjusts the PlayStation driver's video mode, if needed, to ensure imports play in the correct mode
+
+For physical PlayStation 2 game discs:
+- Sets the Retro GEM Game ID
+- Skips the PlayStation 2 logo check, allowing MechaPwn users to launch imports and master discs
+
+Recommended usage:
+- Press `SELECT` to open the **Navigator Menu**
+- Insert a game disc
+- Select **Launch Disc** from the menu
+
 ### Notes on OPL:
 - If OPL freezes at startup and games fail to launch from the PSBBN Game Channel, delete any existing OPL configuration files from your PS2 Memory Cards or connected USB devices.
 - To display the games list in OPL, adjust the following settings:
   1. Settings > HDD (APA) Start Mode: Off
   2. Settings > BDM Start Mode: Auto
   3. Settings > BDM Devices > HDD (GPT/MBR): On
-- Insert a PS2 memory card, then select `Save Changes` from the main menu.
+- Make sure a PS2 memory card is inserted, then select `Save Changes` from the main menu.
 
 ### If, after trying the above steps, games still do not appear in the OPL games list and fail to launch from the PSBBN Game Channel, your drive may not be compatible with the exFAT version of OPL.
 
@@ -119,6 +139,7 @@ An application called [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Laun
 - Contains data from `TitlesDB_PS1_English.txt` and `TitlesDB_PS2_English.txt` from the [Title Database Scrapper](https://github.com/GDX-X/Title-Database-Scrapper), modified by [CosmicScale](https://github.com/CosmicScale)
 - [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) written by [CosmicScale](https://github.com/CosmicScale)
 - Custom build of [Open PS2 Loader](https://github.com/CosmicScale/Open-PS2-Loader-Retro-GEM/tree/psbbn-definitive-ver) with BDM contributions from [KrahJohlito](https://github.com/KrahJohlito) and Auto Launch modifications by [CosmicScale](https://github.com/CosmicScale)
+- [Retro GEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher) written by [CosmicScale](https://github.com/CosmicScale)
 - Uses APA-Jail code from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) by [Berion](https://www.psx-place.com/resources/authors/berion.1431/)
 - `APA Partition Header Checksumer` by Pinky from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) project. Linux port by Bucanero
 - `ziso.py` from [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) written by Virtuous Flame
