@@ -22,7 +22,7 @@ If you appreciate my work and want to support the continued development of the *
 
 ## New to version 2.0
 - Large HDD support. No longer limited to 128 GB, now with support for drives up to 128 PB
-- Supports 700 games, all launchable from the Game Channel
+- Supports over 700 games, all launchable from the Game Channel
 - Set a custom size for your music partition. Original limit of 5 GB allowed the storage of around 7 albums. Now the partition can be up to 40 GB for around 60 albums
 - exFAT partition for easy install of PS2 games
 - wLaunchELF is pre-installed
@@ -60,13 +60,12 @@ These scripts are essential for unlocking all the new features exclusive to vers
 ### PSBBN installer script:
 `02-PSBBN-Installer.sh` fully automates the installation of PSBBN
 
-- Downloads the latest version of the `PSBBN Definitive English patch` from archive.org and installs it
-- Asks how many `OPL Launcher` partitions you'd like to create (for up to 700 games!)
-- Asks how large you’d like the music partition
-- Creates a __.POPS partition for PS1 games with the remaining space up to 128 GB
-- Installs a custom build of OPL with exFAT and Auto Launch support for BDM devices
+- Downloads and installs the latest version of the **PSBBN Definitive English Patch** from archive.org
+- Prompts for the desired size of the Music Partition
+- Prompts for the desired size of the POPS Partition
+- Installs the latest build of Open PS2 Loader (OPL) with exFAT and Auto Launch support for BDM devices
 - Installs POPStarter
-- Runs APA-Jail and creates an exFAT partition with all remaining disk space
+- Runs APA-Jail, creating an exFAT partition using all remaining disk space beyond the first 128 GB
 
 ### Game installer script: 
 `03-Game-Installer.sh` fully automates the installation of PS1 and PS2 games. In the `games` folder on your computer, simply put your PS2 `ISO` or `ZSO` files in the `CD`/`DVD` folders, and your PS1 `VCD` files in the `POPS` folder.
@@ -126,13 +125,13 @@ Possible solutions:
 3. Try using a different HDD/SSD and rerun the PSBBN installer
 
 ### Notes on APA-Jail:
-APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. The remaining space on the drive is formatted as an exFAT partition, which can be accessed directly on a PC and by a [custom build of Open PS2 Loader](https://github.com/CosmicScale/Open-PS2-Loader-Retro-GEM/tree/psbbn-definitive-ver) on PS2. PS2 games in the `ISO` or `ZSO` format are stored on the exFAT partition.
+APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. The remaining space on the drive is formatted as an exFAT partition, which can be accessed directly on a PC and on the PS2 by the [latest build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader). PS2 games in the `ISO` or `ZSO` format are stored on the exFAT partition.
 
 ![APA-Jail Type-A](https://github.com/user-attachments/assets/c1a29371-d0ff-431e-8b86-df8337ddf966)
 
-An application called [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) resides on the APA partitions, along with a [custom build of Open PS2 Loader](https://github.com/CosmicScale/Open-PS2-Loader-Retro-GEM/tree/psbbn-definitive-ver).
+An application called [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) resides on the APA partitions, along with the [latest build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader).
  
-[OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) directs [Open PS2 Loader](https://github.com/CosmicScale/Open-PS2-Loader-Retro-GEM/tree/psbbn-definitive-ver) to launch specific PS2 games.
+[OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) directs [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) to launch specific PS2 games.
 
 ### Warning: Creating new partitions manually on your PS2 drive may lead to drive corruption.
 
