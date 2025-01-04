@@ -1,0 +1,4 @@
+BOOT2 = pfs:/disc-launcher.KELF
+VER = 1.01
+VMODE = NTSC
+HDDUNITPOWER = NICHDD

@@ -40,13 +40,15 @@ If you appreciate my work and want to support the continued development of the *
 - Added support for Arch-based Linux distributions
 - Added confirmation prompts to the PSBBN installer script when creating partitions
 - PSBBN image updated to version 2.01:
-  - Added **Open PS2 Loader** and **Launch Disc** to the Game Channel with a shortcut in the Navigator Menu
   - Set USB keyboard layout to US English. Press `ALT+~` to toggle between kana and direct input
   - Minor corrections to the English translation
+- Added **Open PS2 Loader** and **Launch Disc** to the Game Channel
+- The Game Installer script has been updated to dynamically create and delete `OPL Launcher` partitions as needed. Say goodbye to those annoying "Coming soon..." placeholders!
+- Files placed in the `CFG`, `CHT`, `LNG`, `THM`, and `APPS` folders on your PC will now be copied to the PS2 drive during game sync
 
 ## New installation scripts
 
-These scripts are essential for unlocking all the new features exclusive to version 2.0. They require a Linux environment to run. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive or a virtual machine. Debian-based distributions using `apt` and Arch-based distributions using `pacman` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. The HDD/SSD can be connected to your PC internally or via USB.
+These scripts are essential for unlocking all the new features exclusive to version 2.0. They require a Linux environment to run. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive or a virtual machine. Debian-based distributions using `apt` and Arch-based distributions using `pacman` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
 
 ## Video Tutorial:
 
@@ -59,7 +61,7 @@ These scripts are essential for unlocking all the new features exclusive to vers
 `02-PSBBN-Installer.sh` fully automates the installation of PSBBN
 
 - Downloads the latest version of the `PSBBN Definitive English patch` from archive.org and installs it
-- Asks how many 'OPL Launcher' partitions you'd like to create (for up to 700 games!)
+- Asks how many `OPL Launcher` partitions you'd like to create (for up to 700 games!)
 - Asks how large you’d like the music partition
 - Creates a __.POPS partition for PS1 games with the remaining space up to 128 GB
 - Installs a custom build of OPL with exFAT and Auto Launch support for BDM devices
@@ -83,7 +85,9 @@ By default the `games` folder is located in the same directory you installed the
 ### General Notes:
 - PSBBN requires a Fat PS2 console** with expansion bay and an official Sony Network Adapter
 - I would highly recommend using a **Kaico IDE to SATA Upgrade Kit** and a SATA SSD. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface.
-- Games in the PSBBN Game Channel listed as "Coming soon..." will launch OPL if selected
+- PSBBN startup time increases when no active internet connection is available
+- To quit PS1 games, press `L1 + SELECT + START`
+- To quit PS2 games, press `L1 + L2 + R1 + R2 + SELECT + START`
 - The `root` password for Linux is `password`. There is also a `ps2` user account with the password set as `password`
 
 ### Note on Retro GEM support:
@@ -101,6 +105,7 @@ For physical PlayStation 2 game discs:
 - Skips the PlayStation 2 logo check, allowing MechaPwn users to launch imports and master discs
 
 Recommended usage:
+- Add a shortcut for **Launch Disc** to the **Navigator Menu**
 - Press `SELECT` to open the **Navigator Menu**
 - Insert a game disc
 - Select **Launch Disc** from the menu
@@ -113,11 +118,12 @@ Recommended usage:
   3. Settings > BDM Devices > HDD (GPT/MBR): On
 - Make sure a PS2 memory card is inserted, then select `Save Changes` from the main menu.
 
-### If, after trying the above steps, games still do not appear in the OPL games list and fail to launch from the PSBBN Game Channel, your drive may not be compatible with the exFAT version of OPL.
+### If, after trying the above steps, games still do not appear in the OPL games list and fail to launch from the PSBBN Game Channel, your drive may not be currently compatible with the exFAT version of OPL.
 
 Possible solutions:
-1. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then rerun the PSBBN installer.
-2. Use a different HDD/SSD and rerun the PSBBN installer.
+1. Wait for the OPL bug fix. You can learn more and report your issue [here](https://github.com/ps2homebrew/Open-PS2-Loader/issues/1437)
+2. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then rerun the PSBBN installer
+3. Try using a different HDD/SSD and rerun the PSBBN installer
 
 ### Notes on APA-Jail:
 APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. The remaining space on the drive is formatted as an exFAT partition, which can be accessed directly on a PC and by a [custom build of Open PS2 Loader](https://github.com/CosmicScale/Open-PS2-Loader-Retro-GEM/tree/psbbn-definitive-ver) on PS2. PS2 games in the `ISO` or `ZSO` format are stored on the exFAT partition.
@@ -128,7 +134,7 @@ An application called [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Laun
  
 [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) directs [Open PS2 Loader](https://github.com/CosmicScale/Open-PS2-Loader-Retro-GEM/tree/psbbn-definitive-ver) to launch specific PS2 games.
 
-### Warning: Deleting or creating new partitions on your PS2 drive after setup will cause drive corruption.
+### Warning: Creating new partitions manually on your PS2 drive may lead to drive corruption.
 
 ## Credits
 - PSBBN Definitive English Patch by [CosmicScale](https://github.com/CosmicScale)
@@ -138,14 +144,12 @@ An application called [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Laun
 - Contains code from `list_builder.py` from [XEB+ neutrino Launcher Plugin](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin) by [sync-on-luma](https://github.com/sync-on-luma), modified by [CosmicScale](https://github.com/CosmicScale)
 - Contains data from `TitlesDB_PS1_English.txt` and `TitlesDB_PS2_English.txt` from the [Title Database Scrapper](https://github.com/GDX-X/Title-Database-Scrapper), modified by [CosmicScale](https://github.com/CosmicScale)
 - [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) written by [CosmicScale](https://github.com/CosmicScale)
-- Custom build of [Open PS2 Loader](https://github.com/CosmicScale/Open-PS2-Loader-Retro-GEM/tree/psbbn-definitive-ver) with BDM contributions from [KrahJohlito](https://github.com/KrahJohlito) and Auto Launch modifications by [CosmicScale](https://github.com/CosmicScale)
+- [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) with BDM contributions from [KrahJohlito](https://github.com/KrahJohlito) and Auto Launch modifications by [CosmicScale](https://github.com/CosmicScale)
 - [Retro GEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher) written by [CosmicScale](https://github.com/CosmicScale)
 - Uses APA-Jail code from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) by [Berion](https://www.psx-place.com/resources/authors/berion.1431/)
 - `APA Partition Header Checksumer` by Pinky from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) project. Linux port by Bucanero
 - `ziso.py` from [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) written by Virtuous Flame
-- [PFS Shell](https://github.com/ps2homebrew/pfsshell)
-- [HDL Dump](https://github.com/ps2homebrew/hdl-dump)
-- [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader)  
+- This project also uses [PFS Shell](https://github.com/ps2homebrew/pfsshell), [HDL Dump](https://github.com/ps2homebrew/hdl-dump), [wLaunchELF](https://github.com/ps2homebrew/wLaunchELF) and [PS1VModeNeg](https://github.com/ps2homebrew/PS1VModeNeg)
 
 ---
 <details>

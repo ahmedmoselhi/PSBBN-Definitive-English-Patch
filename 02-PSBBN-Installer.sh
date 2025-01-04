@@ -242,83 +242,67 @@ available=$((capacity - used))
 # Call the function retreive avaliable space
 function_space
 
-# Divide available space by 128 to calculate the maximum number of partitions
-PP=$(((available - 18560) / 128))
-
-# Loop until the user enters a valid number of partitions
-while true; do
-    clear
-    echo | tee -a "${INSTALL_LOG}"
-    echo "    #########################################################################################"
-    echo "    #  'OPL Launcher' partitions are used to launch games from the 'Game Channel.'          #"
-    echo "    #  Consider how many games you want to install, and plan for future expansion.          #"
-    echo "    #  Additional 'OPL Launcher' partitions cannot be created after setup.                  #"
-    echo "    #                                                                                       #"
-    echo "    #  Note: The more partitions you create, the longer it will take to load the game list. #"
-    echo "    #  Fewer 'OPL Launcher' partitions leave more space for the 'Music' partition           #"
-    echo "    #  and the 'POPS' partition for PS1 games.                                              #"
-    echo "    #                                                                                       #"
-    echo "    #  A good starting point is 200 partitions, but feel free to experiment.                #"
-    echo "    #########################################################################################"
-    echo
-    read -p "    Enter the number of \"OPL Launcher\" partitions you would like (1-$PP): " PARTITION_COUNT
-
-    # Check if input is a valid number within the specified range
-    if [[ "$PARTITION_COUNT" =~ ^[0-9]+$ ]] && [ "$PARTITION_COUNT" -ge 1 ] && [ "$PARTITION_COUNT" -le $PP ]; then
-        # Ask the user to confirm the entered number
-        GB=$(((available + 2048 - (PARTITION_COUNT * 128)) / 1024))
-        echo
-        echo "    You entered $PARTITION_COUNT partitions."
-        echo "    This will leave $GB GB to be shared between the Music and POPS partitions."
-        echo
-        read -p "    Do you wish to proceed? (y/n): " CONFIRMATION
-        if [[ "$CONFIRMATION" =~ ^[Yy]$ ]]; then
-            break  # Exit the loop if the user confirms
-        else
-            echo "    Please re-enter the number of partitions." | tee -a "${INSTALL_LOG}"
-        fi
-    else
-        echo
-        echo "    Invalid input. Please enter a number between 1 and $PP." | tee -a "${INSTALL_LOG}"
-        read -p "    Press any key to try again..."
-    fi
-done
-
 # Prompt user for partition size for music, validate input, and keep asking until valid input is provided
 while true; do
-  GB=$(((available + 2048 - 10368 - (PARTITION_COUNT * 128)) / 1024))
-  GB=$(( GB > 40 ? 40 : GB ))
   echo | tee -a "${INSTALL_LOG}"
-  echo "    What size would you like the \"Music\" partition to be?" | tee -a "${INSTALL_LOG}"
-  echo "    Remaining space will be allocated to the POPS partition for PS1 games" | tee -a "${INSTALL_LOG}"
-  echo "    Minimum 10 GB, Maximum $GB GB" | tee -a "${INSTALL_LOG}"
-  read -p "    Enter partition size (in GB): " gb_size
+  echo "What size would you like the \"Music\" partition to be?" | tee -a "${INSTALL_LOG}"
+  echo "Minimum 10 GB, Maximum 40 GB" | tee -a "${INSTALL_LOG}"
+  read -p "Enter partition size (in GB): " gb_size
 
   # Check if the input is a valid number
   if [[ ! "$gb_size" =~ ^[0-9]+$ ]]; then
-    echo "    Invalid input. Please enter a valid number." | tee -a "${INSTALL_LOG}"
+    echo "Invalid input. Please enter a valid number." | tee -a "${INSTALL_LOG}"
     continue
   fi
 
   # Check if the value is within the valid range
-  if (( gb_size >= 10 && gb_size <= GB )); then
+  if (( gb_size >= 10 && gb_size <= 40 )); then
     music_partition=$((gb_size * 1024 - 2048))
-    pops_partition=$((available - (PARTITION_COUNT * 128) - music_partition - 128))
-    GB=$((pops_partition / 1024))
 
     echo | tee -a "${INSTALL_LOG}"
-    echo "    You have selected $gb_size GB for the \"Music\" partition." | tee -a "${INSTALL_LOG}"
-    echo "    This will leave $GB GB for the POPS partition." | tee -a "${INSTALL_LOG}"
+    echo "You have selected $gb_size GB for the \"Music\" partition." | tee -a "${INSTALL_LOG}"
 
     # Ask for confirmation
-    read -p "    Are you sure you want to proceed? (y/n): " confirm
+    read -p "Are you sure you want to proceed? (y/n): " confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
-      echo
-      echo "    $GB GB alocated for POPS partition." | tee -a "${INSTALL_LOG}"
       break  # Exit the loop
     fi
   else
-    echo "    Invalid size. Please enter a value between 10 and $GB GB." | tee -a "${INSTALL_LOG}"
+    echo "Invalid size. Please enter a value between 10 and 40 GB." | tee -a "${INSTALL_LOG}"
+  fi
+done
+
+# Prompt user for partition size for POPS, validate input, and keep asking until valid input is provided
+while true; do
+  GB=$(((available - 14976 - music_partition ) / 1024))
+  echo | tee -a "${INSTALL_LOG}"
+  echo "What size would you like the \"POPS\" partition to be?" | tee -a "${INSTALL_LOG}"
+  echo "All remaining space will be made available for OPL Launcher partitions" | tee -a "${INSTALL_LOG}"
+  echo "Minimum 10 GB, Maximum $GB GB" | tee -a "${INSTALL_LOG}"
+  read -p "Enter partition size (in GB): " gb_size
+
+  # Check if the input is a valid number
+  if [[ ! "$gb_size" =~ ^[0-9]+$ ]]; then
+    echo "Invalid input. Please enter a valid number." | tee -a "${INSTALL_LOG}"
+    continue
+  fi
+
+  # Check if the value is within the valid range
+  if (( gb_size >= 10 && gb_size <= $GB )); then
+    pops_partition=$((gb_size * 1024))
+    game_partitions=$(((available - 2048 - music_partition - pops_partition) / 128))
+
+    echo | tee -a "${INSTALL_LOG}"
+    echo "You have selected $gb_size GB for the \"POPS\" partition." | tee -a "${INSTALL_LOG}"
+    echo "This will leave enough space for $game_partitions games" | tee -a "${INSTALL_LOG}"
+
+    # Ask for confirmation
+    read -p "Are you sure you want to proceed? (y/n): " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+      break  # Exit the loop
+    fi
+  else
+    echo "Invalid size. Please enter a value between 10 and $GB GB." | tee -a "${INSTALL_LOG}"
   fi
 done
 
@@ -328,80 +312,13 @@ COMMANDS+="mkpart __.POPS ${pops_partition}M PFS\n"
 COMMANDS+="mkpart +OPL 128M PFS\nexit"
 echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${INSTALL_LOG}" 2>&1
 
-
-# Call the function to retrieve available space
-function_space
-
-echo | tee -a "${INSTALL_LOG}"
-echo "    Creating $PARTITION_COUNT \"OPL Launcher\" partitions..." | tee -a "${INSTALL_LOG}"
-
-# Set starting partition number
-START_PARTITION_NUMBER=1
-
-# Initialize a counter for the successfully created partitions
-successful_count=0
-
-# Loop to create the specified number of partitions
-for ((i = 0; i < PARTITION_COUNT; i++)); do
-    # Check if available space is at least 128 MB
-    if [ "$available" -lt 128 ]; then
-        echo | tee -a "${INSTALL_LOG}"
-        echo "    Insufficient space for another partition." | tee -a "${INSTALL_LOG}"
-        break
-    fi
-
-    # Calculate the current partition number (starting at $START_PARTITION_NUMBER)
-    PARTITION_NUMBER=$((START_PARTITION_NUMBER + i))
-
-    # Generate the partition label dynamically (PP.001, PP.002, etc.)
-    PARTITION_LABEL=$(printf "PP.%03d" "$PARTITION_NUMBER")
-
-    # Build the command to create this partition
-    COMMAND="device ${DEVICE}\nmkpart ${PARTITION_LABEL} 128M PFS\nexit"
-
-    # Run the partition creation command in PFS Shell
-    echo -e "$COMMAND" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${INSTALL_LOG}" 2>&1
-
-    # Increment the count of successfully created partitions
-    ((successful_count++))
-
-    # Call function_space after exiting PFS Shell to update the available space
-    function_space
-done
-
-# Display the total number of partitions created successfully
-echo | tee -a "${INSTALL_LOG}"
-echo "    $successful_count \"OPL Launcher\" partitions created successfully." | tee -a "${INSTALL_LOG}"
-
-echo | tee -a "${INSTALL_LOG}"
-echo "    Modifying partition headers..." | tee -a "${INSTALL_LOG}"
-
-cd "${TOOLKIT_PATH}/assets/"
-
-# After partitions are created, modify the header for each partition
-for ((i = START_PARTITION_NUMBER; i < START_PARTITION_NUMBER + PARTITION_COUNT; i++)); do
-    PARTITION_LABEL=$(printf "PP.%03d" "$i")
-    sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" modify_header "${DEVICE}" "${PARTITION_LABEL}" >> "${INSTALL_LOG}" 2>&1
-done
-
-echo | tee -a "${INSTALL_LOG}"
-echo "    Making \"res\" folders..." | tee -a "${INSTALL_LOG}"
-
-# make 'res' directory on all PP partitions
-COMMANDS="device ${DEVICE}\n"
-for ((i = START_PARTITION_NUMBER; i < START_PARTITION_NUMBER + PARTITION_COUNT; i++)); do
-    PARTITION_LABEL=$(printf "PP.%03d" "$i")
-    COMMANDS+="mount ${PARTITION_LABEL}\n"
-    COMMANDS+="mkdir res\n"
-    COMMANDS+="umount\n"
-done
-COMMANDS+="exit"
-
 # Pipe all commands to PFS Shell for mounting, copying, and unmounting
 echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${INSTALL_LOG}" 2>&1
 
 echo | tee -a "${INSTALL_LOG}"
-echo "    Installing POPS and OPL..." | tee -a "${INSTALL_LOG}"
+echo "Installing POPS and OPL..." | tee -a "${INSTALL_LOG}"
+
+cd "${TOOLKIT_PATH}/assets/"
 
 # Copy POPS files and OPL to relevent partitions
 COMMANDS="device ${DEVICE}\n"
@@ -476,7 +393,7 @@ function function_clear_temp() {
 	}
 
 echo | tee -a "${INSTALL_LOG}"
-echo "    Running APA-Jail by Berion..." | tee -a "${INSTALL_LOG}"
+echo "Running APA-Jail by Berion..." | tee -a "${INSTALL_LOG}"
 
 # Signature injection (type A2):
 MAGIC_NUMBER="4150414A2D413200"
@@ -533,8 +450,8 @@ output=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc ${DEVICE} 2>&1)
 
 # Check for the word "aborting" in the output
 if echo "$output" | grep -q "aborting"; then
-    echo "    Error: APA partition is broken on ${DEVICE}. Install failed." | tee -a "${INSTALL_LOG}"
-    read -p "    Press any key to exit..."
+    echo "Error: APA partition is broken on ${DEVICE}. Install failed." | tee -a "${INSTALL_LOG}"
+    read -p "Press any key to exit..."
     exit 1
 fi
 
@@ -542,59 +459,23 @@ if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__.POP
    sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__linux.8' && \
    sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '+OPL'; then
    echo
-   echo "    POPS, Music and +OPL partitions were created successfully." | tee -a "${INSTALL_LOG}"
+   echo "POPS, Music and +OPL partitions were created successfully." | tee -a "${INSTALL_LOG}"
    sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" >> "${INSTALL_LOG}"
 else
     echo
-    echo "    Error: Some partitions are missing on ${DEVICE}. See log for details." | tee -a "${INSTALL_LOG}"
+    echo "Error: Some partitions are missing on ${DEVICE}. See log for details." | tee -a "${INSTALL_LOG}"
     sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" >> "${INSTALL_LOG}"
-    read -p "    Press any key to exit..."
-    exit 1
-fi
-
-# Get the list of partition names
-partitions=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc $DEVICE | grep -o 'PP\.[0-9]\+')
-
-# Count detected partitions
-detected_count=$(echo "$partitions" | wc -l)
-
-missing_partitions=()
-
-# Check for each partition from PP.001 to PP.<PARTITION_COUNT> and identify any missing partitions
-for i in $(seq -f "%03g" 1 "$PARTITION_COUNT"); do
-    partition_name="PP.$i"
-    if ! echo "$partitions" | grep -q "$partition_name"; then
-        missing_partitions+=("$partition_name")
-    fi
-done
-
-# Report findings
-if [ ${#missing_partitions[@]} -eq 0 ] && [ "$detected_count" -eq "$PARTITION_COUNT" ]; then
-    echo
-    echo "    All OPL Launcher partitions are present." | tee -a "${INSTALL_LOG}"
-else
-    if [ "$detected_count" -lt "$PARTITION_COUNT" ]; then
-        echo
-        echo "    Warning: Expected $PARTITION_COUNT OPL Launcher partitions but found $detected_count!" | tee -a "${INSTALL_LOG}"
-    fi
-    if [ ${#missing_partitions[@]} -gt 0 ]; then
-        echo
-        echo "    Some OPL Launcher partitions are missing. See log for details." | tee -a "${INSTALL_LOG}"
-        for partition in "${missing_partitions[@]}"; do
-            echo "$partition" >> "${INSTALL_LOG}"
-        done
-    fi
-    read -p "    Press any key to exit..."
+    read -p "Press any key to exit..."
     exit 1
 fi
 
 # Check if 'OPL' is found in the 'lsblk' output and if it matches the device
 if ! lsblk -p -o NAME,LABEL | grep -q "${DEVICE}3"; then
-    echo "    Error: APA-Jail failed on ${DEVICE}." | tee -a "${INSTALL_LOG}"
-    read -p "    Press any key to exit..."
+    echo "Error: APA-Jail failed on ${DEVICE}." | tee -a "${INSTALL_LOG}"
+    read -p "Press any key to exit..."
     exit 1
 fi
 
 echo | tee -a "${INSTALL_LOG}"
-echo "    PSBBN successfully installed." | tee -a "${INSTALL_LOG}"
-read -p "    Press any key to exit. "
+echo "PSBBN successfully installed." | tee -a "${INSTALL_LOG}"
+read -p "Press any key to exit. "
