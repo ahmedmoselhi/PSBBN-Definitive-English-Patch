@@ -84,6 +84,7 @@ By default the `games` folder is located in the same directory you installed the
 ### General Notes:
 - PSBBN requires a Fat PS2 console** with expansion bay and an official Sony Network Adapter
 - I would highly recommend using a **Kaico IDE to SATA Upgrade Kit** and a SATA SSD. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface.
+- PS2 games must be in ISO or ZSO format. PS1 games must be in VCD format
 - PSBBN startup time increases when no active internet connection is available
 - To quit PS1 games, press `L1 + SELECT + START`
 - To quit PS2 games, press `L1 + L2 + R1 + R2 + SELECT + START`
