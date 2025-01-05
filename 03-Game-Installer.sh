@@ -26,15 +26,33 @@ if [[ ! -f "${TOOLKIT_PATH}/helper/PFS Shell.elf" || ! -f "${TOOLKIT_PATH}/helpe
     echo "Required helper files not found. Please make sure you are in the 'PSBBN-Definitive-English-Patch'"
     echo "directory and try again."
     exit 1
-else
-    echo "####################################################################">> "${LOG_FILE}";
-    date >> "${LOG_FILE}"
-    echo >> "${LOG_FILE}"
-    echo "Path set to: $TOOLKIT_PATH" >> "${LOG_FILE}"
-    echo "Helper files found." >> "${LOG_FILE}"
 fi
 
 echo "####################################################################">> "${LOG_FILE}";
+date >> "${LOG_FILE}"
+echo >> "${LOG_FILE}"
+echo "Path set to: $TOOLKIT_PATH" >> "${LOG_FILE}"
+echo "Helper files found." >> "${LOG_FILE}"
+
+# Fetch updates from the remote
+git fetch >> "${LOG_FILE}" 2>&1
+
+# Check the current status of the repository
+LOCAL=$(git rev-parse @)
+REMOTE=$(git rev-parse @{u})
+BASE=$(git merge-base @ @{u})
+
+if [ "$LOCAL" = "$REMOTE" ]; then
+  echo "The repository is up to date." >> "${LOG_FILE}"
+else
+  echo "Downloading update..."
+  git reset --hard && git pull --force >> "${LOG_FILE}" 2>&1
+  echo
+  echo "The script has been updated to the latest version." | tee -a "${LOG_FILE}"
+  read -p "Press any key to exit, set your custom game path if needed, and then run the script again."
+  exit 0
+fi
+
 echo "                  _____                        _____          _        _ _           ";
 echo "                 |  __ \                      |_   _|        | |      | | |          ";
 echo "                 | |  \/ __ _ _ __ ___   ___    | | _ __  ___| |_ __ _| | | ___ ___ ";

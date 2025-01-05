@@ -13,6 +13,25 @@ if [[ ! -f "${TOOLKIT_PATH}/helper/PFS Shell.elf" || ! -f "${TOOLKIT_PATH}/helpe
     exit 1
 fi
 
+# Fetch updates from the remote
+git fetch > /dev/null 2>&1
+
+# Check the current status of the repository
+LOCAL=$(git rev-parse @)
+REMOTE=$(git rev-parse @{u})
+BASE=$(git merge-base @ @{u})
+
+if [ "$LOCAL" = "$REMOTE" ]; then
+  echo "The repository is up to date."
+else
+  echo "Downloading update..."
+  git reset --hard && git pull --force > /dev/null 2>&1
+  echo
+  echo "The script has been updated to the latest version."
+  read -p "Press any key to exit, then run the script again."
+  exit 0
+fi
+
 echo "                                      _____      _               ";
 echo "                                     /  ___|    | |              ";
 echo "                                     \ \`--.  ___| |_ _   _ _ __  ";
