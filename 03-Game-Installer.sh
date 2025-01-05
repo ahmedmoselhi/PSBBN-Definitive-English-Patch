@@ -443,7 +443,7 @@ echo "Orphan .ELF files removed successfully." | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
 
 # Generate the local file list directly in a variable
-local_files=$(ls -1 "$POPS_FOLDER" | sort)
+local_files=$(ls -1 "$POPS_FOLDER" | grep -Ei '\.VCD$|\.ELF$' | sort)
 
 # Build the commands for PFS Shell
 COMMANDS="device ${DEVICE}\n"
