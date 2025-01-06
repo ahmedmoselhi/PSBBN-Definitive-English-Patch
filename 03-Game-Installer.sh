@@ -53,6 +53,10 @@ else
   exit 0
 fi
 
+rm "${GAMES_PATH}/ps1.list" >> "${LOG_FILE}" 2>&1
+rm "${GAMES_PATH}/ps2.list" >> "${LOG_FILE}" 2>&1
+rm "${GAMES_PATH}/master.list" >> "${LOG_FILE}" 2>&1
+
 echo "                  _____                        _____          _        _ _           ";
 echo "                 |  __ \                      |_   _|        | |      | | |          ";
 echo "                 | |  \/ __ _ _ __ ___   ___    | | _ __  ___| |_ __ _| | | ___ ___ ";
@@ -80,7 +84,6 @@ read -p "   Press any key to continue..."
 # Choose the PS2 storage device
 while true; do
 clear
-echo "####################################################################">> "${LOG_FILE}";
 echo "                  _____                        _____          _        _ _           ";
 echo "                 |  __ \                      |_   _|        | |      | | |          ";
 echo "                 | |  \/ __ _ _ __ ___   ___    | | _ __  ___| |_ __ _| | | ___ ___ ";
@@ -169,18 +172,25 @@ deactivate
 
 # Create master list combining PS1 and PS2 games to a single list
 if [[ ! -f "${GAMES_PATH}/ps1.list" && ! -f "${GAMES_PATH}/ps2.list" ]]; then
-    echo "No games found to install."| tee -a ""${LOG_FILE}""
+    echo "No games found to install." | tee -a "${LOG_FILE}"
     read -p "Press any key to exit..."
     exit 1
 elif [[ ! -f "${GAMES_PATH}/ps1.list" ]]; then
-    cat "${GAMES_PATH}/ps2.list" > "${GAMES_PATH}/master.list" 2>> ""${LOG_FILE}""
+    { cat "${GAMES_PATH}/ps2.list" > "${GAMES_PATH}/master.list"; } 2>> "${LOG_FILE}"
 else
-    cat "${GAMES_PATH}/ps1.list" > "${GAMES_PATH}/master.list" 2>> ""${LOG_FILE}""
-    cat "${GAMES_PATH}/ps2.list" >> "${GAMES_PATH}/master.list" 2>> ""${LOG_FILE}""
+    { cat "${GAMES_PATH}/ps1.list" > "${GAMES_PATH}/master.list"; } 2>> "${LOG_FILE}"
+    { cat "${GAMES_PATH}/ps2.list" >> "${GAMES_PATH}/master.list"; } 2>> "${LOG_FILE}"
+fi
+
+# Check for master.list
+if [[ ! -s "${GAMES_PATH}/master.list" ]]; then
+    echo "Failed to create games list (file is missing or empty)." | tee -a "${LOG_FILE}"
+    read -p "Press any key to exit..."
+    exit 1
 fi
 
 echo | tee -a "${LOG_FILE}"
-echo "Games list successfully created"| tee -a "${LOG_FILE}"
+echo "Games list successfully created."| tee -a "${LOG_FILE}"
 
 # Check if PP.OPL exists and create it if not
 if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q 'PP.OPL'; then
@@ -461,7 +471,7 @@ echo "Orphan .ELF files removed successfully." | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
 
 # Generate the local file list directly in a variable
-local_files=$(ls -1 "$POPS_FOLDER" | grep -Ei '\.VCD$|\.ELF$' | sort)
+local_files=$( { ls -1 "$POPS_FOLDER" | grep -Ei '\.VCD$|\.ELF$' | sort; } 2>> "${LOG_FILE}" )
 
 # Build the commands for PFS Shell
 COMMANDS="device ${DEVICE}\n"
@@ -485,7 +495,7 @@ echo "$files_only_in_local" | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
 
 # Syncing PS1 games
-cd "$POPS_FOLDER"
+cd "$POPS_FOLDER" >> "${LOG_FILE}" 2>&1
 combined_commands="device ${DEVICE}\n"
 combined_commands+="mount __.POPS\n"
 
@@ -526,8 +536,8 @@ mkdir "${TOOLKIT_PATH}"/OPL 2>> "${LOG_FILE}"
 sudo mount ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
 echo | tee -a "${LOG_FILE}"
 echo "Syncing PS2 games..." | tee -a "${LOG_FILE}"
-sudo rsync -r --progress --ignore-existing --delete "${GAMES_PATH}/CD/" "${TOOLKIT_PATH}"/OPL/CD/ | tee -a "${LOG_FILE}"
-sudo rsync -r --progress --ignore-existing --delete "${GAMES_PATH}/DVD/" "${TOOLKIT_PATH}"/OPL/DVD/ | tee -a "${LOG_FILE}"
+sudo rsync -r --progress --ignore-existing --delete "${GAMES_PATH}/CD/" "${TOOLKIT_PATH}/OPL/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+sudo rsync -r --progress --ignore-existing --delete "${GAMES_PATH}/DVD/" "${TOOLKIT_PATH}/OPL/DVD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
 sudo cp --update=none "${GAMES_PATH}/CFG/"* "${TOOLKIT_PATH}"/OPL/CFG >> "${LOG_FILE}" 2>&1
 sudo cp --update=none "${GAMES_PATH}/CHT/"* "${TOOLKIT_PATH}"/OPL/CHT >> "${LOG_FILE}" 2>&1
 sudo cp --update=none "${GAMES_PATH}/LNG/"* "${TOOLKIT_PATH}"/OPL/LNG >> "${LOG_FILE}" 2>&1
@@ -699,8 +709,8 @@ for item in "$ICONS_DIR"/*; do
   fi
 done
 
-rm "${TOOLKIT_PATH}/package.json" &> /dev/null
-rm "${TOOLKIT_PATH}/package-lock.json" &> /dev/null
+rm "${TOOLKIT_PATH}/package.json" >> "${LOG_FILE}" 2>&1
+rm "${TOOLKIT_PATH}/package-lock.json" >> "${LOG_FILE}" 2>&1
 
 
 echo | tee -a "${LOG_FILE}"
