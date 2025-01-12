@@ -26,7 +26,7 @@ If you appreciate my work and want to support the continued development of the *
 - Set a custom size for your music partition. Original limit of 5 GB allowed the storage of around 7 albums. Now the partition can be up to 40 GB for around 60 albums
 - exFAT partition for easy install of PS2 games
 - wLaunchELF is pre-installed
-- PS2 Linux is pre-installed. Just hold any button on the controller at startup to boot into Linux
+- PS2 Linux is pre-installed. Just hold any button on the controller while PSBBN is starting to boot into Linux
 - Bandai and SCEI online channels have been added to the Game Channel
 - Some minor fixes to the English translation
 ### Update:
@@ -43,8 +43,10 @@ If you appreciate my work and want to support the continued development of the *
   - Set USB keyboard layout to US English. Press `ALT+~` to toggle between kana and direct input
   - Minor corrections to the English translation
 - Added **Open PS2 Loader** and **Launch Disc** to the Game Channel
-- The Game Installer script has been updated to dynamically create and delete `OPL Launcher` partitions as needed. Say goodbye to those annoying "Coming soon..." placeholders!
+- The Game Installer script has been updated to create and delete `OPL Launcher` partitions as needed. Say goodbye to those annoying "Coming soon..." placeholders!
 - Files placed in the `CFG`, `CHT`, `LNG`, `THM`, and `APPS` folders on your PC will now be copied to the PS2 drive during game sync
+- Added Game ID support for MemCard Pro 2 and SD2PSX
+- Optimised art work
 
 ## New installation scripts
 
