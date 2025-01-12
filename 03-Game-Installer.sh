@@ -23,12 +23,12 @@ cd "${TOOLKIT_PATH}"
 
 # Check if the helper files exists
 if [[ ! -f "${TOOLKIT_PATH}/helper/PFS Shell.elf" || ! -f "${TOOLKIT_PATH}/helper/HDL Dump.elf" ]]; then
-    echo "Required helper files not found. Please make sure you are in the 'PSBBN-Definitive-English-Patch'"
+    echo "Required helper files not found. Please ensure you are in the 'PSBBN-Definitive-English-Patch'"
     echo "directory and try again."
     exit 1
 fi
 
-echo "####################################################################">> "${LOG_FILE}";
+echo "########################################################################################################">> "${LOG_FILE}";
 date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 echo "Path set to: $TOOLKIT_PATH" >> "${LOG_FILE}"
@@ -53,9 +53,27 @@ else
   exit 0
 fi
 
-rm "${GAMES_PATH}/ps1.list" >> "${LOG_FILE}" 2>&1
-rm "${GAMES_PATH}/ps2.list" >> "${LOG_FILE}" 2>&1
-rm "${GAMES_PATH}/master.list" >> "${LOG_FILE}" 2>&1
+function clean_up() {
+echo | tee -a "${LOG_FILE}"
+echo "Cleaning up..." | tee -a "${LOG_FILE}"
+
+# Loop through all items in the target directory
+for item in "$ICONS_DIR"/*; do
+    # Check if the item is a directory and not the 'art' folder
+    if [ -d "$item" ] && [ "$(basename "$item")" != "art" ]; then
+        rm -rf "$item" >> "${LOG_FILE}" 2>&1
+    fi
+done
+
+rm "${TOOLKIT_PATH}/package.json" >> "${LOG_FILE}" 2>&1
+rm "${TOOLKIT_PATH}/package-lock.json" >> "${LOG_FILE}" 2>&1
+sudo rm "${GAMES_PATH}/ps1.list" >> "${LOG_FILE}" 2>&1
+sudo rm "${GAMES_PATH}/ps2.list" >> "${LOG_FILE}" 2>&1
+sudo rm "${GAMES_PATH}/master.list" >> "${LOG_FILE}" 2>&1
+}
+
+clean_up
+clear
 
 echo "                  _____                        _____          _        _ _           ";
 echo "                 |  __ \                      |_   _|        | |      | | |          ";
@@ -96,7 +114,7 @@ echo "                                         Written by CosmicScale"
     lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT | tee -a "${LOG_FILE}"
     echo | tee -a "${LOG_FILE}"
         
-    read -p "Choose your PS2 HDD from list above e.g. /dev/sdx): " DEVICE
+    read -p "Choose your PS2 HDD from the list above e.g. /dev/sdx): " DEVICE
         
     # Validate input
     if [[ $DEVICE =~ ^/dev/sd[a-z]$ ]]; then
@@ -155,7 +173,7 @@ source "./venv/bin/activate"
 
 # Check if activation was successful
 if [ $? -ne 0 ]; then
-    echo "Failed to activate the virtual environment" | tee -a "${LOG_FILE}"
+    echo "Failed to activate the virtual environment." | tee -a "${LOG_FILE}"
     read -p "Press any key to exit..."
     exit 1
 fi
@@ -192,42 +210,51 @@ fi
 echo | tee -a "${LOG_FILE}"
 echo "Games list successfully created."| tee -a "${LOG_FILE}"
 
-# Check if PP.OPL exists and create it if not
-if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q 'PP.OPL'; then
-   echo
-   echo "PP.OPL exists." | tee -a "${LOG_FILE}"
-else
-    # Count the number of 'OPL Launcher' partitions available
-    partition_count=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc $DEVICE | grep -o 'PP\.[0-9]\+' | grep -v '^$' | wc -l)
-    START_PARTITION_NUMBER="1"
-    echo "Installing Apps..." | tee -a "${LOG_FILE}"
-    successful_count=0
-    COMMANDS="device ${DEVICE}\n"
-        # Loop to delete all OPL Launcher partitions
-        for ((i = 0; i < partition_count; i++)); do
-        PARTITION_NUMBER=$((START_PARTITION_NUMBER + i))
-        # Generate the partition label dynamically (PP.001, PP.002, etc.)
-        PARTITION_LABEL=$(printf "PP.%03d" "$PARTITION_NUMBER")
-        # Build the command to create this partition
-        COMMANDS+="rmpart ${PARTITION_LABEL}\n"
+# Delete old game partitions
+delete_partition=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "$DEVICE" | grep -o 'PP\.[^ ]\+' | grep -Ev '^(PP\.WLE|PP\.OPL|PP\.DISC)$')
+COMMANDS="device ${DEVICE}\n"
 
-        # Increment the count of successfully deleted partitions
-        ((successful_count++))
-        done
+while IFS= read -r partition; do
+    COMMANDS+="rmpart ${partition}\n"
+done <<< "$delete_partition"
+
+COMMANDS+="exit"
+
+echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+
+
+# Check if PP.DISC exists and create it if not
+if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q 'PP.DISC'; then
+   echo
+   echo "PP.DISC exists." | tee -a "${LOG_FILE}"
+else
+    echo "Installing Disc Launcher..." | tee -a "${LOG_FILE}"
+    COMMANDS="device ${DEVICE}\n"
     COMMANDS+="rmpart PP.WLE\n"
+    COMMANDS+="rmpart PP.OPL\n"
     COMMANDS+="mkpart PP.DISC 128M PFS\n"
-    COMMANDS+="mkpart PP.WLE 128M PFS\n"
-    COMMANDS+="mkpart PP.OPL 128M PFS\n"
     COMMANDS+="mount PP.DISC\n"
     COMMANDS+="lcd ${TOOLKIT_PATH}/assets/DISC\n"
-    COMMANDS+="put disc-launcher.KELF\n"
-    COMMANDS+="put PS1VModeNeg.elf\n"
     COMMANDS+="mkdir res\n"
     COMMANDS+="cd res\n"
     COMMANDS+="put info.sys\n"
     COMMANDS+="put jkt_001.png\n"
     COMMANDS+="cd ..\n"
     COMMANDS+="umount\n"
+    COMMANDS+="exit"
+    echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+    cd "${TOOLKIT_PATH}/assets/DISC"
+    sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" modify_header "${DEVICE}" PP.DISC >> "${LOG_FILE}" 2>&1
+fi   
+
+# Check if PP.WLE exists and create it if not
+if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q 'PP.WLE'; then
+   echo "PP.WLE exists." | tee -a "${LOG_FILE}"
+else
+    echo "Installing WLE..." | tee -a "${LOG_FILE}"
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="rmpart PP.OPL\n"
+    COMMANDS+="mkpart PP.WLE 128M PFS\n"
     COMMANDS+="mount PP.WLE\n"
     COMMANDS+="lcd ${TOOLKIT_PATH}/assets/WLE\n"
     COMMANDS+="put WLE.KELF\n"
@@ -237,6 +264,19 @@ else
     COMMANDS+="put jkt_001.png\n"
     COMMANDS+="cd ..\n"
     COMMANDS+="umount\n"
+    COMMANDS+="exit"
+    echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+    cd "${TOOLKIT_PATH}/assets/WLE"
+    sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" modify_header "${DEVICE}" PP.WLE >> "${LOG_FILE}" 2>&1
+fi
+
+# Check if PP.OPL exists and create it if not
+if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q 'PP.OPL'; then
+   echo "PP.OPL exists." | tee -a "${LOG_FILE}"
+else
+    echo "Installing OPL..." | tee -a "${LOG_FILE}"
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="mkpart PP.OPL 128M PFS\n"
     COMMANDS+="mount PP.OPL\n"
     COMMANDS+="lcd ${TOOLKIT_PATH}/assets\n"
     COMMANDS+="put OPL-Launcher-BDM.KELF\n"
@@ -249,17 +289,10 @@ else
     COMMANDS+="umount\n"
     COMMANDS+="exit"
     echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-
-    # Modify headers
-    cd "${TOOLKIT_PATH}/assets/DISC"
-    sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" modify_header "${DEVICE}" PP.DISC >> "${LOG_FILE}" 2>&1
-    cd "${TOOLKIT_PATH}/assets/WLE"
-    sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" modify_header "${DEVICE}" PP.WLE >> "${LOG_FILE}" 2>&1
     cd "${TOOLKIT_PATH}/assets"
     sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" modify_header "${DEVICE}" PP.OPL >> "${LOG_FILE}" 2>&1
-    cd "${TOOLKIT_PATH}"
 fi
-
+    
 # Function to find available space
 function function_space() {
 
@@ -267,6 +300,7 @@ output=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc ${DEVICE} 2>&1)
 
 # Check for the word "aborting" in the output
 if echo "$output" | grep -q "aborting"; then
+    echo
     echo "${DEVICE}: APA partition is broken; aborting." | tee -a "${LOG_FILE}"
     read -p "Press any key to exit..."
     exit 1
@@ -282,149 +316,22 @@ available=$((capacity - used))
 
 # Count the number of games to be installed
 count=$(grep -c '^[^[:space:]]' "${ALL_GAMES}")
+echo
 echo "Number of games to install: $count" | tee -a "${LOG_FILE}"
 
-# Count the number of 'OPL Launcher' partitions available
-partition_count=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc $DEVICE | grep -o 'PP\.[0-9]\+' | grep -v '^$' | wc -l)
+function_space
 
-echo "Number of PP partitions: $partition_count" | tee -a "${LOG_FILE}"
+partition_count=$((available / 128))
 
-# Check if the count exceeds the partition count
-if [ "$count" -lt "$partition_count" ]; then
-    START_PARTITION_NUMBER=$((count +1))
-    echo "Starting partition: $START_PARTITION_NUMBER" | tee -a "${LOG_FILE}"
-    PARTITION_COUNT=$((partition_count - count))
-    echo "Deleting $PARTITION_COUNT partitions" | tee -a "${LOG_FILE}"
-    successful_count=0
-    COMMAND="device ${DEVICE}\n"
-        # Loop to create the specified number of partitions
-        for ((i = 0; i < PARTITION_COUNT; i++)); do
-
-        # Calculate the current partition number (starting at $START_PARTITION_NUMBER)
-        PARTITION_NUMBER=$((START_PARTITION_NUMBER + i))
-
-        # Generate the partition label dynamically (PP.001, PP.002, etc.)
-        PARTITION_LABEL=$(printf "PP.%03d" "$PARTITION_NUMBER")
-
-        # Build the command to create this partition
-        COMMAND+="rmpart ${PARTITION_LABEL}\n"
-
-        # Increment the count of successfully deleted partitions
-        #echo "$PARTITION_LABEL"
-        ((successful_count++))
-        done
-
-    COMMAND+="exit"
-    # Run the partition delete command in PFS Shell
-    echo -e "$COMMAND" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-    # Display the total number of partitions deleted successfully
-    echo | tee -a "${LOG_FILE}"
-    echo "$successful_count \"OPL Launcher\" partitions deleted successfully." | tee -a "${LOG_FILE}"
-fi
-
-# Check if the count exceeds the partition count
 if [ "$count" -gt "$partition_count" ]; then
-    function_space
-    START_PARTITION_NUMBER=$((partition_count +1))
-    echo "Starting partition: $START_PARTITION_NUMBER" | tee -a "${LOG_FILE}"
-    PARTITION_COUNT=$((count - partition_count))
-    space_required=$((PARTITION_COUNT * 128))
-    echo "Space required: $space_required MB" | tee -a "${LOG_FILE}"
-    if [ "$space_required" -gt "$available" ]; then
-        echo "Not enough space for $PARTITION_COUNT partitions." | tee -a "${LOG_FILE}"
-        PARTITION_COUNT=$((available / 128))
-        game_count=$((count - PARTITION_COUNT))
-        echo "$PARTITION_COUNT partitions will be created. The first $game_count games will appear in the PSBBN Game Channel" | tee -a "${LOG_FILE}"
-        echo "Remaining PS2 games will appear in OPL only"
-        read -p "Press any key to continue..."
-    fi
-    echo "Creating $PARTITION_COUNT partitions..." | tee -a "${LOG_FILE}"
-    successful_count=0
-        # Loop to create the specified number of partitions
-        for ((i = 0; i < PARTITION_COUNT; i++)); do
-            # Check if available space is at least 128 MB
-            if [ "$available" -lt 128 ]; then
-            echo | tee -a "${LOG_FILE}"
-            echo "Insufficient space for another partition." | tee -a "${LOG_FILE}"
-            break
-        fi
 
-        # Calculate the current partition number (starting at $START_PARTITION_NUMBER)
-        PARTITION_NUMBER=$((START_PARTITION_NUMBER + i))
+    echo "Not enough space for $count partitions." | tee -a "${LOG_FILE}"
+    echo "The first $partition_count games will appear in the PSBBN Game Channel" | tee -a "${LOG_FILE}"
+    echo "Remaining PS2 games will appear in OPL only"
 
-        # Generate the partition label dynamically (PP.001, PP.002, etc.)
-        PARTITION_LABEL=$(printf "PP.%03d" "$PARTITION_NUMBER")
-
-        # Build the command to create this partition
-        COMMAND="device ${DEVICE}\nmkpart ${PARTITION_LABEL} 128M PFS\nexit"
-
-        # Run the partition creation command in PFS Shell
-        echo -e "$COMMAND" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-
-        # Increment the count of successfully created partitions
-        ((successful_count++))
-
-        # Call function_space after exiting PFS Shell to update the available space
-        function_space
-    done
-
-    # Display the total number of partitions created successfully
-    echo | tee -a "${LOG_FILE}"
-    echo "$successful_count \"OPL Launcher\" partitions created successfully." | tee -a "${LOG_FILE}"
-
-    echo | tee -a "${LOG_FILE}"
-    echo "Modifying partition headers..." | tee -a "${LOG_FILE}"
-
-    cd "${TOOLKIT_PATH}/assets/"
-
-    # After partitions are created, modify the header for each partition
-    for ((i = START_PARTITION_NUMBER; i < START_PARTITION_NUMBER + PARTITION_COUNT; i++)); do
-        PARTITION_LABEL=$(printf "PP.%03d" "$i")
-        sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" modify_header "${DEVICE}" "${PARTITION_LABEL}" >> "${LOG_FILE}" 2>&1
-    done
-
-    echo | tee -a "${LOG_FILE}"
-    echo "Making \"res\" folders..." | tee -a "${LOG_FILE}"
-
-    # make 'res' directory on all PP partitions
-    COMMANDS="device ${DEVICE}\n"
-    for ((i = START_PARTITION_NUMBER; i < START_PARTITION_NUMBER + PARTITION_COUNT; i++)); do
-        PARTITION_LABEL=$(printf "PP.%03d" "$i")
-        COMMANDS+="mount ${PARTITION_LABEL}\n"
-        COMMANDS+="mkdir res\n"
-        COMMANDS+="umount\n"
-    done
-    COMMANDS+="exit"
-
-    # Pipe all commands to PFS Shell for mounting, copying, and unmounting
-    echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-fi
-
-cd "${TOOLKIT_PATH}"
-
-# Get the list of partition names
-partitions=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc $DEVICE | grep -o 'PP\.[0-9]*')
-partition_count=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc $DEVICE | grep -o 'PP\.[0-9]\+' | grep -v '^$' | wc -l)
-
-missing_partitions=()
-
-# Check for each partition from PP.001 to PP.<partition_count> and identify any missing partitions
-for i in $(seq -f "%03g" 1 "$partition_count"); do
-    partition_name="PP.$i"
-    if ! echo "$partitions" | grep -q "$partition_name"; then
-        missing_partitions+=("$partition_name")
-    fi
-done
-
-if [ ${#missing_partitions[@]} -eq 0 ]; then
-    echo "All partitions are present." | tee -a "${LOG_FILE}"
-else
-    echo "Missing partitions:" | tee -a "${LOG_FILE}"
-    for partition in "${missing_partitions[@]}"; do
-        echo "$partition" | tee -a "${LOG_FILE}"
-        read -p "Press any key to exit..."
-        exit 1
-    done
+    # Overwrite master.list with the first $partition_count lines
+    head -n "$partition_count" "$ALL_GAMES" > "${ALL_GAMES}.tmp"
+    mv "${ALL_GAMES}.tmp" "$ALL_GAMES"
 fi
 
 echo | tee -a "${LOG_FILE}"
@@ -525,10 +432,8 @@ echo "Syncing PS1 games to HDD..." | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
 echo -e "$combined_commands" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
 echo | tee -a "${LOG_FILE}"
-echo "PS1 games synced sucessfully." | tee -a "${LOG_FILE}"
+echo "PS1 games synced successfully." | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
-
-cd "${TOOLKIT_PATH}"
 
 # Syncing PS2 games
 echo "Mounting OPL partition" | tee -a "${LOG_FILE}"
@@ -544,7 +449,7 @@ sudo cp --update=none "${GAMES_PATH}/LNG/"* "${TOOLKIT_PATH}"/OPL/LNG >> "${LOG_
 sudo cp --update=none "${GAMES_PATH}/THM/"* "${TOOLKIT_PATH}"/OPL/THM >> "${LOG_FILE}" 2>&1
 sudo cp --update=none "${GAMES_PATH}/APPS/"* "${TOOLKIT_PATH}"/OPL/APPS >> "${LOG_FILE}" 2>&1
 echo | tee -a "${LOG_FILE}"
-echo "PS2 games sucessfully synced" | tee -a "${LOG_FILE}"
+echo "PS2 games successfully synced" | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
 echo "Unmounting OPL partition..." | tee -a "${LOG_FILE}"
 sudo umount "${TOOLKIT_PATH}"/OPL
@@ -554,6 +459,8 @@ mkdir -p "${ARTWORK_DIR}/tmp" 2>> "${LOG_FILE}"
 
 echo | tee -a "${LOG_FILE}"
 echo "Downloading artwork..."  | tee -a "${LOG_FILE}"
+
+cd "${TOOLKIT_PATH}"
 
 # First loop: Run the art downloader script for each game_id if artwork doesn't already exist
 while IFS='|' read -r game_title game_id publisher disc_type file_name; do
@@ -584,7 +491,7 @@ if compgen -G "${input_dir}/*" > /dev/null; then
     output="${ARTWORK_DIR}/${base_name}.png"
     
     # Convert each file to .png with resizing and 8-bit depth
-    convert "$file" -resize 256x256\! -depth 8 -dither FloydSteinberg -colors 256 "$output" | tee -a "${LOG_FILE}"
+    convert "$file" -resize 256x256! -depth 8 -alpha off "$output" | tee -a "${LOG_FILE}"
   done
   rm "${input_dir}"/*
 else
@@ -596,6 +503,7 @@ echo "Creating game assets..."  | tee -a "${LOG_FILE}"
 
 # Read the file line by line
 while IFS='|' read -r game_title game_id publisher disc_type file_name; do
+  pp_game_id=$(echo "$game_id" | sed -E 's/_(...)\./-\1/;s/\.//')
   # Create a sub-folder named after the game_id
   game_dir="$ICONS_DIR/$game_id"
   mkdir -p "$game_dir" | tee -a "${LOG_FILE}"
@@ -607,13 +515,13 @@ file_name=$file_name
 title_id=$game_id
 disc_type=$disc_type
 EOL
-  echo "Created info.sys: $launcher_cfg_filename" | tee -a "${LOG_FILE}"
+  echo "Created launcher.cfg: $launcher_cfg_filename" | tee -a "${LOG_FILE}"
 
   # Generate the info.sys file
   info_sys_filename="$game_dir/info.sys"
   cat > "$info_sys_filename" <<EOL
 title = $game_title
-title_id = $game_id
+title_id = $pp_game_id
 title_sub_id = 0
 release_date = 
 developer_id = 
@@ -624,8 +532,8 @@ image_topviewflag = 0
 image_type = 0
 image_count = 1
 image_viewsec = 600
-copyright_viewflag = 1
-copyright_imgcount = 1
+copyright_viewflag = 0
+copyright_imgcount = 0
 genre = 
 parental_lock = 1
 effective_date = 0
@@ -660,60 +568,85 @@ echo "All .cfg, info.sys, and .png files have been created in their respective s
 echo | tee -a "${LOG_FILE}"
 echo "Installing game assets..." | tee -a "${LOG_FILE}"
 
-# Build the mount/copy/unmount commands for all partitions
-COMMANDS="device ${DEVICE}\n"
+cd "${TOOLKIT_PATH}/assets/"
+
 i=0
+# Reverse the lines of the file using tac and process each line
 while IFS='|' read -r game_title game_id publisher disc_type file_name; do
-    # Calculate the partition label for the current iteration, starting from the highest partition and counting down
-    PARTITION_LABEL=$(printf "PP.%03d" "$((partition_count - i))")
+
+    # Check the value of available
+    if [ "$available" -lt 128 ]; then
+        echo | tee -a "${LOG_FILE}"
+        echo "Insufficient space for another partition." | tee -a "${LOG_FILE}"
+        break
+    fi
+
+    # Format game id correctly for partition
+    pp_game_id=$(echo "$game_id" | sed -E 's/_(...)\./-\1/;s/\.//')
+
+    # Sanitize game_title by keeping only uppercase A-Z, 0-9, and underscores, and removing any trailing underscores
+    sanitized_title=$(echo "$game_title" | tr 'a-z' 'A-Z' | sed 's/[^A-Z0-9]/_/g' | sed 's/^_//; s/_$//; s/__*/_/g')
+    PARTITION_LABEL=$(printf "PP.%s.%s" "$pp_game_id" "$sanitized_title" | cut -c 1-32 | sed 's/_$//')
+
+    COMMANDS="device ${DEVICE}\n"
+
+    COMMANDS+="mkpart ${PARTITION_LABEL} 128M PFS\n"
     COMMANDS+="mount ${PARTITION_LABEL}\n"
     COMMANDS+="cd ..\n"
     COMMANDS+="lcd ${TOOLKIT_PATH}/assets\n"
-    COMMANDS+="rm OPL-Launcher-BDM.KELF\n"
     COMMANDS+="put OPL-Launcher-BDM.KELF\n"
 
     # Navigate into the sub-directory named after the gameid
     COMMANDS+="lcd ${ICONS_DIR}/${game_id}\n"
-    COMMANDS+="rm 'launcher.cfg'\n"
     COMMANDS+="put 'launcher.cfg'\n"
+    COMMANDS+="mkdir res\n"
     COMMANDS+="cd res\n"
-    COMMANDS+="rm info.sys\n"
     COMMANDS+="put info.sys\n"
-    COMMANDS+="rm jkt_001.png\n"
     COMMANDS+="put jkt_001.png\n"
     COMMANDS+="umount\n"
-    
-    # Increment the loop counter
-    ((i++))
-done < "$ALL_GAMES"
+    COMMANDS+="exit\n"
 
+    echo "Creating $PARTITION_LABEL" | tee -a "${LOG_FILE}"
+    echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+
+    sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" modify_header "${DEVICE}" "${PARTITION_LABEL}" >> "${LOG_FILE}" 2>&1
+
+    function_space
+    ((i++))
+done < <(tac "$ALL_GAMES")
+
+# Update OPL, Disc Launcher and WLE
+COMMANDS="device ${DEVICE}\n"
 COMMANDS+="lcd ${TOOLKIT_PATH}/assets\n"
 COMMANDS+="mount +OPL\n"
 COMMANDS+="cd ..\n"
 COMMANDS+="rm OPNPS2LD.ELF\n"
 COMMANDS+="put OPNPS2LD.ELF\n"
 COMMANDS+="umount\n"
+
+COMMANDS+="mount PP.DISC\n"
+COMMANDS+="lcd ${TOOLKIT_PATH}/assets/DISC\n"
+COMMANDS+="rm disc-launcher.KELF\n"
+COMMANDS+="put disc-launcher.KELF\n"
+COMMANDS+="rm PS1VModeNeg.elf\n"
+COMMANDS+="put PS1VModeNeg.elf\n"
+COMMANDS+="umount\n"
+
+COMMANDS+="mount PP.WLE\n"
+COMMANDS+="lcd ${TOOLKIT_PATH}/assets/WLE\n"
+COMMANDS+="rm WLE.KELF\n"
+COMMANDS+="put WLE.KELF\n"
+COMMANDS+="umount\n"
+
 COMMANDS+="exit"
 
-# Pipe all commands to PFS Shell for mounting, copying, and unmounting
+echo | tee -a "${LOG_FILE}"
+echo "Updating apps..." | tee -a "${LOG_FILE}"
 echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
 
-echo | tee -a "${LOG_FILE}"
-echo "Cleaning up..." | tee -a "${LOG_FILE}"
-
-# Loop through all items in the target directory
-for item in "$ICONS_DIR"/*; do
-  # Check if the item is a directory and not the 'art' folder
-  if [ -d "$item" ] && [ "$(basename "$item")" != "art" ]; then
-    rm -rf "$item" >> "${LOG_FILE}" 2>&1
-  fi
-done
-
-rm "${TOOLKIT_PATH}/package.json" >> "${LOG_FILE}" 2>&1
-rm "${TOOLKIT_PATH}/package-lock.json" >> "${LOG_FILE}" 2>&1
-
+clean_up
 
 echo | tee -a "${LOG_FILE}"
-echo "Game installer script complete" | tee -a "${LOG_FILE}"
+echo "Game installer script complete." | tee -a "${LOG_FILE}"
 echo
 read -p "Press any key to exit..."
