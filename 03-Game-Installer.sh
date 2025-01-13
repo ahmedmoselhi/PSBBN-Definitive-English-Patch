@@ -70,9 +70,12 @@ rm "${TOOLKIT_PATH}/package-lock.json" >> "${LOG_FILE}" 2>&1
 sudo rm "${GAMES_PATH}/ps1.list" >> "${LOG_FILE}" 2>&1
 sudo rm "${GAMES_PATH}/ps2.list" >> "${LOG_FILE}" 2>&1
 sudo rm "${GAMES_PATH}/master.list" >> "${LOG_FILE}" 2>&1
+rm "${ARTWORK_DIR}/tmp"/*
 }
 
 clean_up
+rm $MISSING_ART
+
 clear
 
 echo "                  _____                        _____          _        _ _           ";
@@ -483,17 +486,16 @@ input_dir="${ARTWORK_DIR}/tmp"
 
 # Check if the directory contains any files
 if compgen -G "${input_dir}/*" > /dev/null; then
-  for file in "${input_dir}"/*; do
-    # Extract the base filename without the path or extension
-    base_name=$(basename "${file%.*}")
+    for file in "${input_dir}"/*; do
+        # Extract the base filename without the path or extension
+        base_name=$(basename "${file%.*}")
 
-    # Define output filename with .png extension
-    output="${ARTWORK_DIR}/${base_name}.png"
+        # Define output filename with .png extension
+        output="${ARTWORK_DIR}/${base_name}.png"
     
-    # Convert each file to .png with resizing and 8-bit depth
-    convert "$file" -resize 256x256! -depth 8 -alpha off "$output" | tee -a "${LOG_FILE}"
-  done
-  rm "${input_dir}"/*
+        # Convert each file to .png with resizing and 8-bit depth
+        convert "$file" -resize 256x256! -depth 8 -alpha off "$output" | tee -a "${LOG_FILE}"
+    done
 else
   echo "No files to process in ${input_dir}" | tee -a "${LOG_FILE}"
 fi
@@ -643,6 +645,32 @@ COMMANDS+="exit"
 echo | tee -a "${LOG_FILE}"
 echo "Updating apps..." | tee -a "${LOG_FILE}"
 echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+
+cp $MISSING_ART $ARTWORK_DIR/tmp >> "${LOG_FILE}" 2>&1
+
+if [ "$(ls -A "${ARTWORK_DIR}/tmp")" ]; then
+    echo | tee -a "${LOG_FILE}"
+    echo "Contributing to the PSBBN art database..." | tee -a "${LOG_FILE}"
+    cd $ARTWORK_DIR/tmp/
+    zip -r $ARTWORK_DIR/tmp/art.zip *
+    # Upload the file using transfer.sh
+    upload_url=$(curl -F "reqtype=fileupload" -F "time=72h" -F "fileToUpload=@art.zip" https://litterbox.catbox.moe/resources/internals/api.php)
+
+    if [[ "$upload_url" == https://* ]]; then
+        echo "File uploaded successfully: $upload_url" | tee -a "${LOG_FILE}"
+
+    # Send a POST request to Webhook.site with the uploaded file URL
+    webhook_url="https://webhook.site/a2e5d551-5c31-43fd-95ab-e88309310a88"
+    curl -X POST -H "Content-Type: application/json" \
+        -d "{\"url\": \"$upload_url\"}" \
+        "$webhook_url" >/dev/null 2>&1
+    else
+        echo "Error: Failed to upload the file." | tee -a "${LOG_FILE}"
+    fi
+else
+    echo | tee -a "${LOG_FILE}"
+    echo "No art work to contribute." | tee -a "${LOG_FILE}"
+fi
 
 clean_up
 
