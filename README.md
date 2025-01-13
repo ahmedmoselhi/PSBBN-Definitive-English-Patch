@@ -47,6 +47,7 @@ If you appreciate my work and want to support the continued development of the *
 - Files placed in the `CFG`, `CHT`, `LNG`, `THM`, and `APPS` folders on your PC will now be copied to the PS2 drive during game sync
 - Added Game ID support for MemCard Pro 2 and SD2PSX
 - Optimised art work
+- Art downloads are now contributed to the PSBBN art database, and missing artwork is automatically reported
 
 ## New installation scripts
 
