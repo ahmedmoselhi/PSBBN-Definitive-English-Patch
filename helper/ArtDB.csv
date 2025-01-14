@@ -285,8 +285,8 @@ SLPS_011.87|alnam-no-tsubasa-shoujin-no-sora-no-kanata-e
 SLPS_011.88|alnam-no-tsubasa-shoujin-no-sora-no-kanata-e
 SLPS_011.89|alnam-no-tsubasa-shoujin-no-sora-no-kanata-e
 SLPS_001.41|alone-in-the-dark-2
-SLES_000.37|alone-in-the-dark-jack-is-back
-SLUS_002.39|alone-in-the-dark-one-eyed-jacks-revenge
+SLES_000.37|alone-in-the-dark-2
+SLUS_002.39|alone-in-the-dark-2
 SLES_028.01|alone-in-the-dark-the-new-nightmare
 SLES_028.02|alone-in-the-dark-the-new-nightmare
 SLES_028.03|alone-in-the-dark-the-new-nightmare
@@ -11333,7 +11333,7 @@ SLES_516.02|all-star-baseball-2004-featuring-derek-jeter
 SLKA_250.57|all-star-baseball-2004-featuring-derek-jeter
 SLUS_205.69|all-star-baseball-2004-featuring-derek-jeter
 SLUS_208.38|all-star-baseball-2005-featuring-derek-jeter
-SLES_544.59|all-star-fighters
+SLES_544.59|-
 SLES_548.83|alone-in-the-dark
 SLES_548.84|alone-in-the-dark
 SLES_552.07|alone-in-the-dark
@@ -11444,8 +11444,8 @@ SLPM_656.70|aqua-kids
 SLES_547.88|aqua-teen-hunger-force-zombie-ninja-pro-am
 SLUS_216.33|aqua-teen-hunger-force-zombie-ninja-pro-am
 SLPS_200.27|aquaqua
-SLES_554.44|ar-tonelico-ii-melody-of-metafalica
-SLUS_217.88|ar-tonelico-ii-melody-of-metafalica
+SLES_554.44|ar-tonelico-2-melody-of-metafalica
+SLUS_217.88|ar-tonelico-2-melody-of-metafalica
 SLPS_258.19|ar-tonelico-ii-sekai-ni-hibiku-shoujo-tachi-no-metafalica
 SLPS_732.63|ar-tonelico-ii-sekai-ni-hibiku-shoujo-tachi-no-metafalica
 SLES_545.86|ar-tonelico-melody-of-elemia
@@ -11586,7 +11586,7 @@ SLES_548.22|atelier-iris-3-grand-phantasm
 SLUS_215.64|atelier-iris-3-grand-phantasm
 SLES_537.64|atelier-iris-eternal-mana
 SLUS_211.13|atelier-iris-eternal-mana
-SLPM_661.40|atelier-marie-+-elie-salburg-no-renkinjutsushi-1-2
+SLPM_661.40|atelier-marie-salburg-no-renkinjutsushi
 SCAJ_200.89|athens-2004
 SCES_524.10|athens-2004
 SCES_524.11|athens-2004
@@ -11610,7 +11610,7 @@ SLES_524.59|autobahn-raser-das-spiel-zum-film
 SCPS_560.16|axel-impact-the-extreme-racing
 SLPM_664.91|ayakashi-bito-genyou-ibunroku-shokai-genteiban
 SLPM_668.62|ayakashi-bito-genyou-ibunroku-shokai-genteiban
-SLPS_254.65|azumi
+SLPS_254.65|azumi-142612
 SLES_546.95|azur-asmar
 SCES_539.60|b-boy
 SLUS_217.61|b-boy
@@ -11710,7 +11710,7 @@ SLKA_251.02|batman-rise-of-sin-tzu
 SLUS_207.09|batman-rise-of-sin-tzu
 SLES_503.55|batman-vengeance
 SLUS_202.26|batman-vengeance
-SLUS_209.29|battle-assault-3-featuring-gundam-seed
+SLUS_209.29|battle-assault-3-featuring-mobile-suit-gundam-seed
 SLES_507.77|battle-engine-aquila
 SLUS_204.95|battle-engine-aquila
 SLPM_620.48|battle-gear-2
@@ -11776,8 +11776,8 @@ SLES_519.17|beyond-good-evil
 SLUS_207.63|beyond-good-evil
 SLED_520.31|beyond-good-evil
 SLUS_290.82|beyond-good-evil
-SLES_545.36|big-ideas-veggietales-larryboy-and-the-bad-apple
-SLUS_214.40|big-ideas-veggietales-larryboy-and-the-bad-apple
+SLES_545.36|larryboy-and-the-bad-apple
+SLUS_214.40|larryboy-and-the-bad-apple
 SLES_513.55|big-mutha-truckers
 SLUS_202.91|big-mutha-truckers
 SLUS_206.05|big-mutha-truckers
@@ -11847,8 +11847,8 @@ SLES_508.15|blood-omen-2-the-legacy-of-kain-series
 SLUS_200.24|blood-omen-2-the-legacy-of-kain-series
 SLES_527.55|blood-will-tell
 SLUS_207.82|blood-will-tell
-SLPS_256.77|blood+-one-night-kiss
-SCPS_151.12|blood+-souyoku-no-battle-rondo
+SLPS_256.77|blood-one-night-kiss
+SCPS_151.12|blood-souyoku-no-battle-rondo
 PAPX_902.06|blood-the-last-vampire
 SCPS_150.08|blood-the-last-vampire-gekan
 SCPS_150.07|blood-the-last-vampire-joukan
@@ -12100,7 +12100,7 @@ SCES_546.76|buzz-junior-robojam
 SCES_547.01|buzz-junior-robojam
 SCUS_975.97|buzz-junior-robojam
 SCUS_976.34|buzz-junior-robojam
-SCED_548.08|buzz-junior-robojam-+-buzz-junior-jungle-party
+SCED_548.08|buzz-junior-robojam-buzz-junior-jungle-party
 SCES_538.81|buzz-le-grand-quiz
 SCES_544.97|buzz-le-mega-quiz
 SCES_553.86|buzz-le-plus-malin-des-français
@@ -12538,7 +12538,7 @@ SLUS_211.91|crash-tag-team-racing
 SLED_534.42|crash-tag-team-racing
 SLES_525.68|crash-twinsanity
 SLUS_209.09|crash-twinsanity
-SLED_525.74|crash-twinsanity-+-spyro-a-heros-tail
+SLED_525.74|crash-twinsanity-spyro-a-heros-tail
 SLUS_291.01|crash-twinsanity-spyro-a-heros-tail
 SLES_548.41|crash-of-the-titans
 SLES_548.42|crash-of-the-titans
@@ -12789,7 +12789,7 @@ SLPS_258.10|dear-my-sun-musuko-ikusei-capriccio
 SLPS_258.04|dear-my-sun-musuko-ikusei-capriccio-genteiban
 SLPS_253.72|dears
 SLPM_552.39|death-connection
-SLPM_624.01|death-crimson-ox+
+SLPM_624.01|death-crimson-ox
 SCAJ_201.16|death-by-degrees
 SLUS_209.34|death-by-degrees
 SLPM_602.57|death-by-degrees
@@ -14386,7 +14386,7 @@ SLPM_744.08|garakuta-meisaku-gekijou-rakugaki-oukoku
 SLPM_601.53|garakuta-meisaku-gekijou-rakugaki-oukoku
 SLPM_653.73|garasu-no-bara
 SLES_528.43|garfield
-SLES_541.72|garfield-2
+SLES_541.72|garfield-a-tail-of-two-kitties
 SLPM_627.33|garfield-arleene-o-sukue
 SLES_548.17|garfield-lasagna-world-tour
 SLES_550.42|garfield-lasagna-world-tour
@@ -17084,7 +17084,7 @@ SLUS_204.23|mortal-kombat-deadly-alliance
 SLES_527.05|mortal-kombat-deception
 SLES_527.06|mortal-kombat-deception
 SLUS_208.81|mortal-kombat-deception
-SLUS_210.81|mortal-kombat-deception-premium-pack-bonus-disc
+SLUS_210.81|mortal-kombat-deception
 SLES_535.24|mortal-kombat-shaolin-monks
 SLES_535.25|mortal-kombat-shaolin-monks
 SLUS_210.87|mortal-kombat-shaolin-monks
@@ -19250,7 +19250,7 @@ SLPM_623.64|sega-ages-2500-series-vol-2-monaco-gp
 SLPM_627.66|sega-ages-2500-series-vol-30-galaxy-force-ii-special-extended-edition
 SLPM_627.67|sega-ages-2500-series-vol-31-dennou-senki-virtual-on
 SLPM_627.75|sega-ages-2500-series-vol-32-phantasy-star-complete-collection
-SLPM_627.80|sega-ages-2500-series-vol-33-fantasy-zone-complete-collection
+SLPM_627.80|fantasy-zone-complete-collection
 SLPM_623.66|sega-ages-2500-series-vol-3-fantasy-zone
 SLPM_623.84|sega-ages-2500-series-vol-4-space-harrier
 SLPM_626.69|sega-ages-2500-series-vol-4-space-harrier
@@ -21883,7 +21883,7 @@ SCPS_550.03|vampire-night
 SLPS_250.77|vampire-night
 SLPS_734.12|vampire-night
 SLUS_202.21|vampire-night
-SLPM_625.06|vampire-panic-shokai-genteiban
+SLPM_625.06|vampire-panic
 SLPM_659.98|vampire-darkstalkers-collection
 SLPM_666.37|vampire-darkstalkers-collection
 SLES_519.08|van-helsing
@@ -22028,7 +22028,7 @@ SLES_536.53|wwii-battle-over-europe
 SLES_542.56|wwii-battle-over-the-pacific
 SLES_536.51|wwii-soldier
 SLES_529.54|wwii-tank-battles
-SLES_501.83|wacky-races-starring-dastardly-muttley
+SLES_501.83|wacky-races
 SLES_546.70|wacky-races-mad-motors
 SLES_549.56|wacky-zoo-gp
 SCPS_150.80|waga-ryuu-o-miyo-pride-of-the-dragon-peace
@@ -22581,3 +22581,4 @@ SLPS_256.17|etude-prologue-yureugoku-kokoro-no-katachi
 SCKA_200.95|okami
 SLES_544.39|okami
 SLUS_211.15|okami
+SCES_522.50|Kaena
