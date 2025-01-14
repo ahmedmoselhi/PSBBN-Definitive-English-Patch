@@ -70,7 +70,7 @@ rm "${TOOLKIT_PATH}/package-lock.json" >> "${LOG_FILE}" 2>&1
 sudo rm "${GAMES_PATH}/ps1.list" >> "${LOG_FILE}" 2>&1
 sudo rm "${GAMES_PATH}/ps2.list" >> "${LOG_FILE}" 2>&1
 sudo rm "${GAMES_PATH}/master.list" >> "${LOG_FILE}" 2>&1
-rm "${ARTWORK_DIR}/tmp"/*
+rm "${ARTWORK_DIR}/tmp"/* >> "${LOG_FILE}" 2>&1
 }
 
 clean_up
@@ -472,9 +472,18 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
   if [[ -f "$png_file" ]]; then
     echo "Artwork for game ID $game_id already exists. Skipping download." | tee -a "${LOG_FILE}"
   else
-    # If the file doesn't exist, run the art downloader
-    echo "Running art downloader for game ID: $game_id" | tee -a "${LOG_FILE}"
-    node "${TOOLKIT_PATH}"/helper/art_downloader.js "$game_id" | tee -a "${LOG_FILE}"
+    # Attempt to download artwork using wget
+    echo "Artwork not found locally. Attempting to download from the PSBBN art database..." | tee -a "${LOG_FILE}"
+    wget --quiet --timeout=10 --tries=3 --output-document="$png_file" \
+        "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/art/${game_id}.png"
+    if [[ -s "$png_file" ]]; then
+      echo "Successfully downloaded artwork for game ID: $game_id" | tee -a "${LOG_FILE}"
+    else
+      # If wget fails, run the art downloader
+        [[ -f "$png_file" ]] && rm "$png_file"
+        echo "Trying IGN for game ID: $game_id" | tee -a "${LOG_FILE}"
+        node "${TOOLKIT_PATH}"/helper/art_downloader.js "$game_id" | tee -a "${LOG_FILE}"
+    fi
   fi
 done < "$ALL_GAMES"
 
