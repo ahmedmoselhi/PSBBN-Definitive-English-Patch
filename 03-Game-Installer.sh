@@ -15,7 +15,9 @@ MISSING_ART=${TOOLKIT_PATH}/missing-art.log
 GAMES_PATH="${TOOLKIT_PATH}/games"
 
 POPS_FOLDER="${GAMES_PATH}/POPS"
-ALL_GAMES="${GAMES_PATH}/master.list"
+PS1_LIST="${TOOLKIT_PATH}/ps1.list"
+PS2_LIST="${TOOLKIT_PATH}/ps2.list"
+ALL_GAMES="${TOOLKIT_PATH}/master.list"
 
 clear
 
@@ -67,9 +69,9 @@ done
 
 rm "${TOOLKIT_PATH}/package.json" >> "${LOG_FILE}" 2>&1
 rm "${TOOLKIT_PATH}/package-lock.json" >> "${LOG_FILE}" 2>&1
-sudo rm "${GAMES_PATH}/ps1.list" >> "${LOG_FILE}" 2>&1
-sudo rm "${GAMES_PATH}/ps2.list" >> "${LOG_FILE}" 2>&1
-sudo rm "${GAMES_PATH}/master.list" >> "${LOG_FILE}" 2>&1
+rm "${PS1_LIST}" >> "${LOG_FILE}" 2>&1
+rm "${PS2_LIST}" >> "${LOG_FILE}" 2>&1
+rm "${ALL_GAMES}" >> "${LOG_FILE}" 2>&1
 rm "${ARTWORK_DIR}/tmp"/* >> "${LOG_FILE}" 2>&1
 }
 
@@ -184,27 +186,27 @@ fi
 # Create games list of PS1 and PS2 games to be installed
 echo | tee -a "${LOG_FILE}"
 echo "Creating PS1 games list..."| tee -a "${LOG_FILE}"
-python3 ./helper/list-builder-ps1.py "${GAMES_PATH}" | tee -a "${LOG_FILE}"
+python3 ./helper/list-builder-ps1.py "${GAMES_PATH}" "${PS1_LIST}" | tee -a "${LOG_FILE}"
 echo "Creating PS2 games list..."| tee -a "${LOG_FILE}"
-python3 ./helper/list-builder-ps2.py "${GAMES_PATH}" | tee -a "${LOG_FILE}"
+python3 ./helper/list-builder-ps2.py "${GAMES_PATH}" "${PS2_LIST}" | tee -a "${LOG_FILE}"
 
 # Deactivate the virtual environment
 deactivate
 
 # Create master list combining PS1 and PS2 games to a single list
-if [[ ! -f "${GAMES_PATH}/ps1.list" && ! -f "${GAMES_PATH}/ps2.list" ]]; then
+if [[ ! -f "${PS1_LIST}" && ! -f "${PS2_LIST}" ]]; then
     echo "No games found to install." | tee -a "${LOG_FILE}"
     read -p "Press any key to exit..."
     exit 1
-elif [[ ! -f "${GAMES_PATH}/ps1.list" ]]; then
-    { cat "${GAMES_PATH}/ps2.list" > "${GAMES_PATH}/master.list"; } 2>> "${LOG_FILE}"
+elif [[ ! -f "${PS1_LIST}" ]]; then
+    { cat "${PS2_LIST}" > "${ALL_GAMES}"; } 2>> "${LOG_FILE}"
 else
-    { cat "${GAMES_PATH}/ps1.list" > "${GAMES_PATH}/master.list"; } 2>> "${LOG_FILE}"
-    { cat "${GAMES_PATH}/ps2.list" >> "${GAMES_PATH}/master.list"; } 2>> "${LOG_FILE}"
+    { cat "${PS1_LIST}" > "${ALL_GAMES}"; } 2>> "${LOG_FILE}"
+    { cat "${PS2_LIST}" >> "${ALL_GAMES}"; } 2>> "${LOG_FILE}"
 fi
 
 # Check for master.list
-if [[ ! -s "${GAMES_PATH}/master.list" ]]; then
+if [[ ! -s "${ALL_GAMES}" ]]; then
     echo "Failed to create games list (file is missing or empty)." | tee -a "${LOG_FILE}"
     read -p "Press any key to exit..."
     exit 1
@@ -391,11 +393,11 @@ COMMANDS+="umount\n"
 COMMANDS+="exit"
 
 # Get the PS1 file list directly from PFS Shell output, filtered and sorted
-ps2_files=$(echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" 2>/dev/null | grep -iE "\.vcd$|\.elf$" | sort)
+ps1_files=$(echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" 2>/dev/null | grep -iE "\.vcd$|\.elf$" | sort)
 
 # Compute differences and store them in variables
-files_only_in_local=$(comm -23 <(echo "$local_files") <(echo "$ps2_files"))
-files_only_in_ps2=$(comm -13 <(echo "$local_files") <(echo "$ps2_files"))
+files_only_in_local=$(comm -23 <(echo "$local_files") <(echo "$ps1_files"))
+files_only_in_ps2=$(comm -13 <(echo "$local_files") <(echo "$ps1_files"))
 
 echo "Files to delete:" | tee -a "${LOG_FILE}"
 echo "$files_only_in_ps2" | tee -a "${LOG_FILE}"
@@ -683,6 +685,7 @@ fi
 
 clean_up
 
+sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "$DEVICE" >> "${LOG_FILE}" 2>&1
 echo | tee -a "${LOG_FILE}"
 echo "Game installer script complete." | tee -a "${LOG_FILE}"
 echo

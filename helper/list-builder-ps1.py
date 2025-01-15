@@ -1,4 +1,4 @@
-import os.path
+import os
 import sys
 import subprocess
 import math
@@ -119,7 +119,7 @@ def process_vcd(folder):
             game_list_entries.append(game_list_entry)
 
     if game_list_entries:
-        with open(os.path.join(game_path, 'ps1.list'), "a") as output:
+        with open(games_list_path, "a") as output:
             for entry in game_list_entries:
                 output.write(f"{entry}\n")
 
@@ -136,9 +136,7 @@ def normalize_text(text):
     )
 
 # Main function to sort the games list
-def sort_games_list(game_path):
-    games_list_path = os.path.join(game_path, 'ps1.list')
-
+def sort_games_list():
     # Read the ps1.list into a list of lines
     with open(games_list_path, 'r') as file:
         lines = file.readlines()
@@ -200,41 +198,43 @@ def sort_games_list(game_path):
     # Sort the lines by the dynamic key using natsorted
     sorted_lines = natsorted(lines, key=sort_key)
 
-    # Write the sorted lines back to ps1.list
+    # Write the sorted lines back to the specified games list path
     with open(games_list_path, 'w') as file:
         file.writelines(sorted_lines)
 
-def main(arg1):
-    if arg1:
+def main(arg1, arg2):
+    if arg1 and arg2:
         global game_path
-        global current_dir
+        global games_list_path
         game_path = arg1
-        current_dir = os.getcwd()
+        games_list_path = arg2
 
-    # Remove any existing game list file
-    ps1_list_path = os.path.join(game_path, 'ps1.list')
-    if os.path.isfile(ps1_list_path):
-        os.remove(ps1_list_path)
+        # Remove any existing game list file
+        if os.path.isfile(games_list_path):
+            os.remove(games_list_path)
 
-    # Count and process files in the DVD and CD folders
-    if os.path.isdir(game_path + '/POPS'):
-        count_vcd('/POPS')
-        if total == 0:  # No VCD files found
-            print("No PS1 games found in the POPS folder.")
+        # Count and process files in the DVD and CD folders
+        if os.path.isdir(game_path + '/POPS'):
+            count_vcd('/POPS')
+            if total == 0:  # No VCD files found
+                print("No PS1 games found in the POPS folder.")
+                sys.exit(1)
+            process_vcd('/POPS')
+        else:
+            print('POPS folder not found at ' + game_path)
             sys.exit(1)
-        process_vcd('/POPS')
+
+        # Sort the games list after processing
+        sort_games_list()
+
+        print(done)
+        print('')
     else:
-        print('POPS folder not found at ' + game_path)
+        print('Usage: python3 list_builder-ps1.py <path/to/games> <path/to/ps1.list>')
         sys.exit(1)
-
-    # Sort the games list after processing
-    sort_games_list(game_path)
-
-    print(done)
-    print('')
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print('Usage: python3 list_builder-ps1.py <path/to/games>')
+    if len(sys.argv) != 3:
+        print('Usage: python3 list_builder-ps1.py <path/to/games> <path/to/ps1.list>')
         sys.exit(1)
-    main(sys.argv[1])
+    main(sys.argv[1], sys.argv[2])
