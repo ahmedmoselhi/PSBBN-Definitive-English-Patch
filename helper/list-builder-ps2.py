@@ -4,6 +4,7 @@ import os.path
 import subprocess
 import unicodedata
 from natsort import natsorted
+import shlex
 
 done = "Error: No games found."
 total = 0
@@ -63,7 +64,11 @@ def process_files(folder, extensions):
 
                 print(f"Converting {image} from .zso to .iso...")
                 venv_activate = os.path.join('venv', 'bin', 'activate')
-                command = f"source {venv_activate} && python3 ./helper/ziso.py -c 0 '{zso_path}' '{iso_path}'"
+                command = (
+                    f"source {shlex.quote(venv_activate)} && "
+                    f"python3 ./helper/ziso.py -c 0 {shlex.quote(zso_path)} {shlex.quote(iso_path)}"
+                )
+                
                 subprocess.run(command, shell=True, check=True, executable='/bin/bash')
 
                 # Update image to the new .iso path for processing
