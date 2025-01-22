@@ -55,7 +55,12 @@ These scripts are essential for unlocking all the new features exclusive to vers
 
 ## Video Tutorial:
 
-[![PSBBN Definitive English Patch 2.0](https://github.com/user-attachments/assets/60f65b87-f445-4f5e-b2e1-65a4276d2ece)](https://www.youtube.com/watch?v=ooH0FjltsyE)
+[![PSBBN Definitive English Patch 2.0](https://github.com/user-attachments/assets/60f65b87-f445-4f5e-b2e1-65a4276d2ece)](https://www.youtube.com/watch?v=sHz0yKYybhk)
+
+### It is highly recommended to install the scripts using the following command to enable automatic updates:
+```
+git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
+```
 
 ### Setup script:
 `01-Setup.sh` installs all the necessary dependencies for the other scripts and must be run first.
