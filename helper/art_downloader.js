@@ -87,7 +87,7 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
                 const img = document.querySelector('img[src^="https://media.ign.com"]');
     
                 if (img) {
-                    return img.src;
+                    return img.src.split('?')[0]; // Remove query parameters
                 }
                 return null;
             });
@@ -101,7 +101,7 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
                 const img = document.querySelector('img[src^="https://ps2media.ign.com"]');
     
                 if (img) {
-                    return img.src;
+                    return img.src.split('?')[0]; // Remove query parameters
                 }
                 return null;
             });
@@ -115,7 +115,7 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
                 const img = document.querySelector('img[src^="https://ps3media.ign.com"]');
     
                 if (img) {
-                    return img.src;
+                    return img.src.split('?')[0]; // Remove query parameters
                 }
                 return null;
             });
@@ -143,7 +143,7 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
                 const img = document.querySelector('img[src^="https://assets1.ignimgs.com"]');
     
                 if (img) {
-                    return img.src;
+                    return img.src.split('?')[0]; // Remove query parameters
                 }
                 return null;
             });

@@ -502,14 +502,29 @@ if compgen -G "${input_dir}/*" > /dev/null; then
         base_name=$(basename "${file%.*}")
 
         # Define output filename with .png extension
-        output="${ARTWORK_DIR}/${base_name}.png"
-    
-        # Convert each file to .png with resizing and 8-bit depth
-        convert "$file" -resize 256x256! -depth 8 -alpha off "$output" | tee -a "${LOG_FILE}"
+        output="${ARTWORK_DIR}/tmp/${base_name}.png"
+
+        # Get image dimensions using identify
+        dimensions=$(identify -format "%w %h" "$file")
+        width=$(echo "$dimensions" | cut -d' ' -f1)
+        height=$(echo "$dimensions" | cut -d' ' -f2)
+
+        # Check if width >= 256 and height >= width
+        if [[ $width -ge 256 && $height -ge $width ]]; then
+            # Convert each file to .png with resizing and 8-bit depth
+            echo "Converting $file"
+            convert "$file" -resize 256x256^ -gravity center -extent 256x256 -depth 8 -alpha off "$output" | tee -a "${LOG_FILE}"
+            rm "$file"
+        else
+            echo "Skipping $file: does not meet size requirements" | tee -a "${LOG_FILE}"
+            rm "$file"
+        fi
     done
 else
-  echo "No files to process in ${input_dir}" | tee -a "${LOG_FILE}"
+    echo "No files to process in ${input_dir}" | tee -a "${LOG_FILE}"
 fi
+
+cp ${ARTWORK_DIR}/tmp/* ${ARTWORK_DIR}
 
 echo | tee -a "${LOG_FILE}"
 echo "Creating game assets..."  | tee -a "${LOG_FILE}"
