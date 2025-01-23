@@ -511,9 +511,16 @@ if compgen -G "${input_dir}/*" > /dev/null; then
 
         # Check if width >= 256 and height >= width
         if [[ $width -ge 256 && $height -ge $width ]]; then
-            # Convert each file to .png with resizing and 8-bit depth
-            echo "Converting $file"
-            convert "$file" -resize 256x256^ -gravity center -extent 256x256 -depth 8 -alpha off "$output" | tee -a "${LOG_FILE}"
+            # Determine whether the image is square
+            if [[ $width -eq $height ]]; then
+                # Square: Resize without cropping
+                echo "Resizing square image $file"
+                convert "$file" -resize 256x256! -depth 8 -alpha off "$output"
+            else
+                # Not square: Resize and crop
+                echo "Resizing and cropping $file"
+                convert "$file" -resize 256x256^ -crop 256x256+0+44 -depth 8 -alpha off "$output"
+            fi
             rm "$file"
         else
             echo "Skipping $file: does not meet size requirements" | tee -a "${LOG_FILE}"
