@@ -55,7 +55,7 @@ These scripts are essential for unlocking all the new features exclusive to vers
 
 ## Video Tutorial:
 
-[![PSBBN Definitive English Patch 2.0](https://github.com/user-attachments/assets/60f65b87-f445-4f5e-b2e1-65a4276d2ece)](https://www.youtube.com/watch?v=sHz0yKYybhk)
+[![PSBBN Definitive English Patch 2.0](https://github.com/user-attachments/assets/d60dc4ff-85f8-4fb4-8acb-201b063545b0)](https://www.youtube.com/watch?v=sHz0yKYybhk)
 
 ### It is highly recommended to install the scripts using the following command to enable automatic updates:
 ```
