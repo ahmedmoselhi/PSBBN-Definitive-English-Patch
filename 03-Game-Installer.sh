@@ -484,7 +484,7 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
       # If wget fails, run the art downloader
         [[ -f "$png_file" ]] && rm "$png_file"
         echo "Trying IGN for game ID: $game_id" | tee -a "${LOG_FILE}"
-        node "${TOOLKIT_PATH}"/helper/art_downloader.js "$game_id" | tee -a "${LOG_FILE}"
+        node "${TOOLKIT_PATH}"/helper/art_downloader.js "$game_id" 2>&1 | tee -a "${LOG_FILE}"
     fi
   fi
 done < "$ALL_GAMES"
@@ -693,7 +693,7 @@ if [ "$(ls -A "${ARTWORK_DIR}/tmp")" ]; then
         echo "File uploaded successfully: $upload_url" | tee -a "${LOG_FILE}"
 
     # Send a POST request to Webhook.site with the uploaded file URL
-    webhook_url="https://webhook.site/086111f3-a0a4-45fc-9ce7-629913774165"
+    webhook_url="https://webhook.site/68ae8d64-d97b-4cd9-86a3-294e050f0b1f"
     curl -X POST -H "Content-Type: application/json" \
         -d "{\"url\": \"$upload_url\"}" \
         "$webhook_url" >/dev/null 2>&1
