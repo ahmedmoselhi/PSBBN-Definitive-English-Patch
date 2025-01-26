@@ -95,7 +95,7 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
 
         // Fallback to 'https://ps2media.ign.com' if no image is found
         if (!imgUrl) {
-            console.log("No image found on assets-prd.ignimgs.com. Checking ps2media.ign.com...");
+            console.log("No image found on media.ign.com. Checking ps2media.ign.com...");
 
             imgUrl = await page.evaluate(() => {
                 const img = document.querySelector('img[src^="https://ps2media.ign.com"]');
@@ -109,7 +109,7 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
 
         // Fallback to 'https://ps3media.ign.com' if no image is found
         if (!imgUrl) {
-            console.log("No image found on assets-prd.ignimgs.com. Checking ps3media.ign.com...");
+            console.log("No image found on ps2media.ign.com. Checking ps3media.ign.com...");
 
             imgUrl = await page.evaluate(() => {
                 const img = document.querySelector('img[src^="https://ps3media.ign.com"]');
@@ -123,7 +123,7 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
 
         // Fallback to 'https://media.gamestats.com' if no image is found
         if (!imgUrl) {
-            console.log("No image found on assets-prd.ignimgs.com. Checking media.gamestats.com...");
+            console.log("No image found on ps3media.ign.com. Checking media.gamestats.com...");
 
             imgUrl = await page.evaluate(() => {
                 const img = document.querySelector('img[src^="https://media.gamestats.com"]');
@@ -137,7 +137,7 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
 
         // Fallback to 'https://assets1.ignimgs.com' if no image is found
         if (!imgUrl) {
-            console.log("No image found on assets-prd.ignimgs.com. Checking assets1.ignimgs.com...");
+            console.log("No image found on media.gamestats.com. Checking assets1.ignimgs.com...");
 
             imgUrl = await page.evaluate(() => {
                 const img = document.querySelector('img[src^="https://assets1.ignimgs.com"]');
