@@ -37,7 +37,7 @@ If you appreciate my work and want to support the continued development of the *
 - The art downloader has been improved to grab significantly more artwork
 - Improved error handling in the PSBBN installer script
 - The setup script has been modified to work on live Linux environments without issues
-- Added support for Arch-based Linux distributions
+- Added support for Arch-based and Fedora-based Linux distributions
 - Added confirmation prompts to the PSBBN installer script when creating partitions
 - PSBBN image updated to version 2.01:
   - Set USB keyboard layout to US English. Press `ALT+~` to toggle between kana and direct input
@@ -51,7 +51,7 @@ If you appreciate my work and want to support the continued development of the *
 
 ## New installation scripts
 
-These scripts are essential for unlocking all the new features exclusive to version 2.0. They require a Linux environment to run. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive or a virtual machine. Debian-based distributions using `apt` and Arch-based distributions using `pacman` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
+These scripts are essential for unlocking all the new features exclusive to version 2.0. They require a Linux environment to run. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive or a virtual machine. Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based distributions using `dnf` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
 
 ## Video Tutorial:
 
