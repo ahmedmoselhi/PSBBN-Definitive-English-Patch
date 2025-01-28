@@ -36,23 +36,28 @@ echo >> "${LOG_FILE}"
 echo "Path set to: $TOOLKIT_PATH" >> "${LOG_FILE}"
 echo "Helper files found." >> "${LOG_FILE}"
 
-# Fetch updates from the remote
-git fetch >> "${LOG_FILE}" 2>&1
-
-# Check the current status of the repository
-LOCAL=$(git rev-parse @)
-REMOTE=$(git rev-parse @{u})
-BASE=$(git merge-base @ @{u})
-
-if [ "$LOCAL" = "$REMOTE" ]; then
-  echo "The repository is up to date." >> "${LOG_FILE}"
+# Check if the current directory is a Git repository
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  echo "This is not a Git repository. Skipping update check." >> "${LOG_FILE}"
 else
-  echo "Downloading update..."
-  git reset --hard && git pull --force >> "${LOG_FILE}" 2>&1
-  echo
-  echo "The script has been updated to the latest version." | tee -a "${LOG_FILE}"
-  read -p "Press any key to exit, set your custom game path if needed, and then run the script again."
-  exit 0
+  # Fetch updates from the remote
+  git fetch >> "${LOG_FILE}" 2>&1
+
+  # Check the current status of the repository
+  LOCAL=$(git rev-parse @)
+  REMOTE=$(git rev-parse @{u})
+  BASE=$(git merge-base @ @{u})
+
+  if [ "$LOCAL" = "$REMOTE" ]; then
+    echo "The repository is up to date." >> "${LOG_FILE}"
+  else
+    echo "Downloading update..."
+    git reset --hard && git pull --force >> "${LOG_FILE}" 2>&1
+    echo
+    echo "The script has been updated to the latest version." | tee -a "${LOG_FILE}"
+    read -p "Press any key to exit, set your custom game path if needed, and then run the script again."
+    exit 0
+  fi
 fi
 
 function clean_up() {

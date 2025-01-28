@@ -18,29 +18,34 @@ if [[ ! -f "${TOOLKIT_PATH}/helper/PFS Shell.elf" || ! -f "${TOOLKIT_PATH}/helpe
     exit 1
 fi
 
-echo "####################################################################">> "${INSTALL_LOG}";
+echo "########################################################################################################">> "${INSTALL_LOG}";
 date >> "${INSTALL_LOG}"
 echo >> "${INSTALL_LOG}"
 echo "Path set to: $TOOLKIT_PATH" >> "${INSTALL_LOG}"
 echo "Helper files found." >> "${INSTALL_LOG}"
 
-# Fetch updates from the remote
-git fetch >> "${INSTALL_LOG}" 2>&1
-
-# Check the current status of the repository
-LOCAL=$(git rev-parse @)
-REMOTE=$(git rev-parse @{u})
-BASE=$(git merge-base @ @{u})
-
-if [ "$LOCAL" = "$REMOTE" ]; then
-  echo "The repository is up to date." >> "${INSTALL_LOG}"
+# Check if the current directory is a Git repository
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  echo "This is not a Git repository. Skipping update check." >> "${INSTALL_LOG}"
 else
-  echo "Downloading update..."
-  git reset --hard && git pull --force >> "${INSTALL_LOG}" 2>&1
-  echo
-  echo "The script has been updated to the latest version." | tee -a "${INSTALL_LOG}"
-  read -p "Press any key to exit, then run the script again."
-  exit 0
+  # Fetch updates from the remote
+  git fetch >> "${INSTALL_LOG}" 2>&1
+
+  # Check the current status of the repository
+  LOCAL=$(git rev-parse @)
+  REMOTE=$(git rev-parse @{u})
+  BASE=$(git merge-base @ @{u})
+
+  if [ "$LOCAL" = "$REMOTE" ]; then
+    echo "The repository is up to date." >> "${INSTALL_LOG}"
+  else
+    echo "Downloading update..."
+    git reset --hard && git pull --force >> "${INSTALL_LOG}" 2>&1
+    echo
+    echo "The script has been updated to the latest version." | tee -a "${INSTALL_LOG}"
+    read -p "Press any key to exit, then run the script again."
+    exit 0
+  fi
 fi
 
 # Choose the PS2 storage device
