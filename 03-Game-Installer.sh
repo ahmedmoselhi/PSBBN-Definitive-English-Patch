@@ -536,7 +536,7 @@ else
     echo "No files to process in ${input_dir}" | tee -a "${LOG_FILE}"
 fi
 
-cp ${ARTWORK_DIR}/tmp/* ${ARTWORK_DIR}
+cp ${ARTWORK_DIR}/tmp/* ${ARTWORK_DIR} >> "${LOG_FILE}" 2>&1
 
 echo | tee -a "${LOG_FILE}"
 echo "Creating game assets..."  | tee -a "${LOG_FILE}"
