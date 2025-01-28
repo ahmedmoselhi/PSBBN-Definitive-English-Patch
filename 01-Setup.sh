@@ -116,6 +116,14 @@ if [ $? -ne 0 ]; then
 fi
 deactivate
 
+npm install puppeteer
+if [ $? -ne 0 ]; then
+    echo
+    echo "Error: Failed to install puppeteer."
+    read -p "Press any key to exit..."
+    exit 1
+fi
+
 echo
 echo "Setup completed successfully!"
 read -p "Press any key to exit..."
