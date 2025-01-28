@@ -5,5 +5,12 @@ assets/POPS-binaries-main/
 *.gz
 *.zip
 *.st
+*.iso
+*.ISO
+*.zso
+*.ZSO
+*.vcd
+*.VCD
+*.json
 IOPRP252.IMG
 POPS.ELF
