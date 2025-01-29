@@ -4,7 +4,10 @@ This is the definitive English patch for Sony's "PlayStation Broadband Navigator
 
 You can find out more about the PSBBN software on [Wikipedia](https://en.wikipedia.org/wiki/PlayStation_Broadband_Navigator).
 
-If you appreciate my work and want to support the continued development of the **PSBBN Definitive English Patch 2.0** and other **PS2-related projects**, you can now do so via **[Ko-fi](https://ko-fi.com/cosmicscale)**
+# Donations  
+This project uses [webhook.site](https://webhook.site/) to automatically contribute game artwork and report missing artwork to the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database). I’m currently on a free account, which provides a temporary URL for seven days or 100 requests. As the project grows in popularity, we're exceeding the 100-request limit every few days. A paid subscription costs $9/month or $90/year, donations would help fund this.
+
+If you appreciate my work and want to support the ongoing development of the PSBBN Definitive English Patch and other PS2-related projects, [you can donate to my Ko-Fi here](https://ko-fi.com/cosmicscale).
 
 ## Video demonstration of PSBBN:
 
@@ -15,13 +18,13 @@ If you appreciate my work and want to support the continued development of the *
 - All binaries, XML files, textures, and pictures have been translated*
 - Compatible with any fat model PS2 console regardless of region**
 - DNAS authorization checks bypassed to enable online connectivity
-- English translations of the online game channels from Sony, Hudson, EA, Konami, Capcom, Namco, and KOEI. Hosted courtesy of vitas155 at [psbbn.ru](https://psbbn.ru/)
+- Online game channels from Sony, Hudson, EA, Konami, Capcom, Namco, and KOEI have been translated into English. Hosted courtesy of vitas155 at [psbbn.ru](https://psbbn.ru/)
 - "Audio Player" feature re-added to the Music Channel from an earlier release of PSBBN, allowing compatibility with NetMD MiniDisc Recorders
 - Associated manual pages and troubleshooting regarding the "Audio Player" feature translated and re-added to the user guide
-- Japanese qwerty on-screen keyboard replaced with US English on-screen keyboard
+- Japanese qwerty on-screen keyboard replaced with US English on-screen keyboard***
 
 ## New to version 2.0
-- Large HDD support. No longer limited to 128 GB, now with support for drives up to 128 PB
+- Large HDD support. No longer limited to 128 GB, now with support for drives up to 2 TB
 - Supports over 700 games, all launchable from the Game Channel
 - Set a custom size for your music partition. Original limit of 5 GB allowed the storage of around 7 albums. Now the partition can be up to 40 GB for around 60 albums
 - exFAT partition for easy install of PS2 games
@@ -37,7 +40,7 @@ If you appreciate my work and want to support the continued development of the *
 - The art downloader has been improved to grab significantly more artwork
 - Improved error handling in the PSBBN installer script
 - The setup script has been modified to work on live Linux environments without issues
-- Added support for Arch-based and Fedora-based Linux distributions
+- Added support for Arch-based and Fedora-based Linux distributions in addition to Debian
 - Added confirmation prompts to the PSBBN installer script when creating partitions
 - PSBBN image updated to version 2.01:
   - Set USB keyboard layout to US English. Press `ALT+~` to toggle between kana and direct input
@@ -46,8 +49,9 @@ If you appreciate my work and want to support the continued development of the *
 - The Game Installer script has been updated to create and delete `OPL Launcher` partitions as needed. Say goodbye to those annoying "Coming soon..." placeholders!
 - Files placed in the `CFG`, `CHT`, `LNG`, `THM`, and `APPS` folders on your PC will now be copied to the PS2 drive during game sync
 - Added Game ID support for MemCard Pro 2 and SD2PSX
+- The scripts now auto-update when an update is available
 - Optimised art work
-- Art downloads are now contributed to the PSBBN art database, and missing artwork is automatically reported
+- Art downloads from IGN are now automatically contributed to the [PSBBN art database](https://github.com/CosmicScale/psbbn-art-database), and missing artwork is also automatically reported. Manual submissions are welcome, see the [PSBBN art database GitHub page](https://github.com/CosmicScale/psbbn-art-database) for details
 
 ## New installation scripts
 
@@ -71,9 +75,9 @@ git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
 - Downloads and installs the latest version of the **PSBBN Definitive English Patch** from archive.org
 - Prompts for the desired size of the Music Partition
 - Prompts for the desired size of the POPS Partition
-- Installs the latest build of Open PS2 Loader (OPL) with exFAT and Auto Launch support for BDM devices
-- Installs POPStarter
-- Runs APA-Jail, creating an exFAT partition using all remaining disk space beyond the first 128 GB
+- Installs a pre-release build of [Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) with exFAT and Auto Launch support for BDM devices
+- Installs [POPStarter](https://bitbucket.org/ShaolinAssassin/popstarter-documentation-stuff/wiki/Home)
+- Runs [APA-Jail](#notes-on-apa-jail), creating an exFAT partition using all remaining disk space beyond the first 128 GB
 
 ### Game installer script: 
 `03-Game-Installer.sh` fully automates the installation of PS1 and PS2 games. In the `games` folder on your computer, simply put your PS2 `ISO` or `ZSO` files in the `CD`/`DVD` folders, and your PS1 `VCD` files in the `POPS` folder.
@@ -81,7 +85,8 @@ git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
 The script will:
 - Synchronise the games on your PC with your PS2's drive
 - Create all game assets
-- Download artwork
+- Download artwork from the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database) or IGN if not found in the database
+- Automatically contribute game artwork from IGN and reports missing artwork to the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database)
 - Install [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) into every game partition, making games bootable from the Game Channel
 
 To add or delete games, simply add or remove them from the `games` folder on your computer, then run the script again to synchronise. All games are kept in alphabetical order and grouped by series in the Game Channel on PSBBN.
@@ -99,7 +104,7 @@ By default the `games` folder is located in the same directory you installed the
 - The `root` password for Linux is `password`. There is also a `ps2` user account with the password set as `password`
 
 ### Note on Retro GEM support:
-I would highly recommend that you install the [Retro GEM Game ID Resetter](https://github.com/CosmicScale/Retro-GEM-GameId-Resetter) on your PS2 Memory Card. With this app, when you quit a game, the Game ID is reset, and the Retro GEM settings are returned to global.
+If you have a Retro GEM, I would highly recommend that you install the [Retro GEM Game ID Resetter](https://github.com/CosmicScale/Retro-GEM-GameId-Resetter) on your PS2 Memory Card. With this app, when you quit a game, the Game ID is reset, and the Retro GEM settings are returned to global.
 
 ### Notes on Launch Disc:
 **Launch Disc** loads the [Retro GEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher) application.
@@ -113,7 +118,7 @@ For physical PlayStation 2 game discs:
 - Skips the PlayStation 2 logo check, allowing MechaPwn users to launch imports and master discs
 
 Recommended usage:
-- Add a shortcut for **Launch Disc** to the **Navigator Menu**
+- Add a shortcut for **Launch Disc** to the **Navigator Menu** if it is not there already
 - Press `SELECT` to open the **Navigator Menu**
 - Insert a game disc
 - Select **Launch Disc** from the menu
@@ -126,19 +131,21 @@ Recommended usage:
   3. Settings > BDM Devices > HDD (GPT/MBR): On
 - Make sure a PS2 memory card is inserted, then select `Save Changes` from the main menu.
 
-### If, after trying the above steps, games still do not appear in the OPL games list and fail to launch from the PSBBN Game Channel, your drive may not be currently compatible with the exFAT version of OPL.
+### If, after trying the above steps, games still do not appear in the OPL games list and fail to launch from the PSBBN Game Channel, your combination of SATA mod and drive may not be currently compatible with the exFAT version of OPL.
 
 Possible solutions:
 1. Wait for the OPL bug fix. You can learn more and report your issue [here](https://github.com/ps2homebrew/Open-PS2-Loader/issues/1437)
 2. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then rerun the PSBBN installer
 3. Try using a different HDD/SSD and rerun the PSBBN installer
+4. Try using a different SATA mod for your PS2
+5. Wait for the release of the PSBBN Neutrino Launcher
 
 ### Notes on APA-Jail:
-APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. The remaining space on the drive is formatted as an exFAT partition, which can be accessed directly on a PC and on the PS2 by the [latest build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader). PS2 games in the `ISO` or `ZSO` format are stored on the exFAT partition.
+APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. The remaining space on the drive is formatted as an exFAT partition, which can be accessed directly on a PC and on the PS2 by the [pre-release build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader). PS2 games in the `ISO` or `ZSO` format are stored on the exFAT partition.
 
 ![APA-Jail Type-A](https://github.com/user-attachments/assets/c1a29371-d0ff-431e-8b86-df8337ddf966)
 
-An application called [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) resides on the APA partitions, along with the [latest build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader).
+An application called [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) resides on the APA partitions, along with the [pre-release build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader).
  
 [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) directs [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) to launch specific PS2 games.
 
@@ -288,21 +295,15 @@ Before installing the English patch, you **must** power off your console to stan
 ---
 
 ## Notes
-- I would highly recommend using a **"Kaico IDE to SATA Upgrade Kit"** and a SATA SSD such as the **Kingston A400**. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface.
 - Use OPL-Launcher to launch PS2 games from the Game Channel. More details can be found [here](https://github.com/ps2homebrew/OPL-Launcher).
-
----
-
-## Known Issues/Limitations of PSBBN
 - Lacks support for large HDDs so drives larger than 130 GB cannot be taken full advantage of. PSBBN can only see the first 130,999 MB of data on your HDD/SSD (as reported by wLaunchELF). If there is 131,000 MB or more on your HDD/SSD, PSBBN will fail to launch. Delete data so there is less than 131,000 MB used, and PSBBN will launch again. In that space, I've managed to install 40 PS2 games in the ZSO format, 9 PS1 games, all bootable from the Game Channel, plus 3 homebrew apps, and Linux. Be extra careful if you have installed via the [PS2 HDD RAW Image](#ps2-hdd-raw-image-install) on a drive larger than 120 GB, going over 130,999 MB will corrupt the drive.
-- Only supports dates up to the end of 2030.
-- Bug with Game Manuals randomly crashing when loading pages. Manuals only work reliably on the first 5 games installed.
-- Default on-screen keyboard is Japanese. US English on-screen keyboard has been added, but you have to press SELECT a number of times to access it. I've noticed a bug where the spacebar key does not function on the US English on-screen keyboard. A space can be entered by pressing the triangle button on the controller instead. I could revert back to the Japanese qwerty keyboard in the future, but I think the benefits of the US keyboard outweigh this negative.
-
----
+- You might need to manually change the title of your "Favorite" folders if they were created before you [Patched an existing PSBBN install](#patch-an-existing-psbbn-install).
 
 </details>
 
-
-\* Instances in feega where some Japanese text could not be translated because it is hard coded in an encrypted file. Atok software has not been translated. You might need to manually change the title of your "Favorite" folders if they were created before you **Patched an existing PSBBN install**.  
-\** Should also be compatible with the PS2 Slim SCPH-70xxx models with an IDE Resurrector mod. PSBBN Definitive English Patch 2.0 and older versions of the **PS2 HDD RAW Image Install** are not compatible with early model Japanese PS2 consoles that have an external HDD due to space limitations. **Patch an existing PSBBN install** - Kloader might have compatibility issues with early model Japanese PS2 consoles.
+## Known Issues/Limitations of PSBBN
+PSBBN only supports dates up to the end of 2030.  
+A bug with Game Manuals randomly crashing when changing pages. Manuals only work reliably on the first 5 games installed.  
+\* Instances in feega where some Japanese text could not be translated because it is hard coded in an encrypted file. Atok software has not been translated.  
+\** Should also be compatible with the PS2 Slim SCPH-70xxx models with an IDE Resurrector or similar mod. [PSBBN Definitive English Patch 2.0](#new-to-version-20) and older versions of the [PS2 HDD RAW Image Install](#ps2-hdd-raw-image-install) are not compatible with early model Japanese PS2 consoles that have an external HDD due to space limitations. When [Patching an existing PSBBN install](#patch-an-existing-psbbn-install), Kloader might have compatibility issues with early model Japanese PS2 consoles.  
+\***Default on-screen keyboard is Japanese. US English on-screen keyboard has been added, but you have to press `SELECT` a number of times to access it. I've noticed a bug where the spacebar key does not function on the US English on-screen keyboard. A space can be entered by pressing the triangle button on the controller instead. I could revert back to the Japanese qwerty keyboard in the future, but I think the benefits of the US keyboard outweigh this negative.
