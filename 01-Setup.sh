@@ -32,7 +32,8 @@ else
     git reset --hard && git pull --force > /dev/null 2>&1
     echo
     echo "The script has been updated to the latest version."
-    read -p "Press any key to exit, then run the script again."
+    read -n 1 -s -r -p "Press any key to exit, then run the script again."
+    echo
     exit 0
   fi
 fi
@@ -49,7 +50,8 @@ echo
 echo "   This script installs all dependencies required for the 'PSBBN Installer' and 'Game Installer'."
 echo "   It must be run first."
 echo
-read -p "   Press any key to continue..."
+read -n 1 -s -r -p "   Press any key to continue..."
+echo
 echo
 
 # Path to the sources.list file
@@ -78,7 +80,8 @@ fi
 if [ $? -ne 0 ]; then
     echo
     echo "Error: Package installation failed."
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 fi
 
@@ -96,7 +99,8 @@ fi
 if [ $? -ne 0 ]; then
     	echo
     	echo "Error: Failed to install exfat driver."
-    	read -p "Press any key to exit..."
+    	read -n 1 -s -r -p "Press any key to exit..."
+        echo
     	exit 1
 fi
 fi
@@ -106,7 +110,8 @@ python3 -m venv venv
 if [ $? -ne 0 ]; then
     echo
     echo "Error: Failed to create Python virtual environment."
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 fi
 
@@ -115,7 +120,8 @@ pip install lz4 natsort
 if [ $? -ne 0 ]; then
     echo
     echo "Error: Failed to install Python dependencies."
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     deactivate
     exit 1
 fi
@@ -125,10 +131,12 @@ npm install puppeteer
 if [ $? -ne 0 ]; then
     echo
     echo "Error: Failed to install puppeteer."
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 fi
 
 echo
 echo "Setup completed successfully!"
-read -p "Press any key to exit..."
+read -n 1 -s -r -p "Press any key to exit..."
+echo

@@ -6,7 +6,7 @@ echo -e "\e[8;40;100t"
 TOOLKIT_PATH="$(pwd)"
 ICONS_DIR="${TOOLKIT_PATH}/icons"
 ARTWORK_DIR="${ICONS_DIR}/art"
-POPSTARTER_DIR="${TOOLKIT_PATH}/assets/POPSTARTER.ELF"
+POPSTARTER="${TOOLKIT_PATH}/assets/POPSTARTER.ELF"
 LOG_FILE="${TOOLKIT_PATH}/game-installer.log"
 MISSING_ART=${TOOLKIT_PATH}/missing-art.log
 
@@ -36,9 +36,19 @@ echo >> "${LOG_FILE}"
 echo "Path set to: $TOOLKIT_PATH" >> "${LOG_FILE}"
 echo "Helper files found." >> "${LOG_FILE}"
 
+# Check if the Python virtual environment exists
+if [ -f "./venv/bin/activate" ]; then
+    echo "The Python virtual environment exists." >> "${LOG_FILE}"
+else
+    echo "Error: The Python virtual environment does not exist. Run 01-Setup.sh and try again." | tee -a "${LOG_FILE}"
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
+    exit 1
+fi
+
 # Check if the current directory is a Git repository
 if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-  echo "This is not a Git repository. Skipping update check." >> "${LOG_FILE}"
+  echo "This is not a Git repository. Skipping update check." | tee -a "${LOG_FILE}"
 else
   # Fetch updates from the remote
   git fetch >> "${LOG_FILE}" 2>&1
@@ -49,21 +59,19 @@ else
   BASE=$(git merge-base @ @{u})
 
   if [ "$LOCAL" = "$REMOTE" ]; then
-    echo "The repository is up to date." >> "${LOG_FILE}"
+    echo "The repository is up to date." | tee -a "${LOG_FILE}"
   else
     echo "Downloading update..."
     git reset --hard && git pull --force >> "${LOG_FILE}" 2>&1
     echo
     echo "The script has been updated to the latest version." | tee -a "${LOG_FILE}"
-    read -p "Press any key to exit, set your custom game path if needed, and then run the script again."
+    read -n 1 -s -r -p "Press any key to exit, set your custom game path if needed, and then run the script again."
+    echo
     exit 0
   fi
 fi
 
 function clean_up() {
-echo | tee -a "${LOG_FILE}"
-echo "Cleaning up..." | tee -a "${LOG_FILE}"
-
 # Loop through all items in the target directory
 for item in "$ICONS_DIR"/*; do
     # Check if the item is a directory and not the 'art' folder
@@ -81,9 +89,7 @@ rm "${ARTWORK_DIR}/tmp"/* >> "${LOG_FILE}" 2>&1
 }
 
 clean_up
-rm $MISSING_ART
-
-clear
+rm $MISSING_ART 2>>"${LOG_FILE}"
 
 echo "                  _____                        _____          _        _ _           ";
 echo "                 |  __ \                      |_   _|        | |      | | |          ";
@@ -107,11 +113,13 @@ echo "   #  Removal: Games on your PS2 that are not in your PC's 'games' folder 
 echo "   #                                                                                            #"
 echo "   ##############################################################################################"
 echo
-read -p "   Press any key to continue..."
+read -n 1 -s -r -p "   Press any key to continue..."
+echo
 
 # Choose the PS2 storage device
 while true; do
 clear
+echo
 echo "                  _____                        _____          _        _ _           ";
 echo "                 |  __ \                      |_   _|        | |      | | |          ";
 echo "                 | |  \/ __ _ _ __ ___   ___    | | _ __  ___| |_ __ _| | | ___ ___ ";
@@ -134,7 +142,8 @@ echo "                                         Written by CosmicScale"
     else
         echo
         echo "Error: Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
-        read -p "Press any key to try again..."
+        read -n 1 -s -r -p "Press any key to try again..."
+        echo
         continue
     fi
 done
@@ -151,7 +160,8 @@ for mount_point in $mounted_volumes; do
         echo "Successfully unmounted $mount_point." | tee -a "${LOG_FILE}"
     else
         echo "Failed to unmount $mount_point. Please unmount manually." | tee -a "${LOG_FILE}"
-        read -p "Press any key to exit..."
+        read -n 1 -s -r -p "Press any key to exit..."
+        echo
         exit 1
     fi
 done
@@ -162,29 +172,22 @@ echo "All volumes unmounted for $DEVICE."| tee -a "${LOG_FILE}"
 if [[ ! -d "$GAMES_PATH" ]]; then
     echo
     echo "Error: GAMES_PATH is not a valid directory: $GAMES_PATH" | tee -a "${LOG_FILE}"
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 fi
 
 echo | tee -a "${LOG_FILE}"
 echo "GAMES_PATH is valid: $GAMES_PATH" | tee -a "${LOG_FILE}"
 
-# Check if the file exists
-if [ -f "./venv/bin/activate" ]; then
-    echo "The Python virtual environment exists."
-else
-    echo "Error: The Python virtual environment does not exist." | tee -a "${LOG_FILE}"
-    read -p "Press any key to exit..."
-    exit 1
-fi
-
 # Activate the virtual environment
 source "./venv/bin/activate"
 
 # Check if activation was successful
 if [ $? -ne 0 ]; then
-    echo "Failed to activate the virtual environment." | tee -a "${LOG_FILE}"
-    read -p "Press any key to exit..."
+    echo "Failed to activate the Python virtual environment." | tee -a "${LOG_FILE}"
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 fi
 
@@ -201,7 +204,8 @@ deactivate
 # Create master list combining PS1 and PS2 games to a single list
 if [[ ! -f "${PS1_LIST}" && ! -f "${PS2_LIST}" ]]; then
     echo "No games found to install." | tee -a "${LOG_FILE}"
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 elif [[ ! -f "${PS1_LIST}" ]]; then
     { cat "${PS2_LIST}" > "${ALL_GAMES}"; } 2>> "${LOG_FILE}"
@@ -213,11 +217,11 @@ fi
 # Check for master.list
 if [[ ! -s "${ALL_GAMES}" ]]; then
     echo "Failed to create games list (file is missing or empty)." | tee -a "${LOG_FILE}"
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 fi
 
-echo | tee -a "${LOG_FILE}"
 echo "Games list successfully created."| tee -a "${LOG_FILE}"
 
 # Delete old game partitions
@@ -312,7 +316,8 @@ output=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc ${DEVICE} 2>&1)
 if echo "$output" | grep -q "aborting"; then
     echo
     echo "${DEVICE}: APA partition is broken; aborting." | tee -a "${LOG_FILE}"
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 fi
 
@@ -345,12 +350,10 @@ if [ "$count" -gt "$partition_count" ]; then
 fi
 
 echo | tee -a "${LOG_FILE}"
-echo "Ready to install games. Press any key to continue..."
-read -n 1 -s
-
-echo | tee -a "${LOG_FILE}"
+read -n 1 -s -r -p "Ready to install games. Press any key to continue..."
+echo
+echo
 echo "Preparing to sync PS1 games..." | tee -a "${LOG_FILE}"
-echo | tee -a "${LOG_FILE}"
 
 # Step 1: Create matching .ELF files for .VCD files
 echo "Creating matching .ELF files for .VCDs..." | tee -a "${LOG_FILE}"
@@ -363,12 +366,19 @@ for vcd_file in "$POPS_FOLDER"/*.VCD; do
         # Copy and rename POPSTARTER.ELF to match the .VCD file
         if [ ! -f "$elf_file" ]; then
             echo "Creating $elf_file..." | tee -a "${LOG_FILE}"
-            cp "$POPSTARTER_DIR" "$elf_file"
+            cp "$POPSTARTER" "$elf_file" 2>>"${LOG_FILE}" || {
+                echo
+                echo "Error: Failed to create $elf_file." | tee -a "${LOG_FILE}"
+                echo "Chech that $POPSTARTER exists and you have write permissions to $GAMES_PATH" | tee -a "${LOG_FILE}"
+                echo
+                read -n 1 -s -r -p "Press any key to exit..."
+                echo
+                exit 1
+            }
         fi
     fi
 done
 echo "Matching .ELF files created successfully." | tee -a "${LOG_FILE}"
-echo | tee -a "${LOG_FILE}"
 
 # Step 2: Delete .ELF files without matching .VCD files
 echo "Removing orphan .ELF files..." | tee -a "${LOG_FILE}"
@@ -380,12 +390,19 @@ for elf_file in "$POPS_FOLDER"/*.ELF; do
         vcd_file="$POPS_FOLDER/$base_name.VCD"
         if [ ! -f "$vcd_file" ]; then
             echo "Deleting orphan $elf_file..." | tee -a "${LOG_FILE}"
-            rm "$elf_file"
+            rm "$elf_file" 2>>"${LOG_FILE}" || {
+                echo
+                echo "Error: Failed to delete $elf_file." | tee -a "${LOG_FILE}"
+                echo "Chech that you have write permissions to $GAMES_PATH" | tee -a "${LOG_FILE}"
+                echo
+                read -n 1 -s -r -p "Press any key to exit..."
+                echo
+                exit 1
+            }
         fi
     fi
 done
 echo "Orphan .ELF files removed successfully." | tee -a "${LOG_FILE}"
-echo | tee -a "${LOG_FILE}"
 
 # Generate the local file list directly in a variable
 local_files=$( { ls -1 "$POPS_FOLDER" | grep -Ei '\.VCD$|\.ELF$' | sort; } 2>> "${LOG_FILE}" )
@@ -404,46 +421,56 @@ ps1_files=$(echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" 2>
 files_only_in_local=$(comm -23 <(echo "$local_files") <(echo "$ps1_files"))
 files_only_in_ps2=$(comm -13 <(echo "$local_files") <(echo "$ps1_files"))
 
-echo "Files to delete:" | tee -a "${LOG_FILE}"
-echo "$files_only_in_ps2" | tee -a "${LOG_FILE}"
-echo | tee -a "${LOG_FILE}"
-echo "Files to copy:" | tee -a "${LOG_FILE}"
-echo "$files_only_in_local" | tee -a "${LOG_FILE}"
-echo | tee -a "${LOG_FILE}"
-
-# Syncing PS1 games
-cd "$POPS_FOLDER" >> "${LOG_FILE}" 2>&1
-combined_commands="device ${DEVICE}\n"
-combined_commands+="mount __.POPS\n"
-
-# Add delete commands for files_only_in_ps2
+# Only display "Files to delete:" if there are files to delete
 if [ -n "$files_only_in_ps2" ]; then
-    while IFS= read -r file; do
-        combined_commands+="rm \"$file\"\n"
-    done <<< "$files_only_in_ps2"
+    echo "Files to delete:" | tee -a "${LOG_FILE}"
+    echo "$files_only_in_ps2" | tee -a "${LOG_FILE}"
 else
     echo "No files to delete." | tee -a "${LOG_FILE}"
 fi
-echo | tee -a "${LOG_FILE}"
-# Add put commands for files_only_in_local
+
+# Only display "Files to copy:" if there are files to copy
 if [ -n "$files_only_in_local" ]; then
-    while IFS= read -r file; do
-        combined_commands+="put \"$file\"\n"
-    done <<< "$files_only_in_local"
+    echo "Files to copy:" | tee -a "${LOG_FILE}"
+    echo "$files_only_in_local" | tee -a "${LOG_FILE}"
 else
     echo "No files to copy." | tee -a "${LOG_FILE}"
 fi
 
-combined_commands+="umount\n"
-combined_commands+="exit"
+# Syncing PS1 games
+if [ -n "$files_only_in_ps2" ] || [ -n "$files_only_in_local" ]; then
+    cd "$POPS_FOLDER" >> "${LOG_FILE}" 2>&1
+    combined_commands="device ${DEVICE}\n"
+    combined_commands+="mount __.POPS\n"
 
-# Execute the combined commands with PFS Shell
-echo "Syncing PS1 games to HDD..." | tee -a "${LOG_FILE}"
-echo | tee -a "${LOG_FILE}"
-echo -e "$combined_commands" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-echo | tee -a "${LOG_FILE}"
-echo "PS1 games synced successfully." | tee -a "${LOG_FILE}"
-echo | tee -a "${LOG_FILE}"
+    # Add delete commands for files_only_in_ps2
+    if [ -n "$files_only_in_ps2" ]; then
+        while IFS= read -r file; do
+            combined_commands+="rm \"$file\"\n"
+        done <<< "$files_only_in_ps2"
+    fi
+
+    # Add put commands for files_only_in_local
+    if [ -n "$files_only_in_local" ]; then
+        while IFS= read -r file; do
+            combined_commands+="put \"$file\"\n"
+        done <<< "$files_only_in_local"
+    fi
+
+    combined_commands+="umount\n"
+    combined_commands+="exit"
+
+    # Execute the combined commands with PFS Shell
+    echo "Syncing PS1 games to HDD..." | tee -a "${LOG_FILE}"
+    echo -e "$combined_commands" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+    echo | tee -a "${LOG_FILE}"
+    echo "PS1 games synced successfully." | tee -a "${LOG_FILE}"
+    echo | tee -a "${LOG_FILE}"
+else
+    echo
+    echo "PS1 games are already synced." | tee -a "${LOG_FILE}"
+    echo | tee -a "${LOG_FILE}"
+fi
 
 # Syncing PS2 games
 echo "Mounting OPL partition" | tee -a "${LOG_FILE}"
@@ -453,17 +480,18 @@ echo | tee -a "${LOG_FILE}"
 echo "Syncing PS2 games..." | tee -a "${LOG_FILE}"
 sudo rsync -r --progress --ignore-existing --delete "${GAMES_PATH}/CD/" "${TOOLKIT_PATH}/OPL/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
 sudo rsync -r --progress --ignore-existing --delete "${GAMES_PATH}/DVD/" "${TOOLKIT_PATH}/OPL/DVD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+sudo cp --update=none "${GAMES_PATH}/APPS/"* "${TOOLKIT_PATH}"/OPL/APPS >> "${LOG_FILE}" 2>&1
+sudo cp --update=none "${GAMES_PATH}/ART/"* "${TOOLKIT_PATH}"/OPL/ART >> "${LOG_FILE}" 2>&1
 sudo cp --update=none "${GAMES_PATH}/CFG/"* "${TOOLKIT_PATH}"/OPL/CFG >> "${LOG_FILE}" 2>&1
 sudo cp --update=none "${GAMES_PATH}/CHT/"* "${TOOLKIT_PATH}"/OPL/CHT >> "${LOG_FILE}" 2>&1
 sudo cp --update=none "${GAMES_PATH}/LNG/"* "${TOOLKIT_PATH}"/OPL/LNG >> "${LOG_FILE}" 2>&1
 sudo cp --update=none "${GAMES_PATH}/THM/"* "${TOOLKIT_PATH}"/OPL/THM >> "${LOG_FILE}" 2>&1
-sudo cp --update=none "${GAMES_PATH}/APPS/"* "${TOOLKIT_PATH}"/OPL/APPS >> "${LOG_FILE}" 2>&1
+sudo cp --update=none "${GAMES_PATH}/VMC/"* "${TOOLKIT_PATH}"/OPL/VMC >> "${LOG_FILE}" 2>&1
 echo | tee -a "${LOG_FILE}"
 echo "PS2 games successfully synced" | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
 echo "Unmounting OPL partition..." | tee -a "${LOG_FILE}"
 sudo umount "${TOOLKIT_PATH}"/OPL
-echo | tee -a "${LOG_FILE}"
 
 mkdir -p "${ARTWORK_DIR}/tmp" 2>> "${LOG_FILE}"
 
@@ -710,10 +738,13 @@ else
     echo "No art work to contribute." | tee -a "${LOG_FILE}"
 fi
 
+echo | tee -a "${LOG_FILE}"
+echo "Cleaning up..." | tee -a "${LOG_FILE}"
 clean_up
 
 sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "$DEVICE" >> "${LOG_FILE}" 2>&1
 echo | tee -a "${LOG_FILE}"
 echo "Game installer script complete." | tee -a "${LOG_FILE}"
 echo
-read -p "Press any key to exit..."
+read -n 1 -s -r -p "Press any key to exit..."
+echo

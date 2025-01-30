@@ -1,6 +1,6 @@
 #!/bin/bash
 # Set terminal size: 100 columns and 40 rows
-echo -e "\e[8;40;100t"
+echo -e "\e[8;45;100t"
 
 # Set paths
 TOOLKIT_PATH="$(pwd)"
@@ -26,7 +26,7 @@ echo "Helper files found." >> "${INSTALL_LOG}"
 
 # Check if the current directory is a Git repository
 if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-  echo "This is not a Git repository. Skipping update check." >> "${INSTALL_LOG}"
+  echo "This is not a Git repository. Skipping update check." | tee -a "${INSTALL_LOG}"
 else
   # Fetch updates from the remote
   git fetch >> "${INSTALL_LOG}" 2>&1
@@ -37,20 +37,20 @@ else
   BASE=$(git merge-base @ @{u})
 
   if [ "$LOCAL" = "$REMOTE" ]; then
-    echo "The repository is up to date." >> "${INSTALL_LOG}"
+    echo "The repository is up to date." | tee -a "${INSTALL_LOG}"
   else
     echo "Downloading update..."
     git reset --hard && git pull --force >> "${INSTALL_LOG}" 2>&1
     echo
     echo "The script has been updated to the latest version." | tee -a "${INSTALL_LOG}"
-    read -p "Press any key to exit, then run the script again."
+    read -n 1 -s -r -p "Press any key to exit, then run the script again."
+    echo
     exit 0
   fi
 fi
 
 # Choose the PS2 storage device
 while true; do
-    clear
     echo "              ______  _________________ _   _   _____          _        _ _           ";
     echo "              | ___ \/  ___| ___ \ ___ \ \ | | |_   _|        | |      | | |          ";
     echo "              | |_/ /\ \`--.| |_/ / |_/ /  \| |   | | _ __  ___| |_ __ _| | | ___ _ __ ";
@@ -77,7 +77,8 @@ while true; do
         if (( size_gb < 200 )); then
             echo
             echo "Error: Device is $size_gb GB. Required minimum is 200 GB."
-            read -p "Press any key to exit."
+            read -n 1 -s -r -p "Press any key to exit."
+            echo
             exit 1
         fi
 
@@ -88,13 +89,16 @@ while true; do
             break
         else
             echo "Aborted." | tee -a "${INSTALL_LOG}"
-            read -p "Press any key to exit..."
+            read -n 1 -s -r -p "Press any key to exit..."
+            echo
             exit 1
         fi
     else
         echo
         echo "Error: Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
-        read -p "Press any key to try again..."
+        read -n 1 -s -r -p "Press any key to try again..."
+        clear
+        echo
         continue
     fi
 done
@@ -111,7 +115,8 @@ for mount_point in $mounted_volumes; do
         echo "Successfully unmounted $mount_point." | tee -a "${INSTALL_LOG}"
     else
         echo "Failed to unmount $mount_point. Please unmount manually." | tee -a "${INSTALL_LOG}"
-        read -p "Press any key to exit..."
+        read -n 1 -s -r -p "Press any key to exit..."
+        echo
         exit 1
     fi
 done
@@ -181,7 +186,8 @@ else
         echo "Download completed: ${LATEST_FILE}" | tee -a "${INSTALL_LOG}"
     else
         echo "Download failed for ${LATEST_FILE}. Please check your internet connection and try again." | tee -a "${INSTALL_LOG}"
-        read -p "Press any key to exit..."
+        read -n 1 -s -r -p "Press any key to exit..."
+        echo
         exit 1
     fi
 fi
@@ -216,7 +222,8 @@ else
     else
         echo | tee -a "${INSTALL_LOG}"
         echo "Error: One or both files (POPS.ELF, IOPRP252.IMG) are missing after extraction." | tee -a "${INSTALL_LOG}"
-        read -p "You can install POPS manually later. Press any key to continue..." | tee -a "${INSTALL_LOG}"
+        read -n 1 -s -r -p "You can install POPS manually later. Press any key to continue..." | tee -a "${INSTALL_LOG}"
+        echo
     fi
 fi
 
@@ -231,15 +238,18 @@ if gunzip -c ${PSBBN_IMAGE} | sudo dd of=${DEVICE} bs=4M status=progress 2>&1 | 
     echo "Verifying installation..."
     if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__common'; then
         echo "Verification successful. PSBBN image installed successfully." | tee -a "${INSTALL_LOG}"
-        read -p "Press any key to continue.."
+        read -n 1 -s -r -p "Press any key to continue.."
+        echo
     else
         echo "Error: Verification failed on ${DEVICE}." | tee -a "${INSTALL_LOG}"
-        read -p "Press any key to exit..."
+        read -n 1 -s -r -p "Press any key to exit..."
+        echo
         exit 1
     fi
 else
     echo "Error: Failed to write the image to ${DEVICE}." | tee -a "${INSTALL_LOG}"
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 fi
 
@@ -251,7 +261,8 @@ output=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc ${DEVICE} 2>&1)
 # Check for the word "aborting" in the output
 if echo "$output" | grep -q "aborting"; then
     echo "${DEVICE}: APA partition is broken; aborting." | tee -a "${INSTALL_LOG}"
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 fi
 
@@ -475,7 +486,8 @@ output=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc ${DEVICE} 2>&1)
 # Check for the word "aborting" in the output
 if echo "$output" | grep -q "aborting"; then
     echo "Error: APA partition is broken on ${DEVICE}. Install failed." | tee -a "${INSTALL_LOG}"
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 fi
 
@@ -489,17 +501,20 @@ else
     echo
     echo "Error: Some partitions are missing on ${DEVICE}. See log for details." | tee -a "${INSTALL_LOG}"
     sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" >> "${INSTALL_LOG}"
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 fi
 
 # Check if 'OPL' is found in the 'lsblk' output and if it matches the device
 if ! lsblk -p -o NAME,LABEL | grep -q "${DEVICE}3"; then
     echo "Error: APA-Jail failed on ${DEVICE}." | tee -a "${INSTALL_LOG}"
-    read -p "Press any key to exit..."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
     exit 1
 fi
 
 echo | tee -a "${INSTALL_LOG}"
 echo "PSBBN successfully installed." | tee -a "${INSTALL_LOG}"
-read -p "Press any key to exit. "
+read -n 1 -s -r -p "Press any key to exit. "
+echo
