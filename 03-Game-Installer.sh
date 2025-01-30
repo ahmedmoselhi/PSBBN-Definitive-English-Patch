@@ -180,6 +180,17 @@ fi
 echo | tee -a "${LOG_FILE}"
 echo "GAMES_PATH is valid: $GAMES_PATH" | tee -a "${LOG_FILE}"
 
+# Create necessary folders if they don't exist
+for folder in APPS ART CFG CHT LNG THM VMC POPS CD DVD; do
+    dir="${GAMES_PATH}/${folder}"
+    [[ -d "$dir" ]] || sudo mkdir -p "$dir" || { 
+        echo "Error: Failed to create $dir. Make sure you have write permissions to $GAMES_PATH" | tee -a "${LOG_FILE}"
+        read -n 1 -s -r -p "Press any key to continue..."
+        echo
+        exit 1
+    }
+done
+
 # Activate the virtual environment
 source "./venv/bin/activate"
 
@@ -203,8 +214,8 @@ deactivate
 
 # Create master list combining PS1 and PS2 games to a single list
 if [[ ! -f "${PS1_LIST}" && ! -f "${PS2_LIST}" ]]; then
-    echo "No games found to install." | tee -a "${LOG_FILE}"
-    read -n 1 -s -r -p "Press any key to exit..."
+    echo
+    read -n 1 -s -r -p "No games found to install. Press any key to exit..."
     echo
     exit 1
 elif [[ ! -f "${PS1_LIST}" ]]; then
@@ -366,7 +377,7 @@ for vcd_file in "$POPS_FOLDER"/*.VCD; do
         # Copy and rename POPSTARTER.ELF to match the .VCD file
         if [ ! -f "$elf_file" ]; then
             echo "Creating $elf_file..." | tee -a "${LOG_FILE}"
-            cp "$POPSTARTER" "$elf_file" 2>>"${LOG_FILE}" || {
+            sudo cp "$POPSTARTER" "$elf_file" 2>>"${LOG_FILE}" || {
                 echo
                 echo "Error: Failed to create $elf_file." | tee -a "${LOG_FILE}"
                 echo "Chech that $POPSTARTER exists and you have write permissions to $GAMES_PATH" | tee -a "${LOG_FILE}"
@@ -390,7 +401,7 @@ for elf_file in "$POPS_FOLDER"/*.ELF; do
         vcd_file="$POPS_FOLDER/$base_name.VCD"
         if [ ! -f "$vcd_file" ]; then
             echo "Deleting orphan $elf_file..." | tee -a "${LOG_FILE}"
-            rm "$elf_file" 2>>"${LOG_FILE}" || {
+            sudo rm "$elf_file" 2>>"${LOG_FILE}" || {
                 echo
                 echo "Error: Failed to delete $elf_file." | tee -a "${LOG_FILE}"
                 echo "Chech that you have write permissions to $GAMES_PATH" | tee -a "${LOG_FILE}"
