@@ -153,6 +153,7 @@ An application called [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Laun
 
 ## Credits
 - PSBBN Definitive English Patch by [CosmicScale](https://github.com/CosmicScale)
+- PSBBN English translation by [CosmicScale](https://github.com/CosmicScale)
 - Online channels resurrected, translated, maintained and hosted by vitas155 at [psbbn.ru](https://psbbn.ru/)
 - PlayStation Now! and Konami online channels re-translated by [CosmicScale](https://github.com/CosmicScale)
 - `01-Setup.sh`, `02-PSBBN-Installer.sh`, `03-Game-Installer.sh`, `art_downloader.js` written by [CosmicScale](https://github.com/CosmicScale)
