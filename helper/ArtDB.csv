@@ -233,7 +233,7 @@ SLPS_032.13|akagawa-jirou-yasoukyoku-2
 SLPS_006.19|akazu-no-ma
 SLES_012.98|akuji-the-heartless
 SLUS_007.15|akuji-the-heartless
-SLUS_807.15|akuji-the-heartless-trade-demo
+SLUS_807.15|akuji-the-heartless
 SLPM_860.23|akumajou-dracula-x-gekka-no-yasoukyoku
 SLPM_860.73|akumajou-dracula-x-gekka-no-yasoukyoku
 SLPM_873.28|akumajou-dracula-x-gekka-no-yasoukyoku
@@ -1842,7 +1842,7 @@ SLES_027.40|dave-mirra-freestyle-bmx
 SLPM_866.82|dave-mirra-freestyle-bmx
 SLUS_010.26|dave-mirra-freestyle-bmx
 SLED_031.15|dave-mirra-freestyle-bmx
-SLUS_810.26|dave-mirra-freestyle-bmx-trade-demo
+SLUS_810.26|dave-mirra-freestyle-bmx
 SLES_033.71|dave-mirra-freestyle-bmx-maximum-remix
 SLUS_013.47|dave-mirra-freestyle-bmx-maximum-remix
 SLES_034.88|david-beckham-soccer
@@ -1857,7 +1857,7 @@ SCPS_451.90|dead-or-alive
 SLPS_012.89|dead-or-alive
 SLUS_006.06|dead-or-alive
 SCED_013.72|dead-or-alive
-SLUS_806.06|dead-or-alive-trade-demo
+SLUS_806.06|dead-or-alive
 SLPS_002.67|deadheat-road
 SLPS_010.36|deadly-skies
 SLPS_004.89|death-wing
@@ -2557,7 +2557,7 @@ SLES_035.17|duke-nukem-time-to-kill
 SLES_035.18|duke-nukem-time-to-kill
 SLUS_005.83|duke-nukem-time-to-kill
 SLUS_900.36|duke-nukem-time-to-kill
-SLUS_805.83|duke-nukem-time-to-kill-trade-demo
+SLUS_805.83|duke-nukem-time-to-kill
 SLPS_015.57|duke-nukem-total-meltdown
 SLUS_003.55|duke-nukem-total-meltdown
 SLES_022.50|dune
@@ -2593,7 +2593,7 @@ SLUS_011.69|ecw-anarchy-rulz
 SLES_025.35|ecw-hardcore-revolution
 SLES_025.36|ecw-hardcore-revolution
 SLUS_010.45|ecw-hardcore-revolution
-SLUS_810.45|ecw-hardcore-revolution-trade-demo
+SLUS_810.45|ecw-hardcore-revolution
 SLPM_801.59|egword-ver-2-00
 SLPS_008.20|eos-edge-of-skyhigh
 SCPS_400.01|eps-series-vol-1-because-i-love-you-yukiko-morikawa
@@ -3585,7 +3585,7 @@ SLUS_007.98|g-police-weapons-of-justice
 SLES_013.14|g-darius
 SLUS_006.90|g-darius
 SLED_014.39|g-darius
-SLUS_806.90|g-darius-devil-dice-brunswick-circuit-pro-bowling-trade-demo
+SLUS_806.90|g-darius-devil-dice-brunswick-circuit-pro-bowling
 SLPS_009.44|god-pure
 SLPM_870.07|grand-theft-auto-gbc
 SLPS_015.54|grand-theft-auto-gbc
@@ -3681,7 +3681,7 @@ SLES_027.91|gauntlet-legends
 SLES_029.31|gauntlet-legends
 SLES_029.32|gauntlet-legends
 SLUS_006.24|gauntlet-legends
-SLUS_806.24|gauntlet-legends-trade-demo
+SLUS_806.24|gauntlet-legends
 SLPS_006.44|gegege-no-kitarou
 SLPM_872.86|gegege-no-kitarou-gyakushuu-youma-daikessen
 SLPM_873.42|gegege-no-kitarou-gyakushuu-youma-daikessen
@@ -4017,7 +4017,7 @@ SLPS_005.80|harukaze-sentai-v-force
 SLPS_023.42|harukaze-sentai-v-force
 SLES_027.81|harvest-moon-back-to-nature
 SLUS_011.15|harvest-moon-back-to-nature
-SLUS_811.15|harvest-moon-back-to-nature-trade-demo
+SLUS_811.15|harvest-moon-back-to-nature
 SLPS_007.04|hashiriya-ookami-tachi-no-densetsu
 SLPS_008.31|hatsukoi-valentine
 SLPS_014.52|hatsukoi-valentine-special
@@ -4295,11 +4295,11 @@ PAPX_900.63|iq-final
 SCPS_100.71|iq-final
 SCPS_913.11|iq-final
 PCPX_961.37|iq-final
-PCPX_960.58|iq-intelligent-qube
-SCPS_100.29|iq-intelligent-qube
-SCPS_910.68|iq-intelligent-qube
-SCUS_941.81|iq-intelligent-qube
-SCUS_941.96|iq-intelligent-qube
+PCPX_960.58|intelligent-qube
+SCPS_100.29|intelligent-qube
+SCPS_910.68|intelligent-qube
+SCUS_941.81|intelligent-qube
+SCUS_941.96|intelligent-qube
 SLUS_010.97|ihra-drag-racing
 SCPS_454.97|iss-pro-evolution
 SLES_020.95|iss-pro-evolution
@@ -4614,7 +4614,7 @@ SLPS_024.31|junjou-de-karen-meymay-kishidan-spectral-force-seishoujo-gaiden
 SLPS_030.78|junjou-de-karen-meymay-kishidan-spectral-force-seishoujo-gaiden
 SLES_001.30|jupiter-strike
 SLUS_001.77|jupiter-strike
-SLUS_805.15|jurassic-park-the-lost-world-trade-demo
+SLUS_805.15|jurassic-park-the-lost-world
 SLES_027.53|k-1-grand-prix
 SLUS_009.41|k-1-grand-prix
 SLPS_026.02|k-1-ouja-ni-narou-king-of-kings
@@ -5836,7 +5836,7 @@ SLES_009.79|monkey-hero
 SLES_019.65|monkey-hero
 SLES_019.66|monkey-hero
 SLUS_007.65|monkey-hero
-SLUS_807.65|monkey-hero-trade-demo
+SLUS_807.65|monkey-hero
 SLPS_025.83|monkey-magic
 SLUS_009.30|monkey-magic
 SLES_009.45|monopoly-ps
@@ -5860,7 +5860,7 @@ SLPM_861.43|monster-race
 SLES_032.46|monster-racer
 SCES_028.72|monster-rancher
 SLUS_005.68|monster-rancher
-SLUS_805.68|monster-rancher-trade-demo
+SLUS_805.68|monster-rancher
 SLUS_009.17|monster-rancher-2
 SLUS_900.71|monster-rancher-2
 SLUS_011.78|monster-rancher-battle-card-episode-ii
@@ -6371,8 +6371,8 @@ SLPS_034.10|nice-price-series-vol-10-igo-o-utou
 SLPS_034.31|nice-price-series-vol-11-nikakudori-deluxe
 SLPS_001.84|nichibutsu-arcade-classics
 SLPS_000.38|nichibutsu-mahjong-joshikou-meijinsen
-SLES_041.73|nick-jr-dora-the-explorer-barnyard-buddies
-SLUS_015.76|nick-jr-dora-the-explorer-barnyard-buddies
+SLES_041.73|dora-the-explorer-barnyard-buddies
+SLUS_015.76|dora-the-explorer-barnyard-buddies
 SLES_033.43|les-razmoket-à-paris-le-film
 SLES_035.45|les-razmoket-100-angelica
 SLES_016.69|les-razmoket-a-la-recherche-de-reptar
@@ -6388,10 +6388,10 @@ SLES_016.70|rugrats-auf-der-suche-nach-reptar
 SLES_016.72|rugrats-de-speurtocht-naar-reptar
 SLES_029.11|rugrats-excursión-al-estudio
 SLES_020.49|rugrats-la-búsqueda-de-reptar
-SLES_015.38|rugrats-search-for-reptar
-SLUS_006.50|rugrats-search-for-reptar
-SLED_017.55|rugrats-search-for-reptar
-SLUS_806.50|rugrats-search-for-reptar-trade-demo
+SLES_015.38|rugrats-the-search-for-reptar
+SLUS_006.50|rugrats-the-search-for-reptar
+SLED_017.55|rugrats-the-search-for-reptar
+SLUS_806.50|rugrats-the-search-for-reptar
 SLES_025.23|rugrats-studio-tour
 SLES_025.25|rugrats-studio-tour
 SLES_029.12|rugrats-studio-tour
@@ -6458,7 +6458,7 @@ SLES_008.49|no-fear-downhill-mountain-biking
 SLED_024.50|no-fear-downhill-mountain-biking
 SLES_013.54|no-one-can-stop-mr-domino
 SLUS_008.04|no-one-can-stop-mr-domino
-SLUS_808.04|no-one-can-stop-mr-domino-trade-demo
+SLUS_808.04|no-one-can-stop-mr-domino
 SLPS_004.93|no-appointment-gals-olympos-apo-nashi-gals-olympos-shokai-gentei
 SLPS_008.62|nobunaga-hiroku-geten-no-yume
 SLPS_003.37|nobunaga-shippuuki-kirameki
@@ -6536,7 +6536,7 @@ SLES_008.41|oddworld-abes-oddysee
 SLUS_001.90|oddworld-abes-oddysee
 SLED_007.25|oddworld-abes-oddysee
 SLUS_900.04|oddworld-abes-oddysee
-SLUS_001.90|oddworld-abes-oddysee-trade-demo
+SLUS_001.90|oddworld-abes-oddysee
 SLES_015.02|oddworld-lexode-dabe
 SLES_115.02|oddworld-lexode-dabe
 SLES_008.38|oddworld-lodyssee-dabe
@@ -6837,7 +6837,7 @@ SLPS_018.20|palm-town
 SLES_009.65|pandemonium-2
 SLUS_005.78|pandemonium-2
 SLED_010.15|pandemonium-2
-SLUS_805.78|pandemonium-2-trade-demo
+SLUS_805.78|pandemonium-2
 SLES_005.26|pandemonium
 SLUS_002.32|pandemonium
 SLED_005.70|pandemonium
@@ -7846,7 +7846,7 @@ SLES_036.04|roger-lemerre-la-selection-des-champions-2002
 SLES_014.17|rogue-trip-vacation-2012
 SLUS_006.43|rogue-trip-vacation-2012
 SLUS_900.44|rogue-trip-vacation-2012
-SLUS_806.43|rogue-trip-vacation-2012-trade-demo
+SLUS_806.43|rogue-trip-vacation-2012
 SLES_034.49|roland-garros-french-open-2001
 SLUS_007.24|roll-away
 SLES_016.60|rollcage
@@ -8264,7 +8264,7 @@ SLED_017.35|silent-hill
 SLED_017.74|silent-hill
 SLED_021.86|silent-hill
 SLUS_900.50|silent-hill
-SLUS_807.07|silent-hill-trade-demo
+SLUS_807.07|silent-hill
 SLES_041.57|silent-iron
 SLPS_016.18|silent-mobius-case-titanic
 SLPS_018.03|silent-mobius-genei-no-datenshi
@@ -10267,7 +10267,7 @@ SLES_040.24|ultimate-brain-games
 SLUS_015.77|ultimate-brain-games
 SLES_029.03|ultimate-fighting-championship
 SLUS_011.43|ultimate-fighting-championship
-SLUS_811.43|ultimate-fighting-championship-trade-demo
+SLUS_811.43|ultimate-fighting-championship
 SLPS_014.55|ultraman-tiga-ultraman-dyna-arata-naru-futatsu-no-hikari
 SLPS_006.52|ultraman-zearth
 SLPS_012.48|ultraman-fighting-evolution
@@ -10807,7 +10807,7 @@ SLPM_867.65|x-men-mutant-academy
 SLPM_870.81|x-men-mutant-academy
 SLUS_007.74|x-men-mutant-academy
 SLPM_806.09|x-men-mutant-academy-spider-man
-SLUS_812.23|x-men-mutant-academy-trade-demo
+SLUS_812.23|x-men-mutant-academy
 SLES_036.30|x-men-mutant-academy-2
 SLPM_870.77|x-men-mutant-academy-2
 SLUS_013.82|x-men-mutant-academy-2
@@ -11331,7 +11331,7 @@ SLUS_200.08|all-star-baseball-2002
 SLES_504.47|all-star-baseball-2003-featuring-derek-jeter
 SLPM_651.37|all-star-baseball-2003-featuring-derek-jeter
 SLUS_203.11|all-star-baseball-2003-featuring-derek-jeter
-SLUS_280.07|all-star-baseball-2003-featuring-derek-jeter-trade-demo
+SLUS_280.07|all-star-baseball-2003-featuring-derek-jeter
 SLES_516.02|all-star-baseball-2004-featuring-derek-jeter
 SLKA_250.57|all-star-baseball-2004-featuring-derek-jeter
 SLUS_205.69|all-star-baseball-2004-featuring-derek-jeter
@@ -11822,7 +11822,7 @@ SLUS_213.76|black
 SLES_516.20|black-bruised
 SLUS_205.06|black-bruised
 SLUS_290.45|black-bruised
-SLUS_280.27|black-bruised-trade-demo
+SLUS_280.27|black-bruised
 SLED_539.37|black
 SLUS_291.80|black
 SLES_542.13|black-buccaneer
@@ -12022,7 +12022,7 @@ SLUS_212.69|bully
 SLES_504.45|burnout
 SLUS_203.07|burnout
 SLED_506.17|burnout
-SLUS_280.06|burnout-trade-demo
+SLUS_280.06|burnout
 SLES_510.44|burnout-2-point-of-impact
 SLES_529.68|burnout-2-point-of-impact
 SLKA_250.39|burnout-2-point-of-impact
@@ -12092,6 +12092,7 @@ SCES_552.10|buzz-junior-ace-racers
 SCES_552.11|buzz-junior-ace-racers
 SCED_554.32|buzz-junior-ace-racers
 SCES_547.49|buzz-junior-dino-den
+SCES_547.50|buzz-junior-dino-den
 SCES_542.19|buzz-junior-jungle-party
 SCES_542.20|buzz-junior-jungle-party
 SCUS_975.96|buzz-junior-jungle-party
@@ -12331,7 +12332,7 @@ SLPM_660.01|chocolat-maid-cafe-curio
 SLKA_150.35|choeyugi-reload-gunlock
 SLES_531.40|choro-q
 SLUS_209.30|choro-q
-SLUS_280.44|choro-q-trade-demo
+SLUS_280.44|choro-q
 SLPM_651.49|choro-q-hg
 SLPS_250.14|choro-q-hg
 SLPS_250.15|choro-q-hg
@@ -12468,7 +12469,7 @@ SLES_533.56|colosseum-road-to-freedom
 SLUS_211.79|colosseum-road-to-freedom
 SLES_539.24|combat-ace
 SLUS_207.15|combat-elite-wwii-paratroopers
-SLUS_280.54|combat-elite-wwii-paratroopers-trade-demo
+SLUS_280.54|combat-elite-wwii-paratroopers
 SLPM_651.69|combatqueen
 SCKA_100.06|come-on-baby
 SLES_508.59|commandos-2-men-of-courage
@@ -12720,7 +12721,7 @@ SLPM_624.27|dance-dance-revolution-party-collection
 SLES_521.07|dance-europe
 SLES_530.09|dance-factory
 SLUS_212.96|dance-factory
-SLUS_280.62|dance-factory-trade-demo
+SLUS_280.62|dance-factory
 SLES_543.32|dance-fest
 SLES_554.62|dance-party-club-hits
 SLES_554.61|dance-party-pop-hits
@@ -13011,12 +13012,12 @@ SLPM_662.71|dirge-of-cerberus-final-fantasy-vii
 SLUS_214.19|dirge-of-cerberus-final-fantasy-vii
 SLES_516.21|dirt-track-devils
 SLUS_205.61|disaster-report
-SLUS_280.25|disaster-report-trade-demo
+SLUS_280.25|disaster-report
 SLES_544.54|disgaea-2-cursed-memories
 SLUS_213.97|disgaea-2-cursed-memories
 SLES_524.58|disgaea-hour-of-darkness
 SLUS_206.66|disgaea-hour-of-darkness
-SLUS_280.34|disgaea-hour-of-darkness-trade-demo
+SLUS_280.34|disgaea-hour-of-darkness
 SLES_554.28|bolt
 SLES_554.29|bolt
 SLES_554.30|bolt
@@ -13424,7 +13425,7 @@ SCPS_550.11|dual-hearts
 SLUS_204.75|dual-hearts
 SLUS_290.33|dual-hearts
 PCPX_963.24|dual-hearts
-SLUS_280.13|dual-hearts-trade-demo
+SLUS_280.13|dual-hearts
 SLES_528.84|duel-masters
 SLUS_209.24|duel-masters
 SLPM_658.82|duel-masters-birth-of-super-dragon
@@ -13788,7 +13789,7 @@ SLES_535.32|fifa-06
 SLES_535.33|fifa-06
 SLKA_253.23|fifa-06
 SLUS_291.60|fifa-06
-SLED_536.64|fifa-06-demo-pre-release-version
+SLED_536.64|fifa-06
 SLAJ_250.88|fifa-07
 SLES_542.40|fifa-07
 SLES_542.41|fifa-07
@@ -13929,9 +13930,9 @@ SLES_532.81|fantastic-4
 SLUS_206.15|fantastic-4
 SLPS_252.36|fantastic-fortune-2
 SLPS_253.96|fantastic-fortune-2-triple-star
-SLES_546.16|fantastic-four-rise-of-the-silver-surfer
-SLES_547.76|fantastic-four-rise-of-the-silver-surfer
-SLUS_215.44|fantastic-four-rise-of-the-silver-surfer
+SLES_546.16|fantastic-4-rise-of-the-silver-surfer
+SLES_547.76|fantastic-4-rise-of-the-silver-surfer
+SLUS_215.44|fantastic-4-rise-of-the-silver-surfer
 SCES_500.02|fantavision
 SCPS_110.02|fantavision
 SCUS_971.05|fantavision
@@ -14762,7 +14763,7 @@ SLES_533.44|guerrilla-strike
 SLES_532.84|guilty-gear-isuka
 SLPM_656.44|guilty-gear-isuka
 SLUS_209.08|guilty-gear-isuka
-SLUS_280.46|guilty-gear-isuka-trade-demo
+SLUS_280.46|guilty-gear-isuka
 SLES_505.91|guilty-gear-x
 SLUS_202.87|guilty-gear-x
 SLPM_645.25|guilty-gear-x-plus
@@ -14863,7 +14864,7 @@ SLPM_655.02|gungrave
 SLUS_204.93|gungrave
 SLPM_651.52|gungrave
 SLPM_601.84|gungrave
-SLUS_280.15|gungrave-trade-demo
+SLUS_280.15|gungrave
 SCAJ_200.82|gungrave-od
 SCKA_200.26|gungrave-od
 SLPM_654.92|gungrave-od
@@ -15080,7 +15081,7 @@ SLES_512.09|haven-call-of-the-king
 SLUS_205.17|haven-call-of-the-king
 SLED_512.81|haven-call-of-the-king
 SLUS_290.38|haven-call-of-the-king
-SLUS_280.19|haven-call-of-the-king-trade-demo
+SLUS_280.19|haven-call-of-the-king
 SLES_544.41|hawk-kawasaki-racing
 SLES_545.40|hawk-superbike-racing
 SLPS_205.01|hayarigami-2-keishichou-kaii-jiken-file
@@ -15124,7 +15125,7 @@ SLPM_645.35|high-heat-major-league-baseball-2003
 SLUS_202.98|high-heat-major-league-baseball-2003
 SLUS_290.19|high-heat-major-league-baseball-2003
 SLUS_206.02|high-heat-major-league-baseball-2004
-SLUS_280.29|high-heat-major-league-baseball-2004-trade-demo
+SLUS_280.29|high-heat-major-league-baseball-2004
 SLUS_210.14|high-rollers-casino
 SLPM_666.20|higurashi-no-naku-koro-ni-matsuri
 SLPM_669.12|higurashi-no-naku-koro-ni-matsuri-kakera-asobi
@@ -15187,6 +15188,7 @@ SLES_530.30|hitman-blood-money
 SLES_530.31|hitman-blood-money
 SLES_530.32|hitman-blood-money
 SLUS_211.08|hitman-blood-money
+SLES_530.28|hitman-blood-money
 SLUS_291.91|hitman-blood-money-urban-chaos-riot-response
 SLES_521.32|hitman-contracts
 SLES_521.33|hitman-contracts
@@ -15673,6 +15675,7 @@ SLES_513.54|jurassic-park-operation-genesis
 SLUS_203.80|jurassic-park-operation-genesis
 SLUS_219.07|jurassic-the-hunted
 SLUS_214.36|just-cause
+SLES_541.37|just-cause
 SLES_544.23|justice-league-heroes
 SLUS_213.04|justice-league-heroes
 SLPM_667.65|juujigen-rippoutai-cypher-game-of-survival-shokai
@@ -16038,7 +16041,7 @@ SLPM_650.35|kitakata-kenzou-sangokushi
 SLPM_624.28|kiwame-mahjong-dx-ii-the-4th-mondo-21-cup-competition
 SCES_503.54|klonoa-2-lunateas-veil
 SLUS_201.51|klonoa-2-lunateas-veil
-SLUS_280.04|klonoa-2-lunateas-veil-trade-demo
+SLUS_280.04|klonoa-2-lunateas-veil
 SLES_528.36|knight-rider-2-the-game
 SLES_510.11|knight-rider-the-game
 SLES_536.45|knights-of-the-temple-ii
@@ -16130,7 +16133,7 @@ SLPM_624.13|kuusen-ii-combat-flight-simulation-ii
 SLES_514.73|kya-dark-lineage
 SLUS_204.40|kya-dark-lineage
 SLED_519.87|kya-dark-lineage
-SLUS_280.37|kya-dark-lineage-trade-demo
+SLUS_280.37|kya-dark-lineage
 SLPS_256.62|kyou-kara-maou-hajimari-no-tabi
 SLPS_256.63|kyou-kara-maou-hajimari-no-tabi
 SLPS_258.01|kyou-kara-maou-shin-makoku-no-kyuujitsu
@@ -16546,7 +16549,7 @@ SLES_539.49|magna-carta-lacrime-di-sangue
 SLES_537.67|magna-carta-les-larmes-de-sang
 SLES_534.83|magna-carta-tears-of-blood
 SLUS_212.21|magna-carta-tears-of-blood
-SLUS_280.53|magna-carta-tears-of-blood-trade-demo
+SLUS_280.53|magna-carta-tears-of-blood
 SLKA_250.48|magye-jeongi-disgaea
 SLPS_200.41|mahjong-gokuu-taisei
 SLPM_626.29|mahjong-haou-battle-royale
@@ -16673,7 +16676,7 @@ SLES_508.71|mat-hoffmans-pro-bmx-2
 SLES_508.72|mat-hoffmans-pro-bmx-2
 SLUS_203.35|mat-hoffmans-pro-bmx-2
 SLED_511.86|mat-hoffmans-pro-bmx-2
-SLUS_280.14|mat-hoffmans-pro-bmx-2-trade-demo
+SLUS_280.14|mat-hoffmans-pro-bmx-2
 SLPM_654.17|mat-hoffmans-pro-bmx-2003
 SLPM_661.41|matantei-loki-ragnarok-mayouga-ushinawareta-bishou
 SLPM_620.66|matching-maker
@@ -16874,7 +16877,7 @@ SLKA_253.55|metal-gear-solid-3-subsistence
 SLUS_213.60|metal-gear-solid-3-subsistence
 SLPM_662.22|metal-gear-solid-3-subsistence
 SLUS_212.93|metal-saga
-SLUS_280.59|metal-saga-trade-demo
+SLUS_280.59|metal-saga
 SLPM_658.68|metal-saga-sajin-no-kusari
 SLPM_742.26|metal-saga-sajin-no-kusari
 SLPS_256.50|metal-slug
@@ -17204,8 +17207,8 @@ SLUS_208.24|nascar-thunder-2004
 SLUS_204.41|nascar-dirt-to-daytona
 SCUS_973.48|nba-06
 SCUS_973.92|nba-06
-SCUS_975.44|nba-07-featuring-the-life-vol-2
-SCUS_975.54|nba-07-featuring-the-life-vol-2
+SCUS_975.44|nba-07-ps2
+SCUS_975.54|nba-07-ps2
 SCES_549.24|nba-08
 SCUS_975.89|nba-08-featuring-the-life-vol-3
 SCUS_976.25|nba-09-the-inside
@@ -17650,15 +17653,15 @@ SLPM_652.35|new-roommania-porori-seishun
 SLPM_680.14|newtype-gundam-game-special-disc
 SLPM_669.26|nights-into-dreams
 SLPS_251.01|nichibeikan-pro-yakyuu-final-league
-SLES_551.12|nick-jr-dora-the-explorer-dora-saves-the-mermaids
-SLES_552.88|nick-jr-dora-the-explorer-dora-saves-the-mermaids
-SLUS_217.17|nick-jr-dora-the-explorer-dora-saves-the-mermaids
-SLES_536.97|nick-jr-dora-the-explorer-journey-to-the-purple-planet
-SLUS_211.73|nick-jr-dora-the-explorer-journey-to-the-purple-planet
-SLES_551.11|nick-jr-go-diego-go-safari-rescue
-SLES_551.89|nick-jr-go-diego-go-safari-rescue
-SLES_552.89|nick-jr-go-diego-go-safari-rescue
-SLUS_217.18|nick-jr-go-diego-go-safari-rescue
+SLES_551.12|dora-the-explorer-dora-saves-the-mermaids
+SLES_552.88|dora-the-explorer-dora-saves-the-mermaids
+SLUS_217.17|dora-the-explorer-dora-saves-the-mermaids
+SLES_536.97|dora-the-explorer-journey-to-the-purple-planet
+SLUS_211.73|dora-the-explorer-journey-to-the-purple-planet
+SLES_551.11|go-diego-go-safari-rescue
+SLES_551.89|go-diego-go-safari-rescue
+SLES_552.89|go-diego-go-safari-rescue
+SLUS_217.18|go-diego-go-safari-rescue
 SLES_543.77|nick-der-tierisch-verrückte-bauernhof
 SLUS_213.95|avatar-the-last-airbender
 SLUS_218.04|avatar-the-last-airbender-into-the-inferno
@@ -17822,7 +17825,7 @@ SLES_551.10|odin-sphere
 SLPM_664.74|odin-sphere
 SLPM_742.59|odin-sphere
 SLUS_215.77|odin-sphere
-SLUS_280.65|odin-sphere-trade-demo
+SLUS_280.65|odin-sphere
 SLES_550.32|off-road
 SLES_502.32|off-road-wide-open
 SLES_527.51|offroad-extreme
@@ -17887,9 +17890,9 @@ SLPS_252.37|only-you-rebel-cross
 SLPS_204.16|onmyou-taisenki-byakko-enbu
 SLPS_204.17|onmyou-taisenki-byakko-enbu
 SLPS_255.01|onmyou-taisenki-hasha-no-in
-SLPM_663.75|ookami
-SLPM_742.39|ookami
-SLPM_611.24|ookami-fude-hajime-no-maki
+SLPM_663.75|okami
+SLPM_742.39|okami
+SLPM_611.24|okami
 SLPM_664.41|oookuki
 SLES_543.10|open-season
 SLES_543.16|open-season
@@ -18666,7 +18669,7 @@ SLES_502.79|red-faction
 SLUS_200.73|red-faction
 SLED_502.86|red-faction
 SLUS_290.05|red-faction
-SLUS_280.02|red-faction-trade-demo
+SLUS_280.02|red-faction
 SLES_511.33|red-faction-ii
 SLUS_204.42|red-faction-ii
 SLED_510.47|red-faction-ii
@@ -18824,7 +18827,7 @@ SLPM_667.36|rogue-hearts-dungeon
 SLES_520.02|rogue-ops
 SLPM_655.34|rogue-ops
 SLUS_207.46|rogue-ops
-SLUS_280.39|rogue-ops-trade-demo
+SLUS_280.39|rogue-ops
 SLES_529.21|rogue-trooper
 SLUS_213.20|rogue-trooper
 SCES_533.10|roland-garros-2005-powered-by-smash-court-tennis
@@ -19102,7 +19105,7 @@ SLES_530.04|samurai-warriors-xtreme-legends
 SLUS_210.80|samurai-warriors-xtreme-legends
 SLES_532.34|samurai-western
 SLUS_211.87|samurai-western
-SLUS_280.51|samurai-western-trade-demo
+SLUS_280.51|samurai-western
 SLPM_657.55|samurai-western-katsugeki-samurai-dou
 SLPM_611.04|samurai-western-katsugeki-samurai-dou
 SLPM_742.09|samurai-dou-2-kettouban
@@ -19461,22 +19464,22 @@ SLUS_218.45|shin-megami-tensei-devil-summoner-2-raidou-kuzunoha-vs-king-abaddon
 SLUS_218.97|shin-megami-tensei-devil-summoner-2-raidou-kuzunoha-vs-king-abaddon
 SLES_546.29|shin-megami-tensei-devil-summoner-raidou-kuzunoha-vs-the-soulless-army
 SLUS_214.31|shin-megami-tensei-devil-summoner-raidou-kuzunoha-vs-the-soulless-army
-SLUS_280.64|shin-megami-tensei-devil-summoner-raidou-kuzunoha-vs-the-soulless-army-trade-demo
+SLUS_280.64|shin-megami-tensei-devil-summoner-raidou-kuzunoha-vs-the-soulless-army
 SLES_534.58|shin-megami-tensei-digital-devil-saga
 SLUS_209.74|shin-megami-tensei-digital-devil-saga
-SLUS_280.49|shin-megami-tensei-digital-devil-saga-trade-demo
+SLUS_280.49|shin-megami-tensei-digital-devil-saga
 SLES_545.55|shin-megami-tensei-digital-devil-saga-2
 SLUS_211.52|shin-megami-tensei-digital-devil-saga-2
-SLUS_280.52|shin-megami-tensei-digital-devil-saga-2-trade-demo
+SLUS_280.52|shin-megami-tensei-digital-devil-saga-2
 SLES_533.63|shin-megami-tensei-lucifers-call
 SLUS_209.11|shin-megami-tensei-iii-nocturne
-SLUS_280.45|shin-megami-tensei-nocturne-trade-demo
+SLUS_280.45|shin-megami-tensei-nocturne
 SLUS_215.69|shin-megami-tensei-persona-3
-SLUS_280.67|shin-megami-tensei-persona-3-trade-demo
+SLUS_280.67|shin-megami-tensei-persona-3
 SLUS_216.21|shin-megami-tensei-persona-3-fes
-SLUS_280.68|shin-megami-tensei-persona-3-fes-trade-demo
+SLUS_280.68|shin-megami-tensei-persona-3-fes
 SLUS_217.82|shin-megami-tensei-persona-4
-SLUS_280.69|shin-megami-tensei-persona-4-trade-demo
+SLUS_280.69|shin-megami-tensei-persona-4
 SLPM_662.75|shin-onimusha-dawn-of-dreams
 SLPM_742.32|shin-onimusha-dawn-of-dreams
 SLPM_742.51|shin-onimusha-dawn-of-dreams
@@ -20105,7 +20108,7 @@ SLUS_203.84|skygunner
 SLUS_290.20|skygunner
 PAPX_902.18|skygunner
 PCPX_963.21|skygunner
-SLUS_280.08|skygunner-trade-demo
+SLUS_280.08|skygunner
 SLES_551.52|skyscraper
 SLES_507.76|slam-tennis
 SLES_506.83|sled-storm
@@ -20426,7 +20429,7 @@ SLPM_652.01|star-wars-jedi-starfighter
 SLPM_675.43|star-wars-jedi-starfighter
 SLPS_251.47|star-wars-jedi-starfighter
 SLUS_202.93|star-wars-jedi-starfighter
-SLUS_280.10|star-wars-jedi-starfighter-trade-demo
+SLUS_280.10|star-wars-jedi-starfighter
 SLES_508.29|star-wars-la-guerra-dei-cloni
 SLES_508.30|star-wars-las-guerras-clon
 SLES_503.66|star-wars-racer-revenge
@@ -20466,7 +20469,7 @@ SLUS_202.14|state-of-emergency
 SLES_540.89|state-of-emergency-2
 SLES_540.92|state-of-emergency-2
 SLUS_209.66|state-of-emergency-2
-SLUS_280.56|state-of-emergency-2-trade-demo
+SLUS_280.56|state-of-emergency-2
 SLPM_664.85|state-of-emergency-revenge
 SLPM_655.58|steady-x-study
 SLES_550.55|stealth-force-2
@@ -20476,7 +20479,7 @@ SLES_541.38|steambot-chronicles
 SLES_543.35|steambot-chronicles
 SLUS_213.44|steambot-chronicles
 SLUS_291.88|steambot-chronicles
-SLUS_280.61|steambot-chronicles-trade-demo
+SLUS_280.61|steambot-chronicles
 SLPS_255.02|steamboy
 SLPM_602.65|steamboy
 SLES_524.82|steel-dragon-ex
@@ -20484,7 +20487,7 @@ SLPM_656.85|stella-deus
 SLPM_666.70|stella-deus
 SLES_537.65|stella-deus-the-gate-of-eternity
 SLUS_211.32|stella-deus-the-gate-of-eternity
-SLUS_280.50|stella-deus-the-gate-of-eternity-trade-demo
+SLUS_280.50|stella-deus-the-gate-of-eternity
 SLPS_200.18|stepping-selection
 SLPS_200.19|stepping-selection
 SLES_539.72|stock-car-crash
@@ -20713,7 +20716,7 @@ SCPS_550.22|surveillance-kanshisha
 PAPX_902.20|surveillance-kanshisha
 SLUS_215.00|suzuki-super-bikes-ii-riding-challenge
 SLUS_209.12|suzuki-tt-superbikes-real-road-racing
-SLUS_218.63|suzuki-tt-superbikes-real-road-racing-championship
+SLUS_218.63|suzuki-tt-superbikes-real-road-racing
 SLPS_258.21|suzumiya-haruhi-no-tomadoi
 SLPS_258.22|suzumiya-haruhi-no-tomadoi
 SLPS_732.64|suzumiya-haruhi-no-tomadoi
@@ -20922,7 +20925,7 @@ SLPS_734.14|tekken-4
 SLUS_203.28|tekken-4
 SCED_511.20|tekken-4
 SLUS_290.34|tekken-4
-SLUS_280.12|tekken-4-trade-demo
+SLUS_280.12|tekken-4
 SCAJ_201.25|tekken-5
 SCAJ_201.26|tekken-5
 SCES_532.02|tekken-5
@@ -21662,7 +21665,7 @@ SLPM_659.17|transformers
 SLUS_206.68|transformers
 SLED_524.41|transformers
 SLUS_291.07|transformers
-SLUS_280.40|transformers-trade-demo
+SLUS_280.40|transformers
 SLED_524.73|transformers-optimus-prime
 SLED_524.74|transformers-red-alert
 SLES_555.20|transformers-revenge-of-the-fallen
@@ -21780,7 +21783,7 @@ SLPS_253.55|ufc-2004
 SLES_509.99|ufc-throwdown
 SLUS_202.52|ufc-throwdown
 SLUS_290.22|ufc-throwdown
-SLUS_280.09|ufc-throwdown-trade-demo
+SLUS_280.09|ufc-throwdown
 SLPM_622.13|ufc-ultimate-fighting-championship-2-tapout
 SLPM_645.39|ufc-ultimate-fighting-championship-2-tapout
 SLES_522.04|ufc-sudden-impact
