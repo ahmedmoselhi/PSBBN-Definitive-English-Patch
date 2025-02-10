@@ -490,7 +490,24 @@ sudo mount ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
 echo | tee -a "${LOG_FILE}"
 echo "Syncing PS2 games..." | tee -a "${LOG_FILE}"
 sudo rsync -r --progress --ignore-existing --delete "${GAMES_PATH}/CD/" "${TOOLKIT_PATH}/OPL/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+if [ $? -ne 0 ]; then
+    echo
+    echo
+    echo "Error: Failed to sync PS2 games. See ${LOG_FILE} for details." | tee -a "${LOG_FILE}"
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
+    exit 1
+fi
+
 sudo rsync -r --progress --ignore-existing --delete "${GAMES_PATH}/DVD/" "${TOOLKIT_PATH}/OPL/DVD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+if [ $? -ne 0 ]; then
+    echo
+    echo
+    echo "Error: Failed to sync PS2 games. See ${LOG_FILE} for details." | tee -a "${LOG_FILE}"
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
+    exit 1
+fi
 sudo cp --update=none "${GAMES_PATH}/APPS/"* "${TOOLKIT_PATH}"/OPL/APPS >> "${LOG_FILE}" 2>&1
 sudo cp --update=none "${GAMES_PATH}/ART/"* "${TOOLKIT_PATH}"/OPL/ART >> "${LOG_FILE}" 2>&1
 sudo cp --update=none "${GAMES_PATH}/CFG/"* "${TOOLKIT_PATH}"/OPL/CFG >> "${LOG_FILE}" 2>&1
