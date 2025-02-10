@@ -279,65 +279,67 @@ function_space
 
 # Prompt user for partition size for music, validate input, and keep asking until valid input is provided
 while true; do
+  clear
   echo | tee -a "${INSTALL_LOG}"
+  echo "Partitioning the first 128 GB of the drive:"
+  echo
   echo "What size would you like the \"Music\" partition to be?" | tee -a "${INSTALL_LOG}"
   echo "Minimum 10 GB, Maximum 40 GB" | tee -a "${INSTALL_LOG}"
   read -p "Enter partition size (in GB): " gb_size
 
-  # Check if the input is a valid number
   if [[ ! "$gb_size" =~ ^[0-9]+$ ]]; then
+    echo
     echo "Invalid input. Please enter a valid number." | tee -a "${INSTALL_LOG}"
+    sleep 3
     continue
   fi
 
-  # Check if the value is within the valid range
   if (( gb_size >= 10 && gb_size <= 40 )); then
     music_partition=$((gb_size * 1024 - 2048))
 
     echo | tee -a "${INSTALL_LOG}"
     echo "You have selected $gb_size GB for the \"Music\" partition." | tee -a "${INSTALL_LOG}"
-
-    # Ask for confirmation
-    read -p "Are you sure you want to proceed? (y/n): " confirm
+    read -p "Do you wish to proceed? (y/n): " confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
-      break  # Exit the loop
+      while true; do
+        GB=$(((available - 14976 - music_partition ) / 1024))
+        echo | tee -a "${INSTALL_LOG}"
+        echo "What size would you like the \"POPS\" partition to be?" | tee -a "${INSTALL_LOG}"
+        echo "The \"POPS\" partition is where PS1 games are stored." | tee -a "${INSTALL_LOG}"
+        echo "Minimum 10 GB, Maximum $GB GB" | tee -a "${INSTALL_LOG}" | tee -a "${INSTALL_LOG}"
+        read -p "Enter partition size (in GB): " gb_size
+
+        if [[ ! "$gb_size" =~ ^[0-9]+$ ]]; then
+          echo
+          echo "Invalid input. Please enter a valid number." | tee -a "${INSTALL_LOG}"
+          continue
+        fi
+
+        if (( gb_size >= 10 && gb_size <= GB )); then
+          pops_partition=$((gb_size * 1024))
+          game_partitions=$(((available - 2048 - music_partition - pops_partition) / 128))
+
+          echo | tee -a "${INSTALL_LOG}"
+          echo "You have selected $gb_size GB for the \"POPS\" partition." | tee -a "${INSTALL_LOG}"
+          echo "This will allow for $game_partitions games in the PSBBN Game Channel." | tee -a "${INSTALL_LOG}"
+          echo
+          echo "If you require more games, reduce the size of your Music/POPS partitions." | tee -a "${INSTALL_LOG}"
+          read -p "Do you wish to proceed? (y/n): " confirm
+          if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            break 2  # Exit both loops
+          else
+            break  # Restart partitioning from the beginning
+          fi
+        else
+          echo
+          echo "Invalid size. Please enter a value between 10 and $GB GB." | tee -a "${INSTALL_LOG}"
+        fi
+      done
     fi
   else
+    echo
     echo "Invalid size. Please enter a value between 10 and 40 GB." | tee -a "${INSTALL_LOG}"
-  fi
-done
-
-# Prompt user for partition size for POPS, validate input, and keep asking until valid input is provided
-while true; do
-  GB=$(((available - 14976 - music_partition ) / 1024))
-  echo | tee -a "${INSTALL_LOG}"
-  echo "What size would you like the \"POPS\" partition to be?" | tee -a "${INSTALL_LOG}"
-  echo "All remaining space will be made available for OPL Launcher partitions" | tee -a "${INSTALL_LOG}"
-  echo "Minimum 10 GB, Maximum $GB GB" | tee -a "${INSTALL_LOG}"
-  read -p "Enter partition size (in GB): " gb_size
-
-  # Check if the input is a valid number
-  if [[ ! "$gb_size" =~ ^[0-9]+$ ]]; then
-    echo "Invalid input. Please enter a valid number." | tee -a "${INSTALL_LOG}"
-    continue
-  fi
-
-  # Check if the value is within the valid range
-  if (( gb_size >= 10 && gb_size <= $GB )); then
-    pops_partition=$((gb_size * 1024))
-    game_partitions=$(((available - 2048 - music_partition - pops_partition) / 128))
-
-    echo | tee -a "${INSTALL_LOG}"
-    echo "You have selected $gb_size GB for the \"POPS\" partition." | tee -a "${INSTALL_LOG}"
-    echo "This will leave enough space for $game_partitions games" | tee -a "${INSTALL_LOG}"
-
-    # Ask for confirmation
-    read -p "Are you sure you want to proceed? (y/n): " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-      break  # Exit the loop
-    fi
-  else
-    echo "Invalid size. Please enter a value between 10 and $GB GB." | tee -a "${INSTALL_LOG}"
+    sleep 3
   fi
 done
 
