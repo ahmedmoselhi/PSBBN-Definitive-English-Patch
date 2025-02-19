@@ -6,7 +6,10 @@ echo -e "\e[8;40;100t"
 TOOLKIT_PATH="$(pwd)"
 ICONS_DIR="${TOOLKIT_PATH}/icons"
 ARTWORK_DIR="${ICONS_DIR}/art"
-POPSTARTER="${TOOLKIT_PATH}/assets/POPSTARTER.ELF"
+HELPER_DIR="${TOOLKIT_PATH}/helper"
+ASSETS_DIR="${TOOLKIT_PATH}/assets"
+POPSTARTER="${ASSETS_DIR}/POPSTARTER.ELF"
+NEUTRINO_DIR="${ASSETS_DIR}/neutrino"
 LOG_FILE="${TOOLKIT_PATH}/game-installer.log"
 MISSING_ART=${TOOLKIT_PATH}/missing-art.log
 
@@ -24,7 +27,7 @@ clear
 cd "${TOOLKIT_PATH}"
 
 # Check if the helper files exists
-if [[ ! -f "${TOOLKIT_PATH}/helper/PFS Shell.elf" || ! -f "${TOOLKIT_PATH}/helper/HDL Dump.elf" ]]; then
+if [[ ! -f "${HELPER_DIR}/PFS Shell.elf" || ! -f "${HELPER_DIR}/HDL Dump.elf" ]]; then
     echo "Required helper files not found. Please ensure you are in the 'PSBBN-Definitive-English-Patch'"
     echo "directory and try again."
     exit 1
@@ -132,20 +135,26 @@ echo "                                         Written by CosmicScale"
     lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT | tee -a "${LOG_FILE}"
     echo | tee -a "${LOG_FILE}"
         
-    read -p "Choose your PS2 HDD from the list above e.g. /dev/sdx): " DEVICE
+    read -p "Choose your PS2 HDD from the list above (e.g., /dev/sdx): " DEVICE
         
-    # Validate input
-    if [[ $DEVICE =~ ^/dev/sd[a-z]$ ]]; then
-        echo
-        echo -e "Selected drive: \"${DEVICE}\"" | tee -a "${LOG_FILE}"
-        break
+    # Validate input format (must start with /dev/)
+    if [[ $DEVICE == /dev/* ]]; then
+        # Check if the device exists
+        if lsblk -p | grep -q "^${DEVICE}"; then
+            echo
+            echo -e "Selected drive: \"${DEVICE}\"" | tee -a "${LOG_FILE}"
+            break
+        else
+            echo
+            echo "Error: Device ${DEVICE} not found. Please choose a valid disk from the list."
+        fi
     else
         echo
         echo "Error: Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
-        read -n 1 -s -r -p "Press any key to try again..."
-        echo
-        continue
     fi
+    
+    read -n 1 -s -r -p "Press any key to try again..."
+    echo
 done
 
 # Find all mounted volumes associated with the device
@@ -191,8 +200,204 @@ for folder in APPS ART CFG CHT LNG THM VMC POPS CD DVD; do
     }
 done
 
+echo | tee -a "${LOG_FILE}"
+echo "Please choose a game launcher:"
+echo "1) Open PS2 Loader (OPL)"
+echo "2) Neutrino"
+echo
+
+while true; do
+    read -p "Enter 1 or 2: " choice
+    case "$choice" in
+        1) LAUNCHER="OPL"; DESC="Open PS2 Loader (OPL)";;
+        2) LAUNCHER="NEUTRINO"; DESC="Neutrino";;
+        *) echo; echo "Invalid choice. Please enter 1 or 2."; continue ;;
+    esac
+
+    echo
+    read -p "You selected $DESC. Are you sure? (y/n): " confirm
+    [[ "$confirm" =~ ^[Yy]$ ]] && break  # Exit loop if "y"
+done
+
+echo "$DESC selected." >> "${LOG_FILE}"
+echo  >> "${LOG_FILE}"
+
+# Delete old game partitions
+delete_partition=$(sudo "${HELPER_DIR}/HDL Dump.elf" toc "$DEVICE" | grep -o 'PP\.[^ ]\+' | grep -Ev '^(PP\.WLE|PP\.LAUNCHER|PP\.DISC)$')
+COMMANDS="device ${DEVICE}\n"
+
+while IFS= read -r partition; do
+    COMMANDS+="rmpart ${partition}\n"
+done <<< "$delete_partition"
+
+COMMANDS+="exit"
+
+echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+echo | tee -a "${LOG_FILE}"
+echo "Checking installed apps:" | tee -a "${LOG_FILE}"
+
+# Check if PP.DISC exists and create it if not
+if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc "${DEVICE}" | grep -q 'PP.DISC'; then
+    echo >> "${LOG_FILE}"
+    echo "Creating PP.DISC partition..." | tee -a "${LOG_FILE}"
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="rmpart PP.WLE\n"
+    COMMANDS+="rmpart PP.LAUNCHER\n"
+    COMMANDS+="mkpart PP.DISC 128M PFS\n"
+    COMMANDS+="mount PP.DISC\n"
+    COMMANDS+="mkdir res\n"
+    COMMANDS+="cd res\n"
+    COMMANDS+="lcd '${ASSETS_DIR}/DISC'\n"
+    COMMANDS+="put info.sys\n"
+    COMMANDS+="put jkt_001.png\n"
+    COMMANDS+="cd /\n"
+    COMMANDS+="umount\n"
+    COMMANDS+="exit"
+    echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+    cd "${ASSETS_DIR}/DISC"
+    sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" PP.DISC >> "${LOG_FILE}" 2>&1
+fi
+
+echo >> "${LOG_FILE}"
+echo "Updating Disc Launcher..." | tee -a "${LOG_FILE}"
+COMMANDS="device ${DEVICE}\n"
+COMMANDS+="mount PP.DISC\n"
+COMMANDS+="lcd '${ASSETS_DIR}/DISC'\n"
+COMMANDS+="rm disc-launcher.KELF\n"
+COMMANDS+="put disc-launcher.KELF\n"
+COMMANDS+="rm PS1VModeNeg.elf\n"
+COMMANDS+="put PS1VModeNeg.elf\n"
+COMMANDS+="umount\n"
+COMMANDS+="exit"
+
+echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+
+# Check if PP.WLE exists and create it if not
+if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc "${DEVICE}" | grep -q 'PP.WLE'; then
+    echo >> "${LOG_FILE}"
+    echo "Creating PP.WLE partition..." | tee -a "${LOG_FILE}"
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="rmpart PP.LAUNCHER\n"
+    COMMANDS+="mkpart PP.WLE 128M PFS\n"
+    COMMANDS+="mount PP.WLE\n"
+    COMMANDS+="mkdir res\n"
+    COMMANDS+="cd res\n"
+    COMMANDS+="lcd '${ASSETS_DIR}/WLE'\n"
+    COMMANDS+="put info.sys\n"
+    COMMANDS+="put jkt_001.png\n"
+    COMMANDS+="cd /\n"
+    COMMANDS+="umount\n"
+    COMMANDS+="exit"
+    echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+    cd "${ASSETS_DIR}/WLE"
+    sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" PP.WLE >> "${LOG_FILE}" 2>&1
+fi
+
+echo >> "${LOG_FILE}"
+echo "Updating WLaunchELF..." | tee -a "${LOG_FILE}"
+COMMANDS="device ${DEVICE}\n"
+COMMANDS+="mount PP.WLE\n"
+COMMANDS+="lcd '${ASSETS_DIR}/WLE'\n"
+COMMANDS+="rm WLE.KELF\n"
+COMMANDS+="put WLE.KELF\n"
+COMMANDS+="umount\n"
+COMMANDS+="exit"
+
+echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+
+# Check if PP.LAUNCHER exists and create it if not
+if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc "${DEVICE}" | grep -q 'PP.LAUNCHER'; then
+   echo >> "${LOG_FILE}"
+   echo "Creating PP.LAUNCHER partition..." | tee -a "${LOG_FILE}"
+   COMMANDS="device ${DEVICE}\n"
+   COMMANDS+="mkpart PP.LAUNCHER 128M PFS\n"
+   COMMANDS+="mount PP.LAUNCHER\n"
+   COMMANDS+="mkdir res\n"
+   COMMANDS+="umount\n"
+   COMMANDS+="exit"
+   echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+   cd "${ASSETS_DIR}/LAUNCHER"
+   sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" PP.LAUNCHER >> "${LOG_FILE}" 2>&1
+fi
+
+echo >> "${LOG_FILE}"
+echo "Updating OPL/Neutrino..." | tee -a "${LOG_FILE}"
+COMMANDS="device ${DEVICE}\n"
+COMMANDS+="mount PP.LAUNCHER\n"
+COMMANDS+="lcd '${ASSETS_DIR}'\n"
+COMMANDS+="rm launcher.KELF\n"
+COMMANDS+="put launcher.KELF\n"
+COMMANDS+="cd res\n"
+
+if [ "$LAUNCHER" = "OPL" ]; then
+    COMMANDS+="lcd OPL\n"
+    COMMANDS+="rm info.sys\n"
+    COMMANDS+="rm jkt_001.png\n"
+    COMMANDS+="put info.sys\n"
+    COMMANDS+="put jkt_001.png\n"
+    COMMANDS+="cd /\n"
+    COMMANDS+="rm nhddl.elf.lch\n"
+    COMMANDS+="put OPNPS2LD.ELF.lch\n"
+elif [ "$LAUNCHER" = "NEUTRINO" ]; then
+    COMMANDS+="lcd NHDDL\n"
+    COMMANDS+="put info.sys\n"
+    COMMANDS+="put jkt_001.png\n"
+    COMMANDS+="cd /\n"
+    COMMANDS+="rm OPNPS2LD.ELF.lch\n"
+    COMMANDS+="put nhddl.elf.lch\n"
+fi
+
+COMMANDS+="umount\n"
+
+# Generate the Neutrino file list
+neutrino_config=$( { ls -1 "$NEUTRINO_DIR/config" | sort; } 2>> "${LOG_FILE}" )
+neutrino_modules=$( { ls -1 "$NEUTRINO_DIR/modules" | sort; } 2>> "${LOG_FILE}" )
+
+COMMANDS+="rmpart +OPL\n"
+COMMANDS+="mkpart +OPL 128M PFS\n"
+COMMANDS+="mount +OPL\n"
+COMMANDS+="cd /\n"
+COMMANDS+="lcd '${ASSETS_DIR}'\n"
+COMMANDS+="put OPNPS2LD.ELF\n"
+COMMANDS+="put nhddl.elf\n"
+COMMANDS+="mkdir neutrino\n"
+COMMANDS+="cd neutrino\n"
+COMMANDS+="lcd '${NEUTRINO_DIR}'\n"
+COMMANDS+="put neutrino.elf\n"
+COMMANDS+="put version.txt\n"
+COMMANDS+="mkdir config\n"
+COMMANDS+="mkdir modules\n"
+COMMANDS+="cd config\n"
+COMMANDS+="lcd '${NEUTRINO_DIR}/config'\n"
+
+# Add put commands for neutrino_config
+if [ -n "$neutrino_config" ]; then
+    while IFS= read -r file; do
+        COMMANDS+="put \"$file\"\n"
+    done <<< "$neutrino_config"
+fi
+
+COMMANDS+="cd ..\n"
+COMMANDS+="cd modules\n"
+COMMANDS+="lcd '${NEUTRINO_DIR}/modules'\n"
+
+# Add put commands for neutrino_modules
+if [ -n "$neutrino_modules" ]; then
+    while IFS= read -r file; do
+        COMMANDS+="put \"$file\"\n"
+    done <<< "$neutrino_modules"
+fi
+
+COMMANDS+="cd /\n"
+COMMANDS+="umount\n"
+COMMANDS+="exit"
+
+echo >> "${LOG_FILE}"
+echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+
 # Activate the virtual environment
-source "./venv/bin/activate"
+sleep 5
+source ./venv/bin/activate 2>>"${LOG_FILE}"
 
 # Check if activation was successful
 if [ $? -ne 0 ]; then
@@ -202,12 +407,55 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+if [ "$LAUNCHER" = "NEUTRINO" ]; then
+    if find "$GAMES_PATH/CD" "$GAMES_PATH/DVD" -type f \( -iname "*.zso" \) | grep -q .; then
+        echo | tee -a "${LOG_FILE}"
+        echo "Games in the compressed ZSO format have been found in the CD/DVD folder." | tee -a "${LOG_FILE}"
+        echo "Neutrino does not support compressed ZSO files."
+        echo
+        echo "ZSO files will be converted to ISO files before proceeding."
+        read -n 1 -s -r -p "Press any key to continue..."
+        echo
+        echo
+
+        while IFS= read -r -d '' zso_file; do
+            iso_file="${zso_file%.*}.iso"
+            echo "Converting: $zso_file -> $iso_file"
+
+            python3 "${HELPER_DIR}/ziso.py" -c 0 "$zso_file" "$iso_file"
+            if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+                rm -f "$iso_file"
+                echo "Error: Failed to uncompress $zso_file" | tee -a "${LOG_FILE}"
+                read -n 1 -s -r -p "Press any key to exit..."
+                echo
+                exit 1  # Properly exits the main script
+            fi
+
+            rm -f "$zso_file"
+        done < <(find "$GAMES_PATH/CD" "$GAMES_PATH/DVD" -type f -iname "*.zso" -print0)
+    fi
+fi
+
 # Create games list of PS1 and PS2 games to be installed
 echo | tee -a "${LOG_FILE}"
-echo "Creating PS1 games list..."| tee -a "${LOG_FILE}"
-python3 ./helper/list-builder-ps1.py "${GAMES_PATH}" "${PS1_LIST}" | tee -a "${LOG_FILE}"
-echo "Creating PS2 games list..."| tee -a "${LOG_FILE}"
-python3 ./helper/list-builder-ps2.py "${GAMES_PATH}" "${PS2_LIST}" | tee -a "${LOG_FILE}"
+
+echo "Creating PS1 games list..." | tee -a "${LOG_FILE}"
+python3 "${HELPER_DIR}/list-builder-ps1.py" "${GAMES_PATH}" "${PS1_LIST}" | tee -a "${LOG_FILE}"
+if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+    echo "Error: Failed to create PS1 games list." | tee -a "${LOG_FILE}"
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
+    exit 1
+fi
+
+echo "Creating PS2 games list..." | tee -a "${LOG_FILE}"
+python3 "${HELPER_DIR}/list-builder-ps2.py" "${GAMES_PATH}" "${PS2_LIST}" | tee -a "${LOG_FILE}"
+if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+    echo "Error: Failed to create PS2 games list." | tee -a "${LOG_FILE}"
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
+    exit 1
+fi
 
 # Deactivate the virtual environment
 deactivate
@@ -234,94 +482,11 @@ if [[ ! -s "${ALL_GAMES}" ]]; then
 fi
 
 echo "Games list successfully created."| tee -a "${LOG_FILE}"
-
-# Delete old game partitions
-delete_partition=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "$DEVICE" | grep -o 'PP\.[^ ]\+' | grep -Ev '^(PP\.WLE|PP\.OPL|PP\.DISC)$')
-COMMANDS="device ${DEVICE}\n"
-
-while IFS= read -r partition; do
-    COMMANDS+="rmpart ${partition}\n"
-done <<< "$delete_partition"
-
-COMMANDS+="exit"
-
-echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-
-
-# Check if PP.DISC exists and create it if not
-if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q 'PP.DISC'; then
-   echo
-   echo "PP.DISC exists." | tee -a "${LOG_FILE}"
-else
-    echo "Installing Disc Launcher..." | tee -a "${LOG_FILE}"
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="rmpart PP.WLE\n"
-    COMMANDS+="rmpart PP.OPL\n"
-    COMMANDS+="mkpart PP.DISC 128M PFS\n"
-    COMMANDS+="mount PP.DISC\n"
-    COMMANDS+="lcd ${TOOLKIT_PATH}/assets/DISC\n"
-    COMMANDS+="mkdir res\n"
-    COMMANDS+="cd res\n"
-    COMMANDS+="put info.sys\n"
-    COMMANDS+="put jkt_001.png\n"
-    COMMANDS+="cd ..\n"
-    COMMANDS+="umount\n"
-    COMMANDS+="exit"
-    echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-    cd "${TOOLKIT_PATH}/assets/DISC"
-    sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" modify_header "${DEVICE}" PP.DISC >> "${LOG_FILE}" 2>&1
-fi   
-
-# Check if PP.WLE exists and create it if not
-if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q 'PP.WLE'; then
-   echo "PP.WLE exists." | tee -a "${LOG_FILE}"
-else
-    echo "Installing WLE..." | tee -a "${LOG_FILE}"
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="rmpart PP.OPL\n"
-    COMMANDS+="mkpart PP.WLE 128M PFS\n"
-    COMMANDS+="mount PP.WLE\n"
-    COMMANDS+="lcd ${TOOLKIT_PATH}/assets/WLE\n"
-    COMMANDS+="put WLE.KELF\n"
-    COMMANDS+="mkdir res\n"
-    COMMANDS+="cd res\n"
-    COMMANDS+="put info.sys\n"
-    COMMANDS+="put jkt_001.png\n"
-    COMMANDS+="cd ..\n"
-    COMMANDS+="umount\n"
-    COMMANDS+="exit"
-    echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-    cd "${TOOLKIT_PATH}/assets/WLE"
-    sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" modify_header "${DEVICE}" PP.WLE >> "${LOG_FILE}" 2>&1
-fi
-
-# Check if PP.OPL exists and create it if not
-if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q 'PP.OPL'; then
-   echo "PP.OPL exists." | tee -a "${LOG_FILE}"
-else
-    echo "Installing OPL..." | tee -a "${LOG_FILE}"
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="mkpart PP.OPL 128M PFS\n"
-    COMMANDS+="mount PP.OPL\n"
-    COMMANDS+="lcd ${TOOLKIT_PATH}/assets\n"
-    COMMANDS+="put OPL-Launcher-BDM.KELF\n"
-    COMMANDS+="mkdir res\n"
-    COMMANDS+="cd res\n"
-    COMMANDS+="lcd OPL\n"
-    COMMANDS+="put info.sys\n"
-    COMMANDS+="put jkt_001.png\n"
-    COMMANDS+="cd ..\n"
-    COMMANDS+="umount\n"
-    COMMANDS+="exit"
-    echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-    cd "${TOOLKIT_PATH}/assets"
-    sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" modify_header "${DEVICE}" PP.OPL >> "${LOG_FILE}" 2>&1
-fi
     
 # Function to find available space
 function function_space() {
 
-output=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc ${DEVICE} 2>&1)
+output=$(sudo "${HELPER_DIR}/HDL Dump.elf" toc ${DEVICE} 2>&1)
 
 # Check for the word "aborting" in the output
 if echo "$output" | grep -q "aborting"; then
@@ -353,12 +518,16 @@ if [ "$count" -gt "$partition_count" ]; then
 
     echo "Not enough space for $count partitions." | tee -a "${LOG_FILE}"
     echo "The first $partition_count games will appear in the PSBBN Game Channel" | tee -a "${LOG_FILE}"
-    echo "Remaining PS2 games will appear in OPL only"
+    echo "Remaining PS2 games will appear in OPL/NHDDL only"
 
     # Overwrite master.list with the first $partition_count lines
     head -n "$partition_count" "$ALL_GAMES" > "${ALL_GAMES}.tmp"
     mv "${ALL_GAMES}.tmp" "$ALL_GAMES"
 fi
+
+echo
+echo "master.list:" >> "${LOG_FILE}"
+cat "$ALL_GAMES" >> "${LOG_FILE}"
 
 echo | tee -a "${LOG_FILE}"
 read -n 1 -s -r -p "Ready to install games. Press any key to continue..."
@@ -426,7 +595,7 @@ COMMANDS+="umount\n"
 COMMANDS+="exit"
 
 # Get the PS1 file list directly from PFS Shell output, filtered and sorted
-ps1_files=$(echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" 2>/dev/null | grep -iE "\.vcd$|\.elf$" | sort)
+ps1_files=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" 2>/dev/null | grep -iE "\.vcd$|\.elf$" | sort)
 
 # Compute differences and store them in variables
 files_only_in_local=$(comm -23 <(echo "$local_files") <(echo "$ps1_files"))
@@ -473,7 +642,7 @@ if [ -n "$files_only_in_ps2" ] || [ -n "$files_only_in_local" ]; then
 
     # Execute the combined commands with PFS Shell
     echo "Syncing PS1 games to HDD..." | tee -a "${LOG_FILE}"
-    echo -e "$combined_commands" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+    echo -e "$combined_commands" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
     echo | tee -a "${LOG_FILE}"
     echo "PS1 games synced successfully." | tee -a "${LOG_FILE}"
     echo | tee -a "${LOG_FILE}"
@@ -482,6 +651,16 @@ else
     echo "PS1 games are already synced." | tee -a "${LOG_FILE}"
     echo | tee -a "${LOG_FILE}"
 fi
+
+# Check contents of __.POPS after sync
+COMMANDS="device ${DEVICE}\n"
+COMMANDS+="mount __.POPS\n"
+COMMANDS+="ls\n"
+COMMANDS+="umount\n"
+COMMANDS+="exit"
+
+echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+echo >> "${LOG_FILE}"
 
 # Syncing PS2 games
 echo "Mounting OPL partition" | tee -a "${LOG_FILE}"
@@ -516,9 +695,13 @@ sudo cp --update=none "${GAMES_PATH}/LNG/"* "${TOOLKIT_PATH}"/OPL/LNG >> "${LOG_
 sudo cp --update=none "${GAMES_PATH}/THM/"* "${TOOLKIT_PATH}"/OPL/THM >> "${LOG_FILE}" 2>&1
 sudo cp --update=none "${GAMES_PATH}/VMC/"* "${TOOLKIT_PATH}"/OPL/VMC >> "${LOG_FILE}" 2>&1
 echo | tee -a "${LOG_FILE}"
+echo "PS2 Games on PS2 drive:" >> "${LOG_FILE}"
+ls -1 "${TOOLKIT_PATH}/OPL/CD/" >> "${LOG_FILE}" 2>&1
+ls -1 "${TOOLKIT_PATH}/OPL/DVD/" >> "${LOG_FILE}" 2>&1
 echo "PS2 games successfully synced" | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
 echo "Unmounting OPL partition..." | tee -a "${LOG_FILE}"
+sleep 5
 sudo umount "${TOOLKIT_PATH}"/OPL
 
 mkdir -p "${ARTWORK_DIR}/tmp" 2>> "${LOG_FILE}"
@@ -545,7 +728,7 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
       # If wget fails, run the art downloader
         [[ -f "$png_file" ]] && rm "$png_file"
         echo "Trying IGN for game ID: $game_id" | tee -a "${LOG_FILE}"
-        node "${TOOLKIT_PATH}"/helper/art_downloader.js "$game_id" 2>&1 | tee -a "${LOG_FILE}"
+        node "${HELPER_DIR}/art_downloader.js" "$game_id" 2>&1 | tee -a "${LOG_FILE}"
     fi
   fi
 done < "$ALL_GAMES"
@@ -604,12 +787,20 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
   game_dir="$ICONS_DIR/$game_id"
   mkdir -p "$game_dir" | tee -a "${LOG_FILE}"
 
+   # Determine the launcher value for this specific game
+  if [[ "$disc_type" == "POPS" ]]; then
+    launcher_value="POPS"
+  else
+    launcher_value="$LAUNCHER"
+  fi
+
   # Generate the launcher.cfg file
   launcher_cfg_filename="$game_dir/launcher.cfg"
   cat > "$launcher_cfg_filename" <<EOL
 file_name=$file_name
 title_id=$game_id
 disc_type=$disc_type
+launcher=$launcher_value
 EOL
   echo "Created launcher.cfg: $launcher_cfg_filename" | tee -a "${LOG_FILE}"
 
@@ -664,7 +855,7 @@ echo "All .cfg, info.sys, and .png files have been created in their respective s
 echo | tee -a "${LOG_FILE}"
 echo "Installing game assets..." | tee -a "${LOG_FILE}"
 
-cd "${TOOLKIT_PATH}/assets/"
+cd "${ASSETS_DIR}"
 
 i=0
 # Reverse the lines of the file using tac and process each line
@@ -688,12 +879,12 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
 
     COMMANDS+="mkpart ${PARTITION_LABEL} 128M PFS\n"
     COMMANDS+="mount ${PARTITION_LABEL}\n"
-    COMMANDS+="cd ..\n"
-    COMMANDS+="lcd ${TOOLKIT_PATH}/assets\n"
-    COMMANDS+="put OPL-Launcher-BDM.KELF\n"
+    COMMANDS+="cd /\n"
+    COMMANDS+="lcd '${ASSETS_DIR}'\n"
+    COMMANDS+="put bbnl.KELF\n"
 
     # Navigate into the sub-directory named after the gameid
-    COMMANDS+="lcd ${ICONS_DIR}/${game_id}\n"
+    COMMANDS+="lcd '${ICONS_DIR}/${game_id}'\n"
     COMMANDS+="put 'launcher.cfg'\n"
     COMMANDS+="mkdir res\n"
     COMMANDS+="cd res\n"
@@ -703,42 +894,15 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
     COMMANDS+="exit\n"
 
     echo "Creating $PARTITION_LABEL" | tee -a "${LOG_FILE}"
-    echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+    echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
 
-    sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" modify_header "${DEVICE}" "${PARTITION_LABEL}" >> "${LOG_FILE}" 2>&1
+    sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "${PARTITION_LABEL}" >> "${LOG_FILE}" 2>&1
 
     function_space
     ((i++))
 done < <(tac "$ALL_GAMES")
 
-# Update OPL, Disc Launcher and WLE
-COMMANDS="device ${DEVICE}\n"
-COMMANDS+="lcd ${TOOLKIT_PATH}/assets\n"
-COMMANDS+="mount +OPL\n"
-COMMANDS+="cd ..\n"
-COMMANDS+="rm OPNPS2LD.ELF\n"
-COMMANDS+="put OPNPS2LD.ELF\n"
-COMMANDS+="umount\n"
-
-COMMANDS+="mount PP.DISC\n"
-COMMANDS+="lcd ${TOOLKIT_PATH}/assets/DISC\n"
-COMMANDS+="rm disc-launcher.KELF\n"
-COMMANDS+="put disc-launcher.KELF\n"
-COMMANDS+="rm PS1VModeNeg.elf\n"
-COMMANDS+="put PS1VModeNeg.elf\n"
-COMMANDS+="umount\n"
-
-COMMANDS+="mount PP.WLE\n"
-COMMANDS+="lcd ${TOOLKIT_PATH}/assets/WLE\n"
-COMMANDS+="rm WLE.KELF\n"
-COMMANDS+="put WLE.KELF\n"
-COMMANDS+="umount\n"
-
-COMMANDS+="exit"
-
-echo | tee -a "${LOG_FILE}"
-echo "Updating apps..." | tee -a "${LOG_FILE}"
-echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+# Submit missing artwork to the PSBBN Art Database
 
 cp $MISSING_ART $ARTWORK_DIR/tmp >> "${LOG_FILE}" 2>&1
 
@@ -770,7 +934,7 @@ echo | tee -a "${LOG_FILE}"
 echo "Cleaning up..." | tee -a "${LOG_FILE}"
 clean_up
 
-sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "$DEVICE" >> "${LOG_FILE}" 2>&1
+sudo "${HELPER_DIR}/HDL Dump.elf" toc "$DEVICE" >> "${LOG_FILE}" 2>&1
 echo | tee -a "${LOG_FILE}"
 echo "Game installer script complete." | tee -a "${LOG_FILE}"
 echo

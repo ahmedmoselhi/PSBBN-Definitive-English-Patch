@@ -1,4 +1,4 @@
-BOOT2 = pfs:/bbnl.KELF
+BOOT2 = pfs:/launcher.KELF
 VER = 1.01
 VMODE = NTSC
 HDDUNITPOWER = NICHDD

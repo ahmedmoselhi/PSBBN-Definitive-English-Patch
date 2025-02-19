@@ -5,9 +5,9 @@ This is the definitive English patch for Sony's "PlayStation Broadband Navigator
 You can find out more about the PSBBN software on [Wikipedia](https://en.wikipedia.org/wiki/PlayStation_Broadband_Navigator).
 
 # Donations  
-This project uses [webhook.site](https://webhook.site/) to automatically contribute game artwork and report missing artwork to the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database). I’m currently on a free account, which provides a temporary URL for seven days or 100 requests. As the project grows in popularity, we're exceeding the 100-request limit every few days. A paid subscription costs $9/month or $90/year, donations would help fund this.
-
 If you appreciate my work and want to support the ongoing development of the PSBBN Definitive English Patch and other PS2-related projects, [you can donate to my Ko-Fi here](https://ko-fi.com/cosmicscale).
+
+This project uses [webhook.site](https://webhook.site/) to automatically contribute game artwork and report missing artwork to the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database). As the project has grow in popularity, we're exceeding the limit offered by a free account. A paid subscription costs $9/month or $90/year, donations would help fund this.
 
 ## Video demonstration of PSBBN:
 
@@ -32,11 +32,11 @@ If you appreciate my work and want to support the ongoing development of the PSB
 - PS2 Linux is pre-installed. Just hold any button on the controller while PSBBN is starting to boot into Linux
 - Bandai and SCEI online channels have been added to the Game Channel
 - Some minor fixes to the English translation
-### Update:
+### Updates:
 - Added Game ID support for the Pixel FX Retro GEM. Works for both PS1 and PS2 games
 - PS2 games now launch up to 5 seconds faster
 - Resolved conflict with mass storage devices (USB, iLink, MX4SIO). Games now launch without issues if these devices are connected
-- OPL software now automatically updates when you sync your games
+- Apps now automatically update when you sync your games
 - The art downloader has been improved to grab significantly more artwork
 - Improved error handling in the PSBBN installer script
 - The setup script has been modified to work on live Linux environments without issues
@@ -46,12 +46,13 @@ If you appreciate my work and want to support the ongoing development of the PSB
   - Set USB keyboard layout to US English. Press `ALT+~` to toggle between kana and direct input
   - Minor corrections to the English translation
 - Added **Open PS2 Loader** and **Launch Disc** to the Game Channel
-- The Game Installer script has been updated to create and delete `OPL Launcher` partitions as needed. Say goodbye to those annoying "Coming soon..." placeholders!
+- The Game Installer script has been updated to create and delete game partitions as needed. Say goodbye to those annoying "Coming soon..." placeholders!
 - Files placed in the `CFG`, `CHT`, `LNG`, `THM`, and `APPS` folders on your PC will now be copied to the PS2 drive during game sync
 - Added Game ID support for MemCard Pro 2 and SD2PSX
 - The scripts now auto-update when an update is available
 - Optimised art work
 - Art downloads from IGN are now automatically contributed to the [PSBBN art database](https://github.com/CosmicScale/psbbn-art-database), and missing artwork is also automatically reported. Manual submissions are welcome, see the [PSBBN art database GitHub page](https://github.com/CosmicScale/psbbn-art-database) for details
+- Added Neutrino support
 
 ## New installation scripts
 
@@ -61,7 +62,7 @@ These scripts are essential for unlocking all the new features exclusive to vers
 
 [![PSBBN Definitive English Patch 2.0](https://github.com/user-attachments/assets/d60dc4ff-85f8-4fb4-8acb-201b063545b0)](https://www.youtube.com/watch?v=sHz0yKYybhk)
 
-### It is highly recommended to install the scripts using the following command to enable automatic updates:
+<span style="font-size: 17px; font-weight: bold;">It is highly recommended to install the scripts using the following command to enable automatic updates:</span>
 ```
 git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
 ```
@@ -75,7 +76,6 @@ git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
 - Downloads and installs the latest version of the **PSBBN Definitive English Patch** from archive.org
 - Prompts for the desired size of the Music Partition
 - Prompts for the desired size of the POPS Partition
-- Installs a pre-release build of [Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) with exFAT and Auto Launch support for BDM devices
 - Installs [POPStarter](https://bitbucket.org/ShaolinAssassin/popstarter-documentation-stuff/wiki/Home)
 - Runs [APA-Jail](#notes-on-apa-jail), creating an exFAT partition using all remaining disk space beyond the first 128 GB
 
@@ -83,15 +83,16 @@ git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
 `03-Game-Installer.sh` fully automates the installation of PS1 and PS2 games. In the `games` folder on your computer, simply put your PS2 `ISO` or `ZSO` files in the `CD`/`DVD` folders, and your PS1 `VCD` files in the `POPS` folder.
 
 The script will:
+- Gives you a choice of [Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) or [Neutrino](https://github.com/rickgaiser/neutrino) for the game launcher
 - Synchronise the games on your PC with your PS2's drive
 - Create all game assets
 - Download artwork from the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database) or IGN if not found in the database
 - Automatically contribute game artwork from IGN and reports missing artwork to the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database)
-- Install [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) into every game partition, making games bootable from the Game Channel
+- Install [BBN Launcher](https://github.com/pcm720/bbnl) into every game partition, making games bootable from the Game Channel
 
 To add or delete games, simply add or remove them from the `games` folder on your computer, then run the script again to synchronise. All games are kept in alphabetical order and grouped by series in the Game Channel on PSBBN.
 
-By default the `games` folder is located in the same directory you installed the scrips to. If you need to change the location of the `games` folder, edit `03-Game-Installer.sh` and modify the `GAMES_PATH` variable.
+By default the `games` folder is located in the same directory you installed the scripts to. If you need to change the location of the `games` folder, edit `03-Game-Installer.sh` and modify the `GAMES_PATH` variable.
 
 
 ### General Notes:
@@ -100,7 +101,7 @@ By default the `games` folder is located in the same directory you installed the
 - PS2 games must be in ISO or ZSO format. PS1 games must be in VCD format
 - PSBBN startup time increases when no active internet connection is available
 - To quit PS1 games, press `L1 + SELECT + START`
-- To quit PS2 games, press `L1 + L2 + R1 + R2 + SELECT + START`
+- If you are using OPL as your game launcher, to quit PS2 games, press `L1 + L2 + R1 + R2 + SELECT + START` and to power off the console press `L1 + L2 + L3 + R1 + R2 + R3`
 - The `root` password for Linux is `password`. There is also a `ps2` user account with the password set as `password`
 
 ### Note on Retro GEM support:
@@ -124,32 +125,42 @@ Recommended usage:
 - Select **Launch Disc** from the menu
 
 ### Notes on OPL:
+[Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) is a 100% Open source game and application loader for the PS2.
+- If you selected [Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) as your game launcher, per-game settings assigned in OPL are reflected when launching games from the PSBBN Game Channel
 - If OPL freezes at startup and games fail to launch from the PSBBN Game Channel, delete any existing OPL configuration files from your PS2 Memory Cards or connected USB devices.
 - To display the games list in OPL, adjust the following settings:
   1. Settings > HDD (APA) Start Mode: Off
   2. Settings > BDM Start Mode: Auto
   3. Settings > BDM Devices > HDD (GPT/MBR): On
-- Make sure a PS2 memory card is inserted, then select `Save Changes` from the main menu.
+  4. Make sure a PS2 memory card is inserted, then select `Save Changes` from the main menu.
 
-### If, after trying the above steps, games still do not appear in the OPL games list and fail to launch from the PSBBN Game Channel, your combination of SATA mod and drive may not be currently compatible with the exFAT version of OPL.
+<span style="font-size: 17px; font-weight: bold;">If, after trying the above steps, games still do not appear in the OPL games list and fail to launch from the PSBBN Game Channel, your combination of SATA mod and drive may not be currently compatible with the exFAT version of OPL.</span>
 
-Possible solutions:
-1. Wait for the OPL bug fix. You can learn more and report your issue [here](https://github.com/ps2homebrew/Open-PS2-Loader/issues/1437)
-2. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then rerun the PSBBN installer
-3. Try using a different HDD/SSD and rerun the PSBBN installer
-4. Try using a different SATA mod for your PS2
-5. Wait for the release of the PSBBN Neutrino Launcher
+**Solution:**  
+Re-run `03-Game-Installer.sh` and select [Neutrino](https://github.com/rickgaiser/neutrino) as your game launcher
+
+**Alternatively solutions:** 
+1. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then re-run `02-PSBBN-Installer.sh`
+2. Try using a different HDD/SSD and re-run `02-PSBBN-Installer.sh`
+3. Try using a different SATA mod for your PS2
+4. Wait for the OPL bug fix. You can learn more and report your issue [here](https://github.com/ps2homebrew/Open-PS2-Loader/issues/1437)
+
+### Notes on Neutrino and NHDDL:
+[Neutrino](https://github.com/rickgaiser/neutrino) is a lightweight device emulator for PS2. [NHDDL](https://github.com/pcm720/nhddl) is a frontend for Neutrino.
+- If you selected [Neutrino](https://github.com/rickgaiser/neutrino) as your game launcher, per-game settings assigned in [NHDDL](https://github.com/pcm720/nhddl) are reflected when launching games from the PSBBN Game Channel
+- [Neutrino](https://github.com/rickgaiser/neutrino) does not support compressed `ZSO` files. If `ZSO` files are found in your `games` folder, they will be automatically uncompressed to `ISO` files by the `03-Game-Installer.sh` script
+- If PS2 games are not displayed in [NHDDL](https://github.com/pcm720/nhddl) and fail to launch from the PSBBN Game Channel, connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then re-run `02-PSBBN-Installer.sh`
 
 ### Notes on APA-Jail:
-APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. The remaining space on the drive is formatted as an exFAT partition, which can be accessed directly on a PC and on the PS2 by the [pre-release build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader). PS2 games in the `ISO` or `ZSO` format are stored on the exFAT partition.
+APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. The remaining space on the drive is formatted as an exFAT partition, which can be accessed directly on a PC and on the PS2 by the [pre-release build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) and [Neutrino](https://github.com/rickgaiser/neutrino). PS2 games in the `ISO` or `ZSO` format are stored on the exFAT partition.
 
-![APA-Jail Type-A](https://github.com/user-attachments/assets/c1a29371-d0ff-431e-8b86-df8337ddf966)
+![APA-Jail Type-A2](https://github.com/user-attachments/assets/8c83dab7-f49f-4a77-b641-9f63d92c85e7)
 
-An application called [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) resides on the APA partitions, along with the [pre-release build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader).
+An application called [BBN Launcher](https://github.com/pcm720/bbnl) resides on the APA partitions, along with the [pre-release build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) or [Neutrino](https://github.com/rickgaiser/neutrino).
  
-[OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) directs [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) to launch specific PS2 games.
+[BBN Launcher](https://github.com/pcm720/bbnl) directs [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) or [Neutrino](https://github.com/rickgaiser/neutrino) to launch specific PS2 games.
 
-### Warning: Creating new partitions manually on your PS2 drive may lead to drive corruption.
+### Warning: Creating new partitions manually on your PS2 drive (e.g., with wLaunchELF) and exceeding the 128 GB limit will cause drive corruption.
 
 ## Credits
 - PSBBN Definitive English Patch by [CosmicScale](https://github.com/CosmicScale)
@@ -160,8 +171,9 @@ An application called [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Laun
 - `01-Setup.sh`, `02-PSBBN-Installer.sh`, `03-Game-Installer.sh`, `art_downloader.js` written by [CosmicScale](https://github.com/CosmicScale)
 - Contains code from `list_builder.py` from [XEB+ neutrino Launcher Plugin](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin) by [sync-on-luma](https://github.com/sync-on-luma), modified by [CosmicScale](https://github.com/CosmicScale)
 - Contains data from `TitlesDB_PS1_English.txt` and `TitlesDB_PS2_English.txt` from the [Title Database Scrapper](https://github.com/GDX-X/Title-Database-Scrapper), modified by [CosmicScale](https://github.com/CosmicScale)
-- [OPL Launcher BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) written by [CosmicScale](https://github.com/CosmicScale)
+- [BBN Launcher](https://github.com/pcm720/bbnl) written by [pcm720](https://github.com/pcm720) and [CosmicScale](https://github.com/CosmicScale)
 - [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) with BDM contributions from [KrahJohlito](https://github.com/KrahJohlito) and Auto Launch modifications by [CosmicScale](https://github.com/CosmicScale)
+- [NHDDL](https://github.com/pcm720/nhddl) written by [pcm720](https://github.com/pcm720)
 - [Retro GEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher) written by [CosmicScale](https://github.com/CosmicScale)
 - Uses APA-Jail code from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) by [Berion](https://www.psx-place.com/resources/authors/berion.1431/)
 - `APA Partition Header Checksumer` by Pinky from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) project. Linux port by Bucanero
