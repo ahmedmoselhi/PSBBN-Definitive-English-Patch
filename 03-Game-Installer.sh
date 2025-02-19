@@ -441,21 +441,9 @@ echo | tee -a "${LOG_FILE}"
 
 echo "Creating PS1 games list..." | tee -a "${LOG_FILE}"
 python3 "${HELPER_DIR}/list-builder-ps1.py" "${GAMES_PATH}" "${PS1_LIST}" | tee -a "${LOG_FILE}"
-if [ "${PIPESTATUS[0]}" -ne 0 ]; then
-    echo "Error: Failed to create PS1 games list." | tee -a "${LOG_FILE}"
-    read -n 1 -s -r -p "Press any key to exit..."
-    echo
-    exit 1
-fi
 
 echo "Creating PS2 games list..." | tee -a "${LOG_FILE}"
 python3 "${HELPER_DIR}/list-builder-ps2.py" "${GAMES_PATH}" "${PS2_LIST}" | tee -a "${LOG_FILE}"
-if [ "${PIPESTATUS[0]}" -ne 0 ]; then
-    echo "Error: Failed to create PS2 games list." | tee -a "${LOG_FILE}"
-    read -n 1 -s -r -p "Press any key to exit..."
-    echo
-    exit 1
-fi
 
 # Deactivate the virtual environment
 deactivate
