@@ -349,9 +349,6 @@ COMMANDS+="mkpart __.POPS ${pops_partition}M PFS\n"
 COMMANDS+="mkpart +OPL 128M PFS\nexit"
 echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${INSTALL_LOG}" 2>&1
 
-# Pipe all commands to PFS Shell for mounting, copying, and unmounting
-echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${INSTALL_LOG}" 2>&1
-
 echo | tee -a "${INSTALL_LOG}"
 echo "Installing POPS and OPL..." | tee -a "${INSTALL_LOG}"
 
