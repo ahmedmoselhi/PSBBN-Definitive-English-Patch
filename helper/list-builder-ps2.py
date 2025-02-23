@@ -16,6 +16,8 @@ pattern_2 = [b'\x3B', b'\x31']
 def count_files(folder, extensions):
     global total
     for image in os.listdir(game_path + folder):
+        if image.startswith('.'):
+            continue  # Skip hidden files
         if any(image.lower().endswith(ext) for ext in extensions):
             total += 1
 
@@ -40,6 +42,8 @@ def process_files(folder, extensions):
     game_list_entries = []
 
     for image in os.listdir(game_path + folder):
+        if image.startswith('.'):
+            continue  # Skip hidden files
         if any(image.lower().endswith(ext) for ext in extensions):
             print(math.floor((count * 100) / total), '% complete')
             print('Processing', image)
@@ -54,7 +58,7 @@ def process_files(folder, extensions):
             file_name_without_ext = os.path.splitext(image)[0]
             if len(file_name_without_ext) >= 9 and file_name_without_ext[4] == '_' and file_name_without_ext[8] == '.':
                 # Filename meets the condition, directly set the game ID
-                string = file_name_without_ext[:11]
+                string = file_name_without_ext[:11].upper()
                 print(f"Filename meets condition. Game ID set directly from filename: {string}")
 
              # If the file has a .zso extension and no ID was set, convert to .iso
@@ -113,10 +117,23 @@ def process_files(folder, extensions):
 
             count += 1
 
-            # Fallback if no title ID is found
+            # If no Game ID is found, generate one from filename
             if len(string) != 11:
-                string = os.path.splitext(original_image)[0][:11]
-                print(f'No title ID found. Defaulting to first 11 chars of filename: {string}')
+                # Remove spaces from filename and convert to uppercase
+                base_name = os.path.splitext(image)[0]  # Strip the file extension
+                string = base_name.replace(' ', '').upper()
+
+                # Trim the string to 9 characters or pad with zeros
+                string = string[:9].ljust(9, '0')
+
+                # Insert the underscore at position 5 and the full stop at position 9
+                string = string[:4] + '_' + string[4:7] + '.' + string[7:]
+
+                # Ensure the string is exactly 11 characters long
+                string = string[:11]
+
+                print(f'No Game ID found. Generating Game ID based on filename: {string}')
+
 
             # Rename the original `.zso` file to begin with the `gameid`
             if converted_iso:
@@ -129,10 +146,28 @@ def process_files(folder, extensions):
             # Determine game name and publisher
             entry = game_names.get(string)
             if entry:
-                game_name, publisher = entry
+                # If we found a match in the CSV
+                game_name = entry[0] if entry[0] else None  # If game name is empty, set to None
+                publisher = entry[1] if len(entry) > 1 and entry[1] else ""
+                if not game_name:  # If game name is None (i.e., found in CSV but empty)
+                    print(f"Game ID '{string}' found in CSV, but title is missing. Using filename logic.")
+                    file_name_without_ext = os.path.splitext(image)[0]
+                    if len(file_name_without_ext) >= 12 and file_name_without_ext[4] == '_' and file_name_without_ext[8] == '.' and file_name_without_ext[11] == '.':
+                        game_name = file_name_without_ext[12:]  # Fallback to part after the game ID
+                    else:
+                        game_name = file_name_without_ext  # Use the filename as-is
+                    publisher = ""  # Publisher will remain empty in this case
+                print(f"Match found: ID='{string}' -> Game='{game_name}', Publisher='{publisher}'")
             else:
-                game_name = os.path.splitext(original_image)[0]
+                # If no match found in CSV, use filename logic for game name
+                print(f"No match found for ID '{string}'")
+                file_name_without_ext = os.path.splitext(image)[0]
+                if len(file_name_without_ext) >= 12 and file_name_without_ext[4] == '_' and file_name_without_ext[8] == '.' and file_name_without_ext[11] == '.':
+                    game_name = file_name_without_ext[12:]
+                else:
+                    game_name = file_name_without_ext
                 publisher = ""
+                print(f"Default game name from filename: '{game_name}'")
 
             # Format entry with game name, game ID, publisher, and updated original image info
             folder_image = f"{folder.replace('/', '', 1)}|{original_image}"

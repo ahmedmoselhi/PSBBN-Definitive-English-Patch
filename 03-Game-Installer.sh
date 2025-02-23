@@ -656,7 +656,7 @@ mkdir "${TOOLKIT_PATH}"/OPL 2>> "${LOG_FILE}"
 sudo mount ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
 echo | tee -a "${LOG_FILE}"
 echo "Syncing PS2 games..." | tee -a "${LOG_FILE}"
-sudo rsync -r --progress --ignore-existing --delete "${GAMES_PATH}/CD/" "${TOOLKIT_PATH}/OPL/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+sudo rsync -r --progress --ignore-existing --delete --exclude=".*" "${GAMES_PATH}/CD/" "${TOOLKIT_PATH}/OPL/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
 if [ $? -ne 0 ]; then
     echo
     echo
@@ -666,7 +666,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-sudo rsync -r --progress --ignore-existing --delete "${GAMES_PATH}/DVD/" "${TOOLKIT_PATH}/OPL/DVD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+sudo rsync -r --progress --ignore-existing --delete --exclude=".*" "${GAMES_PATH}/DVD/" "${TOOLKIT_PATH}/OPL/DVD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
 if [ $? -ne 0 ]; then
     echo
     echo

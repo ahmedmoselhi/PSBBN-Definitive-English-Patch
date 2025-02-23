@@ -15,6 +15,8 @@ pattern_2 = [b'\x3B', b'\x31']
 def count_vcd(folder):
     global total
     for image in os.listdir(game_path + folder):
+        if image.startswith('.'):  # Skip hidden files
+            continue
         if image.lower().endswith(".vcd"):
             total += 1
 
@@ -26,12 +28,12 @@ def process_vcd(folder):
 
     gameid_file_path = "./helper/TitlesDB_PS1_English.csv"
 
-    # Read TitlesDB_PS1_English.csv and create a dictionary of title IDs to game names
+    # Read TitlesDB_PS1_English.csv and create a dictionary of Game IDs to game names
     game_names = {}
     if os.path.isfile(gameid_file_path):
         with open(gameid_file_path, 'r') as gameid_file:
             for line in gameid_file:
-                parts = line.strip().split('|')  # Split title ID and game name
+                parts = line.strip().split('|')  # Split Game ID and game name
                 if len(parts) >= 3:
                     game_names[parts[0]] = (parts[1], parts[2])
     
@@ -39,52 +41,73 @@ def process_vcd(folder):
     game_list_entries = []
 
     for image in os.listdir(game_path + folder):
+        if image.startswith('.'):  # Skip hidden files
+            continue
         if image.lower().endswith(".vcd"):
             print(math.floor((count * 100) / total), '% complete')
             print('Processing', image)
             index = 0
             string = ""
 
-            with open(game_path + folder + "/" + image, "rb") as file:
-                while (byte := file.read(1)):
-                    if len(string) < 4:
-                        if index == 2:
-                            string += byte.decode('utf-8', errors='ignore')
-                        elif byte == pattern_1[index]:
-                            index += 1
-                        else:
-                            string = ""
-                            index = 0
-                    elif len(string) == 4:
-                        index = 0
-                        if byte == b'\x5F':
-                            string += byte.decode('utf-8', errors='ignore')
-                        else:
-                            string = ""
-                    elif len(string) < 8:
-                        string += byte.decode('utf-8', errors='ignore')
-                    elif len(string) == 8:
-                        if byte == b'\x2E':
-                            string += byte.decode('utf-8', errors='ignore')
-                        else:
-                            string = ""
-                    elif len(string) < 11:
-                        string += byte.decode('utf-8', errors='ignore')
-                    elif len(string) == 11:
-                        if byte == pattern_2[index]:
-                            index += 1
+            # Check the filename condition for all files
+            file_name_without_ext = os.path.splitext(image)[0]
+            if len(file_name_without_ext) >= 9 and file_name_without_ext[4] == '_' and file_name_without_ext[8] == '.':
+                # Filename meets the condition, directly set the game ID
+                string = file_name_without_ext[:11].upper()
+                print(f"Filename meets condition. Game ID set directly from filename: {string}")
+            if not string:  # Only process if the game ID is not set from the filename
+                with open(game_path + folder + "/" + image, "rb") as file:
+                    while (byte := file.read(1)):
+                        if len(string) < 4:
                             if index == 2:
-                                break
-                        else:
-                            string = ""
+                                string += byte.decode('utf-8', errors='ignore')
+                            elif byte == pattern_1[index]:
+                                index += 1
+                            else:
+                                string = ""
+                                index = 0
+                        elif len(string) == 4:
                             index = 0
+                            if byte == b'\x5F':
+                                string += byte.decode('utf-8', errors='ignore')
+                            else:
+                                string = ""
+                        elif len(string) < 8:
+                            string += byte.decode('utf-8', errors='ignore')
+                        elif len(string) == 8:
+                            if byte == b'\x2E':
+                                string += byte.decode('utf-8', errors='ignore')
+                            else:
+                                string = ""
+                        elif len(string) < 11:
+                            string += byte.decode('utf-8', errors='ignore')
+                        elif len(string) == 11:
+                            if byte == pattern_2[index]:
+                                index += 1
+                                if index == 2:
+                                    break
+                            else:
+                                string = ""
+                                index = 0
 
-            count += 1
+                count += 1
 
-            # If no title ID is found, set it to the first 11 characters of the filename
+            # If no Game ID is found, generate one from filename
             if len(string) != 11:
-                string = os.path.splitext(image)[0][:11]
-                print(f'No title ID found. Defaulting to first 11 chars of filename: {string}')
+                # Remove spaces from filename and convert to uppercase
+                base_name = os.path.splitext(image)[0]  # Strip the file extension
+                string = base_name.replace(' ', '').upper()
+
+                # Trim the string to 9 characters or pad with zeros
+                string = string[:9].ljust(9, '0')
+
+                # Insert the underscore at position 5 and the full stop at position 9
+                string = string[:4] + '_' + string[4:7] + '.' + string[7:]
+
+                # Ensure the string is exactly 11 characters long
+                string = string[:11]
+
+                print(f'No Game ID found. Generating Game ID based on filename: {string}')
 
             # Determine game name and publisher
             entry = game_names.get(string)
@@ -104,7 +127,7 @@ def process_vcd(folder):
                 print(f"Match found: ID='{string}' -> Game='{game_name}', Publisher='{publisher}'")
             else:
                 # If no match found in CSV, use filename logic for game name
-                print(f"No match found for ID='{string}'")
+                print(f"No match found for ID '{string}'")
                 file_name_without_ext = os.path.splitext(image)[0]
                 if len(file_name_without_ext) >= 12 and file_name_without_ext[4] == '_' and file_name_without_ext[8] == '.' and file_name_without_ext[11] == '.':
                     game_name = file_name_without_ext[12:]
