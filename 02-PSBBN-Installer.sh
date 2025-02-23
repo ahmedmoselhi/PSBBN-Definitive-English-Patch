@@ -39,13 +39,27 @@ else
   if [ "$LOCAL" = "$REMOTE" ]; then
     echo "The repository is up to date." | tee -a "${INSTALL_LOG}"
   else
-    echo "Downloading update..."
-    git reset --hard && git pull --force >> "${INSTALL_LOG}" 2>&1
-    echo
-    echo "The script has been updated to the latest version." | tee -a "${INSTALL_LOG}"
-    read -n 1 -s -r -p "Press any key to exit, then run the script again."
-    echo
-    exit 0
+    echo "Downloading updates..."
+    # Get a list of files that have changed remotely
+    UPDATED_FILES=$(git diff --name-only "$LOCAL" "$REMOTE")
+
+    if [ -n "$UPDATED_FILES" ]; then
+      echo "Files updated in the remote repository:" | tee -a "${INSTALL_LOG}"
+      echo "$UPDATED_FILES" | tee -a "${INSTALL_LOG}"
+
+      # Reset only the files that were updated remotely (discard local changes to them)
+      echo "$UPDATED_FILES" | xargs git checkout -- >> "${INSTALL_LOG}" 2>&1
+
+      # Pull the latest changes
+      git pull --ff-only >> "${INSTALL_LOG}" 2>&1
+
+      echo "The script has been updated to the latest version." | tee -a "${INSTALL_LOG}"
+      read -n 1 -s -r -p "Press any key to exit, then run the script again."
+      echo
+      exit 0
+    else
+      echo "The repository is up to date." | tee -a "${INSTALL_LOG}"
+    fi
   fi
 fi
 

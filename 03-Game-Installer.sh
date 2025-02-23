@@ -64,13 +64,27 @@ else
   if [ "$LOCAL" = "$REMOTE" ]; then
     echo "The repository is up to date." | tee -a "${LOG_FILE}"
   else
-    echo "Downloading update..."
-    git reset --hard && git pull --force >> "${LOG_FILE}" 2>&1
-    echo
-    echo "The script has been updated to the latest version." | tee -a "${LOG_FILE}"
-    read -n 1 -s -r -p "Press any key to exit, set your custom game path if needed, and then run the script again."
-    echo
-    exit 0
+    echo "Downloading updates..."
+    # Get a list of files that have changed remotely
+    UPDATED_FILES=$(git diff --name-only "$LOCAL" "$REMOTE")
+
+    if [ -n "$UPDATED_FILES" ]; then
+      echo "Files updated in the remote repository:" | tee -a "${LOG_FILE}"
+      echo "$UPDATED_FILES" | tee -a "${LOG_FILE}"
+
+      # Reset only the files that were updated remotely (discard local changes to them)
+      echo "$UPDATED_FILES" | xargs git checkout -- >> "${LOG_FILE}" 2>&1
+
+      # Pull the latest changes
+      git pull --ff-only >> "${LOG_FILE}" 2>&1
+
+      echo "The script has been updated to the latest version." | tee -a "${LOG_FILE}"
+      read -n 1 -s -r -p "Press any key to exit, set your custom game path if needed, and then run the script again."
+      echo
+      exit 0
+    else
+      echo "The repository is up to date." | tee -a "${LOG_FILE}"
+    fi
   fi
 fi
 

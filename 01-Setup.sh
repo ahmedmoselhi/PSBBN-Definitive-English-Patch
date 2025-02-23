@@ -28,13 +28,28 @@ else
   if [ "$LOCAL" = "$REMOTE" ]; then
     echo "The repository is up to date."
   else
-    echo "Downloading update..."
-    git reset --hard && git pull --force > /dev/null 2>&1
-    echo
-    echo "The script has been updated to the latest version."
-    read -n 1 -s -r -p "Press any key to exit, then run the script again."
-    echo
-    exit 0
+    echo "Downloading updates..."
+    # Get a list of files that have changed remotely
+    UPDATED_FILES=$(git diff --name-only "$LOCAL" "$REMOTE")
+
+    if [ -n "$UPDATED_FILES" ]; then
+      echo "Files updated in the remote repository:"
+      echo "$UPDATED_FILES"
+
+      # Reset only the files that were updated remotely (discard local changes to them)
+      echo "$UPDATED_FILES" | xargs git checkout --
+
+      # Pull the latest changes
+      git pull --ff-only
+
+      echo
+      echo "The script has been updated to the latest version."
+      read -n 1 -s -r -p "Press any key to exit, then run the script again."
+      echo
+      exit 0
+    else
+      echo "The repository is up to date."
+    fi
   fi
 fi
 
