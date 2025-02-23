@@ -1,8 +1,8 @@
 import os
 import sys
-import subprocess
 import math
 import unicodedata
+import re
 from natsort import natsorted
 
 done = "Error: No games found."
@@ -96,7 +96,7 @@ def process_vcd(folder):
             if len(string) != 11:
                 # Remove spaces from filename and convert to uppercase
                 base_name = os.path.splitext(image)[0]  # Strip the file extension
-                string = base_name.replace(' ', '').upper()
+                string = re.sub(r'[^A-Z0-9]', '', base_name.upper())  # Keep only A-Z and 0-9
 
                 # Trim the string to 9 characters or pad with zeros
                 string = string[:9].ljust(9, '0')
@@ -241,7 +241,7 @@ def main(arg1, arg2):
             count_vcd('/POPS')
             if total == 0:  # No VCD files found
                 print("No PS1 games found in the POPS folder.")
-                sys.exit(1)
+                sys.exit(0)
             process_vcd('/POPS')
         else:
             print('POPS folder not found at ' + game_path)

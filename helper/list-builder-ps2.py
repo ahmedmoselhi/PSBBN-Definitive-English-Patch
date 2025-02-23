@@ -3,6 +3,7 @@ import math
 import os.path
 import subprocess
 import unicodedata
+import re
 from natsort import natsorted
 import shlex
 
@@ -61,23 +62,26 @@ def process_files(folder, extensions):
                 string = file_name_without_ext[:11].upper()
                 print(f"Filename meets condition. Game ID set directly from filename: {string}")
 
-             # If the file has a .zso extension and no ID was set, convert to .iso
+            # If the file has a .zso extension and no ID was set, convert to .iso
             if image.lower().endswith('.zso') and not string:
                 zso_path = os.path.join(game_path + folder, image)
                 iso_path = os.path.join(game_path + folder, os.path.splitext(image)[0] + '.iso')
 
-                print(f"Converting {image} from .zso to .iso...")
-                venv_activate = os.path.join('venv', 'bin', 'activate')
                 command = (
-                    f"source {shlex.quote(venv_activate)} && "
+                    f'echo "Converting {image} from .zso to .iso..." && '
                     f"python3 ./helper/ziso.py -c 0 {shlex.quote(zso_path)} {shlex.quote(iso_path)}"
                 )
-                
-                subprocess.run(command, shell=True, check=True, executable='/bin/bash')
 
-                # Update image to the new .iso path for processing
-                image = os.path.basename(iso_path)
-                converted_iso = True  # Mark the .iso file as being converted from .zso
+                try:
+                    subprocess.run(command, shell=True, check=True, executable='/bin/bash')
+                    # Update image to the new .iso path for processing
+                    image = os.path.basename(iso_path)
+                    converted_iso = True  # Mark the .iso file as being converted from .zso
+                except subprocess.CalledProcessError:
+                    print(f"Error: Conversion of {image} failed. Deleting {iso_path}.")
+                    if os.path.exists(iso_path):
+                        os.remove(iso_path)
+                    sys.exit(1)  # Exit script on failure
 
             # Extract the game ID from the file content if not set by the filename
             if not string:  # Only process if the game ID is not set from the filename
@@ -121,7 +125,7 @@ def process_files(folder, extensions):
             if len(string) != 11:
                 # Remove spaces from filename and convert to uppercase
                 base_name = os.path.splitext(image)[0]  # Strip the file extension
-                string = base_name.replace(' ', '').upper()
+                string = re.sub(r'[^A-Z0-9]', '', base_name.upper())  # Keep only A-Z and 0-9
 
                 # Trim the string to 9 characters or pad with zeros
                 string = string[:9].ljust(9, '0')
@@ -323,7 +327,7 @@ def main(arg1, arg2):
     # Check if no games were found
     if total == 0:
         print("No PS2 games found in the CD or DVD folder.")
-        sys.exit(1)
+        sys.exit(0)
 
     # Process the files now that we know there are games
     for folder, extensions in [('/DVD', ['.iso', '.zso']), ('/CD', ['.iso', '.zso'])]:
@@ -338,6 +342,6 @@ def main(arg1, arg2):
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print('Usage: python3 list_builder-ps1.py <path/to/games> <path/to/ps2.list>')
+        print('Usage: python3 list_builder-ps2.py <path/to/games> <path/to/ps2.list>')
         sys.exit(1)
     main(sys.argv[1], sys.argv[2])
