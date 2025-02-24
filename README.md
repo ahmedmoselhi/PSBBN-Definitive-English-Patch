@@ -7,7 +7,7 @@ You can find out more about the PSBBN software on [Wikipedia](https://en.wikiped
 # Donations  
 If you appreciate my work and want to support the ongoing development of the PSBBN Definitive English Patch and other PS2-related projects, [you can donate to my Ko-Fi here](https://ko-fi.com/cosmicscale).
 
-This project uses [webhook.site](https://webhook.site/) to automatically contribute game artwork and report missing artwork to the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database). As the project has grow in popularity, we're exceeding the limit offered by a free account. A paid subscription costs $9/month or $90/year, donations would help fund this.
+This project uses [webhook.site](https://webhook.site/) to automatically contribute game artwork and report missing artwork to the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database). As the project has grow in popularity, we're exceeding the limit offered by a free account. A paid subscription costs $9/month or $90/year, donations help fund this.
 
 ## Video demonstration of PSBBN:
 
@@ -125,31 +125,27 @@ Recommended usage:
 - Select **Launch Disc** from the menu
 
 ### Notes on OPL:
-[Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) is a 100% Open source game and application loader for the PS2.
+[Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) is a 100% open source game and application loader for the PS2.
 - If you selected [Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) as your game launcher, per-game settings assigned in OPL are reflected when launching games from the PSBBN Game Channel
 - If OPL freezes at startup and games fail to launch from the PSBBN Game Channel, delete any existing OPL configuration files from your PS2 Memory Cards or connected USB devices.
-- To display the games list in OPL, adjust the following settings:
-  1. Settings > HDD (APA) Start Mode: Off
-  2. Settings > BDM Start Mode: Auto
-  3. Settings > BDM Devices > HDD (GPT/MBR): On
-  4. Make sure a PS2 memory card is inserted, then select `Save Changes` from the main menu.
-
-<span style="font-size: 17px; font-weight: bold;">If, after trying the above steps, games still do not appear in the OPL games list and fail to launch from the PSBBN Game Channel, your combination of SATA mod and drive may not be currently compatible with the exFAT version of OPL.</span>
-
-**Solution:**  
-Re-run `03-Game-Installer.sh` and select [Neutrino](https://github.com/rickgaiser/neutrino) as your game launcher
-
-**Alternatively solutions:** 
-1. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then re-run `02-PSBBN-Installer.sh`
-2. Try using a different HDD/SSD and re-run `02-PSBBN-Installer.sh`
-3. Try using a different SATA mod for your PS2
-4. Wait for the OPL bug fix. You can learn more and report your issue [here](https://github.com/ps2homebrew/Open-PS2-Loader/issues/1437)
+- To display the games list in OPL, make sure a PS2 memory card is inserted into your console, launch OPL and adjust the following settings:
+2. Settings > HDD (APA) Start Mode: Off
+3. Settings > BDM Start Mode: Auto
+4. Settings > BDM Devices > HDD (GPT/MBR): On
+5. Select `Save Changes` from the main menu.
 
 ### Notes on Neutrino and NHDDL:
 [Neutrino](https://github.com/rickgaiser/neutrino) is a lightweight device emulator for PS2. [NHDDL](https://github.com/pcm720/nhddl) is a frontend for Neutrino.
 - If you selected [Neutrino](https://github.com/rickgaiser/neutrino) as your game launcher, per-game settings assigned in [NHDDL](https://github.com/pcm720/nhddl) are reflected when launching games from the PSBBN Game Channel
-- [Neutrino](https://github.com/rickgaiser/neutrino) does not support compressed `ZSO` files. If `ZSO` files are found in your `games` folder, they will be automatically uncompressed to `ISO` files by the `03-Game-Installer.sh` script
-- If PS2 games are not displayed in [NHDDL](https://github.com/pcm720/nhddl) and fail to launch from the PSBBN Game Channel, connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then re-run `02-PSBBN-Installer.sh`
+- [Neutrino](https://github.com/rickgaiser/neutrino) does not support compressed `ZSO` files. If `ZSO` files are found in your `games` folder, they will be automatically decompressed to `ISO` files by the `03-Game-Installer.sh` script
+
+### Problems Launching Games
+If games still do not appear in the OPL/NHDDL games list and fail to launch from the PSBBN Game Channel, you should try the following:
+
+1. Re-run `03-Game-Installer.sh` and select an alternative game launcher
+2. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then re-run `02-PSBBN-Installer.sh`
+3. Try using a different HDD/SSD and re-run `02-PSBBN-Installer.sh`
+4. Try using a different SATA mod for your PS2
 
 ### Notes on APA-Jail:
 APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. The remaining space on the drive is formatted as an exFAT partition, which can be accessed directly on a PC and on the PS2 by the [pre-release build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) and [Neutrino](https://github.com/rickgaiser/neutrino). PS2 games in the `ISO` or `ZSO` format are stored on the exFAT partition.
@@ -319,5 +315,5 @@ Before installing the English patch, you **must** power off your console to stan
 PSBBN only supports dates up to the end of 2030.  
 A bug with Game Manuals randomly crashing when changing pages. Manuals only work reliably on the first 5 games installed.  
 \* Instances in feega where some Japanese text could not be translated because it is hard coded in an encrypted file. Atok software has not been translated.  
-\** Should also be compatible with the PS2 Slim SCPH-70xxx models with an IDE Resurrector or similar mod. [PSBBN Definitive English Patch 2.0](#new-to-version-20) and older versions of the [PS2 HDD RAW Image Install](#ps2-hdd-raw-image-install) are not compatible with early model Japanese PS2 consoles that have an external HDD due to space limitations. When [Patching an existing PSBBN install](#patch-an-existing-psbbn-install), Kloader might have compatibility issues with early model Japanese PS2 consoles.  
+\** Should also be compatible with the PS2 Slim SCPH-70xxx models with an IDE Resurrector or similar mod. [PSBBN Definitive English Patch 2.0](#new-to-version-20) and older versions of the [PS2 HDD RAW Image Install](#ps2-hdd-raw-image-install) are not compatible with early model Japanese PS2 consoles that have an external HDD due to space limitations (unless the stock drive is replaced with a 200+ GB drive). When [Patching an existing PSBBN install](#patch-an-existing-psbbn-install), Kloader might have compatibility issues with early model Japanese PS2 consoles with an external HDD.  
 \***Default on-screen keyboard is Japanese. US English on-screen keyboard has been added, but you have to press `SELECT` a number of times to access it. I've noticed a bug where the spacebar key does not function on the US English on-screen keyboard. A space can be entered by pressing the triangle button on the controller instead. I could revert back to the Japanese qwerty keyboard in the future, but I think the benefits of the US keyboard outweigh this negative.
