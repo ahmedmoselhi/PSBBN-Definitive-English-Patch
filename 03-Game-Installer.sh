@@ -680,7 +680,23 @@ echo >> "${LOG_FILE}"
 # Syncing PS2 games
 echo "Mounting OPL partition" | tee -a "${LOG_FILE}"
 mkdir "${TOOLKIT_PATH}"/OPL 2>> "${LOG_FILE}"
+
 sudo mount ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
+
+# Handle possibility host system's `mount` is using Fuse
+if [ $? -ne 0 ] && hash mount.exfat-fuse; then
+    sudo mount.exfat-fuse ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
+fi
+
+if [ $? -ne 0 ]; then
+    echo
+    echo
+    echo "Error: Failed to mount ${DEVICE}3 - did you run 01-Setup.sh?"
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
+    exit 1;
+fi
+
 echo | tee -a "${LOG_FILE}"
 echo "Syncing PS2 games..." | tee -a "${LOG_FILE}"
 sudo rsync -r --progress --ignore-existing --delete --exclude=".*" "${GAMES_PATH}/CD/" "${TOOLKIT_PATH}/OPL/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
