@@ -434,9 +434,9 @@ if [ "$LAUNCHER" = "NEUTRINO" ]; then
 
         while IFS= read -r -d '' zso_file; do
             iso_file="${zso_file%.*}.iso"
-            echo "Converting: $zso_file -> $iso_file"
+            echo "Converting: $zso_file -> $iso_file" | tee -a "${LOG_FILE}"
 
-            python3 "${HELPER_DIR}/ziso.py" -c 0 "$zso_file" "$iso_file"
+            python3 -u "${HELPER_DIR}/ziso.py" -c 0 "$zso_file" "$iso_file" | tee -a "${LOG_FILE}"
             if [ "${PIPESTATUS[0]}" -ne 0 ]; then
                 rm -f "$iso_file"
                 echo "Error: Failed to uncompress $zso_file" | tee -a "${LOG_FILE}"
@@ -681,21 +681,33 @@ echo >> "${LOG_FILE}"
 echo "Mounting OPL partition" | tee -a "${LOG_FILE}"
 mkdir "${TOOLKIT_PATH}"/OPL 2>> "${LOG_FILE}"
 
-sudo mount ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
+sudo mount ${DEVICE}3 "${TOOLKIT_PATH}"/OPL >> "${LOG_FILE}" 2>&1
 
 # Handle possibility host system's `mount` is using Fuse
 if [ $? -ne 0 ] && hash mount.exfat-fuse; then
-    sudo mount.exfat-fuse ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
+    echo "Attempting to use exfat.fuse..." | tee -a "${LOG_FILE}"
+    sudo mount.exfat-fuse ${DEVICE}3 "${TOOLKIT_PATH}"/OPL >> "${LOG_FILE}" 2>&1
 fi
 
 if [ $? -ne 0 ]; then
     echo
     echo
-    echo "Error: Failed to mount ${DEVICE}3 - did you run 01-Setup.sh?"
+    echo "Error: Failed to mount ${DEVICE}3" | tee -a "${LOG_FILE}"
     read -n 1 -s -r -p "Press any key to exit..."
     echo
     exit 1;
 fi
+
+# Create necessary folders if they don't exist
+for folder in APPS ART CFG CHT LNG THM VMC POPS CD DVD; do
+    dir="${TOOLKIT_PATH}/OPL/${folder}"
+    [[ -d "$dir" ]] || sudo mkdir -p "$dir" || { 
+        echo "Error: Failed to create $dir." | tee -a "${LOG_FILE}"
+        read -n 1 -s -r -p "Press any key to continue..."
+        echo
+        exit 1
+    }
+done
 
 echo | tee -a "${LOG_FILE}"
 echo "Syncing PS2 games..." | tee -a "${LOG_FILE}"
@@ -732,8 +744,8 @@ ls -1 "${TOOLKIT_PATH}/OPL/DVD/" >> "${LOG_FILE}" 2>&1
 echo "PS2 games successfully synced" | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
 echo "Unmounting OPL partition..." | tee -a "${LOG_FILE}"
-sleep 5
-sudo umount "${TOOLKIT_PATH}"/OPL
+sync
+sudo umount -l "${TOOLKIT_PATH}"/OPL
 
 mkdir -p "${ARTWORK_DIR}/tmp" 2>> "${LOG_FILE}"
 

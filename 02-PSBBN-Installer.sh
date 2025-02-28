@@ -399,28 +399,6 @@ function function_apajail_magic_number() {
 	sudo dd if=/tmp/apajail_magic_number.bin of=${DEVICE} bs=8 count=1 seek=28 conv=notrunc >> "${INSTALL_LOG}" 2>&1
 	}
 
-function function_make_ps2_dirs() {
-	if [ ! -d "/tmp/ps2_dirs" ]; then
-		mkdir /tmp/ps2_dirs
-	fi	
-	if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
-		sudo mount ${DEVICE}p${PARTITION_NUMBER} /tmp/ps2_dirs
-		else sudo mount ${DEVICE}${PARTITION_NUMBER} /tmp/ps2_dirs
-	fi
-	cd /tmp/ps2_dirs
-	sudo mkdir -p APPS/		# Open PS2 Loader: applications 
-	sudo mkdir -p ART/		# Open PS2 Loader: disc covers (<GameID>_COV.png, <GameID>_ICO.png, <GameID>_SCR.png etc.)
-	sudo mkdir -p CFG/		# Open PS2 Loader: per game configs (<GameID>.cfg)
-	sudo mkdir -p CHT/		# Open PS2 Loader: cheats (<GameID>.cht)
-	sudo mkdir -p CD/		# Open PS2 Loader: CD disc images (*.iso, *.zso)
-	sudo mkdir -p DVD/		# Open PS2 Loader: DVD disc images (*.iso, *.zso)
-	sudo mkdir -p LNG		# Open PS2 Loader: Language files
-	sudo mkdir -p THM/		# Open PS2 Loader: theme dirs (thm_<ThemeName>/*)
-	sudo mkdir -p VMC/		# Open PS2 Loader: non-ECC PS2 Memory Card images (generic or <GameID>_0.bin, <GameID>_1.bin)
-	sync
-	sudo umount -l /tmp/ps2_dirs
-	}
-
 function function_apa_checksum_fix() {
 	sudo dd if=${DEVICE} of=/tmp/apa_header_full.bin bs=512 count=2 >> "${INSTALL_LOG}" 2>&1
 	"${TOOLKIT_PATH}/helper/PS2 APA Header Checksum Fixer.elf" /tmp/apa_header_full.bin | sed -n 8p | awk '{print $6}' | xxd -r -p > /tmp/apa_header_checksum.bin
@@ -462,7 +440,6 @@ fi
 } >> "${INSTALL_LOG}" 2>&1
 
 PARTITION_NUMBER=3
-function_make_ps2_dirs
 
 # Finalising recovery:
 if [ ! -d "${TOOLKIT_PATH}/storage/hdd/recovery" ]; then
