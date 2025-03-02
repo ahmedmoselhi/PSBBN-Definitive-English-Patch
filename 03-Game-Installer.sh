@@ -606,7 +606,7 @@ echo | tee -a "${LOG_FILE}"
 echo "Size of local POPS folder: ${POPS_SIZE} MB" | tee -a "${LOG_FILE}"
 
 # Get the POPS partition size in MB
-POPS_PARTITION=$(sudo "${HELPER_DIR}/HDL Dump.elf" toc /dev/sdf | grep __.POPS | awk '{print $4}' | grep -oE '[0-9]+')
+POPS_PARTITION=$(sudo "${HELPER_DIR}/HDL Dump.elf" toc ${DEVICE} | grep __.POPS | awk '{print $4}' | grep -oE '[0-9]+')
 
 echo "Size of POPS partition: ${POPS_PARTITION} MB"| tee -a "${LOG_FILE}"
 
