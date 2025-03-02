@@ -599,6 +599,30 @@ for elf_file in "$POPS_FOLDER"/*.ELF; do
 done
 echo "Orphan .ELF files removed successfully." | tee -a "${LOG_FILE}"
 
+# Get the local POPS folder size in MB
+POPS_SIZE=$(du -s --block-size=1M "$POPS_FOLDER" | awk '{print $1}')
+
+echo | tee -a "${LOG_FILE}"
+echo "Size of local POPS folder: ${POPS_SIZE} MB" | tee -a "${LOG_FILE}"
+
+# Get the POPS partition size in MB
+POPS_PARTITION=$(sudo "${HELPER_DIR}/HDL Dump.elf" toc /dev/sdf | grep __.POPS | awk '{print $4}' | grep -oE '[0-9]+')
+
+echo "Size of POPS partition: ${POPS_PARTITION} MB"| tee -a "${LOG_FILE}"
+
+# Check if POPS_SIZE is greater than POPS_PARTITION - 128
+THRESHOLD=$((POPS_PARTITION - 128))
+
+if [ "$POPS_SIZE" -gt "$THRESHOLD" ]; then
+    echo
+    echo "Error: The local POPS folder is ${POPS_SIZE} MB, which exceeds the allowed limit of ${THRESHOLD} MB."| tee -a "${LOG_FILE}"
+    echo "Remove some VCD files from the local POPS folder and try again."
+    echo
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
+    exit 1
+fi
+
 # Generate the local file list directly in a variable
 local_files=$( { ls -1 "$POPS_FOLDER" | grep -Ei '\.VCD$|\.ELF$' | sort; } 2>> "${LOG_FILE}" )
 
@@ -618,17 +642,21 @@ files_only_in_ps2=$(comm -13 <(echo "$local_files") <(echo "$ps1_files"))
 
 # Only display "Files to delete:" if there are files to delete
 if [ -n "$files_only_in_ps2" ]; then
+    echo | tee -a "${LOG_FILE}"
     echo "Files to delete:" | tee -a "${LOG_FILE}"
     echo "$files_only_in_ps2" | tee -a "${LOG_FILE}"
 else
+    echo | tee -a "${LOG_FILE}"
     echo "No files to delete." | tee -a "${LOG_FILE}"
 fi
 
 # Only display "Files to copy:" if there are files to copy
 if [ -n "$files_only_in_local" ]; then
+    echo | tee -a "${LOG_FILE}"
     echo "Files to copy:" | tee -a "${LOG_FILE}"
     echo "$files_only_in_local" | tee -a "${LOG_FILE}"
 else
+    echo | tee -a "${LOG_FILE}"
     echo "No files to copy." | tee -a "${LOG_FILE}"
 fi
 
@@ -656,6 +684,7 @@ if [ -n "$files_only_in_ps2" ] || [ -n "$files_only_in_local" ]; then
     combined_commands+="exit"
 
     # Execute the combined commands with PFS Shell
+    echo | tee -a "${LOG_FILE}"
     echo "Syncing PS1 games to HDD..." | tee -a "${LOG_FILE}"
     echo -e "$combined_commands" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
     echo | tee -a "${LOG_FILE}"
@@ -678,7 +707,7 @@ echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
 echo >> "${LOG_FILE}"
 
 # Syncing PS2 games
-echo "Mounting OPL partition" | tee -a "${LOG_FILE}"
+echo "Mounting OPL partition..." | tee -a "${LOG_FILE}"
 mkdir "${TOOLKIT_PATH}"/OPL 2>> "${LOG_FILE}"
 
 sudo mount ${DEVICE}3 "${TOOLKIT_PATH}"/OPL >> "${LOG_FILE}" 2>&1
@@ -708,6 +737,31 @@ for folder in APPS ART CFG CHT LNG THM VMC POPS CD DVD; do
         exit 1
     }
 done
+
+# Get the local CD & DVD folder's size in MB
+CD_FOLDER=$(du -s --block-size=1M "${GAMES_PATH}/CD" | awk '{print $1}')
+DVD_FOLDER=$(du -s --block-size=1M "${GAMES_PATH}/DVD" | awk '{print $1}')
+
+PS2_SIZE=$((CD_FOLDER + DVD_FOLDER))
+
+echo | tee -a "${LOG_FILE}"
+echo "Size of PS2 games: $PS2_SIZE MB" | tee -a "${LOG_FILE}"
+
+OPL_PARTITION=$(df -m | grep "${TOOLKIT_PATH}/OPL" | awk '{print $4}')
+echo "Size of OPL partition: ${OPL_PARTITION} MB" | tee -a "${LOG_FILE}"
+
+# Check if PS2_SIZE is greater than OPL_PARTITION - 128
+THRESHOLD=$((OPL_PARTITION - 128))
+
+if [ "$PS2_SIZE" -gt "$THRESHOLD" ]; then
+    echo
+    echo "Error: The total size of local PS2 games is ${PS2_SIZE} MB, which exceeds the allowed limit of ${THRESHOLD} MB." | tee -a "${LOG_FILE}"
+    echo "Remove some ISO/ZSO files from the local CD/DVD folders and try again."
+    echo
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
+    exit 1
+fi
 
 echo | tee -a "${LOG_FILE}"
 echo "Syncing PS2 games..." | tee -a "${LOG_FILE}"
