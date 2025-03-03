@@ -56,7 +56,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 ## New installation scripts
 
-These scripts are essential for unlocking all the new features exclusive to version 2.0. They require a Linux environment to run. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive or a virtual machine. Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based distributions using `dnf` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
+These scripts are essential for unlocking all the new features exclusive to version 2.0. They require a x86 Linux environment to run. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive or a virtual machine. Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based distributions using `dnf` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
 
 ## Video Tutorial:
 
@@ -65,6 +65,10 @@ These scripts are essential for unlocking all the new features exclusive to vers
 <span style="font-size: 17px; font-weight: bold;">It is highly recommended to install the scripts using the following command to enable automatic updates:</span>
 ```
 git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
+```
+If you have not used Git before, you might need to install it first. On Debian-based distributions, it can be installed with the following command:
+```
+sudo apt install git
 ```
 
 ### Setup script:
@@ -77,7 +81,7 @@ git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
 - Prompts for the desired size of the Music Partition
 - Prompts for the desired size of the POPS Partition
 - Installs [POPStarter](https://bitbucket.org/ShaolinAssassin/popstarter-documentation-stuff/wiki/Home)
-- Runs [APA-Jail](#notes-on-apa-jail), creating an exFAT partition using all remaining disk space beyond the first 128 GB
+- Runs [APA-Jail](#notes-on-apa-jail), creating an exFAT partition using all remaining disk space beyond the first 128 GB (up to 2 TB)
 
 ### Game installer script: 
 `03-Game-Installer.sh` fully automates the installation of PS1 and PS2 games. In the `games` folder on your computer, simply put your PS2 `ISO` or `ZSO` files in the `CD`/`DVD` folders, and your PS1 `VCD` files in the `POPS` folder.
@@ -129,10 +133,10 @@ Recommended usage:
 - If you selected [Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) as your game launcher, per-game settings assigned in OPL are reflected when launching games from the PSBBN Game Channel
 - If OPL freezes at startup and games fail to launch from the PSBBN Game Channel, delete any existing OPL configuration files from your PS2 Memory Cards or connected USB devices.
 - To display the games list in OPL, make sure a PS2 memory card is inserted into your console, launch OPL and adjust the following settings:
-2. Settings > HDD (APA) Start Mode: Off
-3. Settings > BDM Start Mode: Auto
-4. Settings > BDM Devices > HDD (GPT/MBR): On
-5. Select `Save Changes` from the main menu.
+1. Settings > HDD (APA) Start Mode: Off
+2. Settings > BDM Start Mode: Auto
+3. Settings > BDM Devices > HDD (GPT/MBR): On
+4. Settings > Save Changes
 
 ### Notes on Neutrino and NHDDL:
 [Neutrino](https://github.com/rickgaiser/neutrino) is a lightweight device emulator for PS2. [NHDDL](https://github.com/pcm720/nhddl) is a frontend for Neutrino.
