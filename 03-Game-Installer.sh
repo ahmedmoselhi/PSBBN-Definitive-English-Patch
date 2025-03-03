@@ -208,7 +208,7 @@ for folder in APPS ART CFG CHT LNG THM VMC POPS CD DVD; do
     dir="${GAMES_PATH}/${folder}"
     [[ -d "$dir" ]] || sudo mkdir -p "$dir" || { 
         echo "Error: Failed to create $dir. Make sure you have write permissions to $GAMES_PATH" | tee -a "${LOG_FILE}"
-        read -n 1 -s -r -p "Press any key to continue..."
+        read -n 1 -s -r -p "Press any key to exit..."
         echo
         exit 1
     }
@@ -732,7 +732,7 @@ for folder in APPS ART CFG CHT LNG THM VMC POPS CD DVD; do
     dir="${TOOLKIT_PATH}/OPL/${folder}"
     [[ -d "$dir" ]] || sudo mkdir -p "$dir" || { 
         echo "Error: Failed to create $dir." | tee -a "${LOG_FILE}"
-        read -n 1 -s -r -p "Press any key to continue..."
+        read -n 1 -s -r -p "Press any key to exit..."
         echo
         exit 1
     }
@@ -747,7 +747,7 @@ PS2_SIZE=$((CD_FOLDER + DVD_FOLDER))
 echo | tee -a "${LOG_FILE}"
 echo "Size of PS2 games: $PS2_SIZE MB" | tee -a "${LOG_FILE}"
 
-OPL_PARTITION=$(df -m | grep "${TOOLKIT_PATH}/OPL" | awk '{print $4}')
+OPL_PARTITION=$(df -m --output=size "${TOOLKIT_PATH}/OPL" | tail -n 1 | awk '{$1=$1};1')
 echo "Size of OPL partition: ${OPL_PARTITION} MB" | tee -a "${LOG_FILE}"
 
 # Check if PS2_SIZE is greater than OPL_PARTITION - 128
