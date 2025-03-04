@@ -36,6 +36,8 @@ fi
 echo "########################################################################################################">> "${LOG_FILE}";
 date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
+cat /etc/*-release >> "${LOG_FILE}" 2>&1
+echo >> "${LOG_FILE}"
 echo "Path set to: $TOOLKIT_PATH" >> "${LOG_FILE}"
 echo "Helper files found." >> "${LOG_FILE}"
 

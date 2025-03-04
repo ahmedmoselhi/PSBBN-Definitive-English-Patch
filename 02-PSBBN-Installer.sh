@@ -21,6 +21,8 @@ fi
 echo "########################################################################################################">> "${INSTALL_LOG}";
 date >> "${INSTALL_LOG}"
 echo >> "${INSTALL_LOG}"
+cat /etc/*-release >> "${INSTALL_LOG}" 2>&1
+echo >> "${INSTALL_LOG}"
 echo "Path set to: $TOOLKIT_PATH" >> "${INSTALL_LOG}"
 echo "Helper files found." >> "${INSTALL_LOG}"
 
