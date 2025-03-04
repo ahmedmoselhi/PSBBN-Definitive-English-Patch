@@ -889,6 +889,7 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
    # Determine the launcher value for this specific game
   if [[ "$disc_type" == "POPS" ]]; then
     launcher_value="POPS"
+    cp "${ASSETS_DIR}/"{1.png,2.png,bg.png,man.xml} "$game_dir"
   else
     launcher_value="$LAUNCHER"
   fi
@@ -989,6 +990,10 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
     COMMANDS+="cd res\n"
     COMMANDS+="put info.sys\n"
     COMMANDS+="put jkt_001.png\n"
+    COMMANDS+="put 1.png\n"
+    COMMANDS+="put 2.png\n"
+    COMMANDS+="put bg.png\n"
+    COMMANDS+="put man.xml\n"
     COMMANDS+="umount\n"
     COMMANDS+="exit\n"
 
