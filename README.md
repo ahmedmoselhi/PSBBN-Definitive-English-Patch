@@ -318,6 +318,7 @@ Before installing the English patch, you **must** power off your console to stan
 
 ## Known Issues/Limitations of PSBBN
 PSBBN only supports dates up to the end of 2030.    
+PSBBN will freeze when launching apps if a mod chip is detected. To use PSBBN, mod chips must be disabled.   
 \* Instances in feega where some Japanese text could not be translated because it is hard coded in an encrypted file. Atok software has not been translated.  
 \** Should also be compatible with the PS2 Slim SCPH-70xxx models with an IDE Resurrector or similar mod. [PSBBN Definitive English Patch 2.0](#new-to-version-20) and older versions of the [PS2 HDD RAW Image Install](#ps2-hdd-raw-image-install) are not compatible with early model Japanese PS2 consoles that have an external HDD due to space limitations (unless the stock drive is replaced with a 200+ GB drive). When [Patching an existing PSBBN install](#patch-an-existing-psbbn-install), Kloader might have compatibility issues with early model Japanese PS2 consoles with an external HDD.  
 \***Default on-screen keyboard is Japanese. US English on-screen keyboard has been added, but you have to press `SELECT` a number of times to access it. I've noticed a bug where the spacebar key does not function on the US English on-screen keyboard. A space can be entered by pressing the triangle button on the controller instead. I could revert back to the Japanese qwerty keyboard in the future, but I think the benefits of the US keyboard outweigh this negative.
