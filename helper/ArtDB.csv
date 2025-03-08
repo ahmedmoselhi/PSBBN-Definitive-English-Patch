@@ -13787,7 +13787,7 @@ SLES_535.31|fifa-06
 SLES_535.32|fifa-06
 SLES_535.33|fifa-06
 SLKA_253.23|fifa-06
-SLUS_291.60|fifa-06
+SLUS_291.60|fifa-soccer-06
 SLED_536.64|fifa-06
 SLAJ_250.88|fifa-07
 SLES_542.40|fifa-07
@@ -13827,10 +13827,10 @@ SLES_556.53|fifa-12
 SLES_556.54|fifa-12
 SLES_556.64|fifa-13
 SLES_556.65|fifa-13
-SLUS_219.54|fifa-13
-SLES_556.71|fifa-14
-SLES_556.72|fifa-14
-SLUS_270.93|fifa-14
+SLUS_219.54|fifa-soccer-13
+SLES_556.71|fifa-14-legacy-edition
+SLES_556.72|fifa-14-legacy-edition
+SLUS_270.93|fifa-14-legacy-edition
 SLES_500.11|fifa-2001
 SLES_500.12|fifa-2001
 SLES_500.13|fifa-2001
