@@ -45,15 +45,25 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 - PSBBN image updated to version 2.01:
   - Set USB keyboard layout to US English. Press `ALT+~` to toggle between kana and direct input
   - Minor corrections to the English translation
-- Added **Open PS2 Loader** and **Launch Disc** to the Game Channel
+- Added [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) and [Launch Disc](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher) to the Game Channel
 - The Game Installer script has been updated to create and delete game partitions as needed. Say goodbye to those annoying "Coming soon..." placeholders!
 - Files placed in the `CFG`, `CHT`, `LNG`, `THM`, and `APPS` folders on your PC will now be copied to the PS2 drive during game sync
 - Added Game ID support for MemCard Pro 2 and SD2PSX
 - The scripts now auto-update when an update is available
 - Optimised art work
 - Art downloads from IGN are now automatically contributed to the [PSBBN art database](https://github.com/CosmicScale/psbbn-art-database), and missing artwork is also automatically reported. Manual submissions are welcome, see the [PSBBN art database GitHub page](https://github.com/CosmicScale/psbbn-art-database) for details
-- Added Neutrino support
+- Added [Neutrino](https://github.com/rickgaiser/neutrino) support. You can now choose between [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) and [Neutrino](https://github.com/rickgaiser/neutrino) as your game launcher
+- [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) updated to version 1.2.0-Beta-2201-4b6cc21:
+  - Limited max BDM UDMA mode to UDMA4 to avoid compatibility issues with various SATA/IDE2SD adapters
 - Added a manual for PS1 games. It can be accessed in the Game Channel by selecting a game, pressing Triangle, and then selecting `Manual`
+- Transitioned to [BBN Launcher (BBNL)](https://github.com/pcm720/bbnl) version 2.0:
+  - Dropped APA support in favor of loading [OPL](https://github.com/ps2homebrew/Open-PS2-Loader), [POPStarter](https://bitbucket.org/ShaolinAssassin/popstarter-documentation-stuff/wiki/Home), [Neutrino](https://github.com/rickgaiser/neutrino), and configuration files from the exFAT partition to speed up initialization.
+  - Moved [BBNL](https://github.com/pcm720/bbnl) to the APA header to further improve loading times.
+  - Removed dependency on renamed [POPStarter](https://bitbucket.org/ShaolinAssassin/popstarter-documentation-stuff/wiki/Home) ELF files to launch PS1 VCDs; [POPStarter](https://bitbucket.org/ShaolinAssassin/popstarter-documentation-stuff/wiki/Home) is now launched directly with a boot argument.
+  - [NHDDL](https://github.com/pcm720/nhddl) now launches in ATA mode, improving startup time and avoiding potential error messages.
+- Updated [Neutrino](https://github.com/rickgaiser/neutrino) to version 1.6.1
+- Updated [NHDDL](https://github.com/pcm720/nhddl) to version MMCE + HDL Beta 4.17
+
 
 ## New installation scripts
 
@@ -81,7 +91,7 @@ sudo apt install git
 - Downloads and installs the latest version of the **PSBBN Definitive English Patch** from archive.org
 - Prompts for the desired size of the Music Partition
 - Prompts for the desired size of the POPS Partition
-- Installs [POPStarter](https://bitbucket.org/ShaolinAssassin/popstarter-documentation-stuff/wiki/Home)
+- Installs [POPS] binaries (https://bitbucket.org/ShaolinAssassin/popstarter-documentation-stuff/wiki/Home)
 - Runs [APA-Jail](#notes-on-apa-jail), creating an exFAT partition using all remaining disk space beyond the first 128 GB (up to 2 TB)
 
 ### Game installer script: 
@@ -93,7 +103,7 @@ The script will:
 - Create all game assets
 - Download artwork from the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database) or IGN if not found in the database
 - Automatically contribute game artwork from IGN and reports missing artwork to the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database)
-- Install [BBN Launcher](https://github.com/pcm720/bbnl) into every game partition, making games bootable from the Game Channel
+- Creates [BBN Launcher](https://github.com/pcm720/bbnl) partitions, making games bootable from the PSBBN Game Channel
 
 To add or delete games, simply add or remove them from the `games` folder on your computer, then run the script again to synchronise. All games are kept in alphabetical order and grouped by series in the Game Channel on PSBBN.
 
@@ -153,12 +163,15 @@ If games still do not appear in the OPL/NHDDL games list and fail to launch from
 4. Try using a different SATA mod for your PS2
 
 ### Notes on APA-Jail:
-APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. The remaining space on the drive is formatted as an exFAT partition, which can be accessed directly on a PC and on the PS2 by the [pre-release build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) and [Neutrino](https://github.com/rickgaiser/neutrino). PS2 games in the `ISO` or `ZSO` format are stored on the exFAT partition.
 
 ![APA-Jail Type-A2](https://github.com/user-attachments/assets/8c83dab7-f49f-4a77-b641-9f63d92c85e7)
 
-An application called [BBN Launcher](https://github.com/pcm720/bbnl) resides on the APA partitions, along with the [pre-release build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) or [Neutrino](https://github.com/rickgaiser/neutrino).
- 
+APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. All remaining space on the drive is formatted as exFAT.
+
+An application called [BBN Launcher](https://github.com/pcm720/bbnl) resides on the APA partitions, a [pre-release build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) and [Neutrino](https://github.com/rickgaiser/neutrino) reside on the exFAT partition, along with the PS2 games in the `ISO` or `ZSO` format.
+
+The exFAT partition can be accessed on a PC and on the PS2 by [BBN Launcher](https://github.com/pcm720/bbnl), a [pre-release build of Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) and [Neutrino](https://github.com/rickgaiser/neutrino).
+
 [BBN Launcher](https://github.com/pcm720/bbnl) directs [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) or [Neutrino](https://github.com/rickgaiser/neutrino) to launch specific PS2 games.
 
 ### Warning: Creating new partitions manually on your PS2 drive (e.g., with wLaunchELF) and exceeding the 128 GB limit will cause drive corruption.

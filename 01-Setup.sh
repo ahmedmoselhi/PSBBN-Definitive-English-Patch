@@ -41,9 +41,18 @@ else
 
       # Pull the latest changes
       git pull --ff-only
-
+      if [[ $? -ne 0 ]]; then
+        echo
+        echo "Error: Update failed. Delete the PSBBN-Definitive-English-Patch direcrtory and run the command:"
+        echo
+        echo "git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git"
+        echo
+        read -n 1 -s -r -p "Then try running the script again. Press any key to exit"
+        echo
+        exit 1
+      fi
       echo
-      echo "The script has been updated to the latest version."
+      echo "The repository has been successfully updated."
       read -n 1 -s -r -p "Press any key to exit, then run the script again."
       echo
       exit 0

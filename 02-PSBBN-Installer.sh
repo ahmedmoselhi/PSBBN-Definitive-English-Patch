@@ -54,8 +54,18 @@ else
 
       # Pull the latest changes
       git pull --ff-only >> "${INSTALL_LOG}" 2>&1
-
-      echo "The script has been updated to the latest version." | tee -a "${INSTALL_LOG}"
+      if [[ $? -ne 0 ]]; then
+        echo
+        echo "Error: Update failed. Delete the PSBBN-Definitive-English-Patch direcrtory and run the command:"
+        echo
+        echo "git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git"
+        echo
+        read -n 1 -s -r -p "Then try running the script again. Press any key to exit"
+        echo
+        exit 1
+      fi
+      echo
+      echo "The repository has been successfully updated." | tee -a "${INSTALL_LOG}"
       read -n 1 -s -r -p "Press any key to exit, then run the script again."
       echo
       exit 0
@@ -362,36 +372,30 @@ done
 COMMANDS="device ${DEVICE}\n"
 COMMANDS+="mkpart __linux.8 ${music_partition}M REISER\n"
 COMMANDS+="mkpart __.POPS ${pops_partition}M PFS\n"
-COMMANDS+="mkpart +OPL 128M PFS\nexit"
+COMMANDS+="exit"
 echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${INSTALL_LOG}" 2>&1
 
 echo | tee -a "${INSTALL_LOG}"
-echo "Installing POPS and OPL..." | tee -a "${INSTALL_LOG}"
+echo "Installing POPS..." | tee -a "${INSTALL_LOG}"
 
-cd "${TOOLKIT_PATH}/assets/"
-
-# Copy POPS files and OPL to relevent partitions
+# Copy POPS files to __common
 COMMANDS="device ${DEVICE}\n"
-COMMANDS+="mount +OPL\n"
-COMMANDS+="put OPNPS2LD.ELF\n"
-COMMANDS+="umount\n"
 COMMANDS+="mount __common\n"
+COMMANDS+="lcd '${TOOLKIT_PATH}/assets/POPStarter'\n"
 COMMANDS+="mkdir POPS\n"
 COMMANDS+="cd POPS\n"
 COMMANDS+="put IGR_BG.TM2\n"
 COMMANDS+="put IGR_NO.TM2\n"
 COMMANDS+="put IGR_YES.TM2\n"
-COMMANDS+="lcd POPS-binaries-main\n"
+COMMANDS+="lcd '${TOOLKIT_PATH}/assets/POPS-binaries-main'\n"
 COMMANDS+="put POPS.ELF\n"
 COMMANDS+="put IOPRP252.IMG\n"
-COMMANDS+="cd ..\n"
+COMMANDS+="cd /\n"
 COMMANDS+="umount\n"
 COMMANDS+="exit"
 
 # Pipe all commands to PFS Shell for mounting, copying, and unmounting
 echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${INSTALL_LOG}" 2>&1
-
-cd "${TOOLKIT_PATH}"
 
 
 #//////////////////////////////////////////////// APA-Jail code by Berion ////////////////////////////////////////////////
@@ -484,10 +488,9 @@ if echo "$output" | grep -q "aborting"; then
 fi
 
 if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__.POPS' && \
-   sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__linux.8' && \
-   sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '+OPL'; then
+   sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__linux.8'; then
    echo
-   echo "POPS, Music and +OPL partitions were created successfully." | tee -a "${INSTALL_LOG}"
+   echo "POPS and Music partitions were created successfully." | tee -a "${INSTALL_LOG}"
    sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" >> "${INSTALL_LOG}"
 else
     echo
