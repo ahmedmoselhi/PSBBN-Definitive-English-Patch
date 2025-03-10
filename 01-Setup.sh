@@ -43,7 +43,7 @@ else
       git pull --ff-only
       if [[ $? -ne 0 ]]; then
         echo
-        echo "Error: Update failed. Delete the PSBBN-Definitive-English-Patch direcrtory and run the command:"
+        echo "Error: Update failed. Delete the PSBBN-Definitive-English-Patch directory and run the command:"
         echo
         echo "git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git"
         echo
