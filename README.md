@@ -107,14 +107,14 @@ The script will:
 
 To add or delete games, simply add or remove them from the `games` folder on your computer, then run the script again to synchronise. All games are kept in alphabetical order and grouped by series in the Game Channel on PSBBN.
 
-By default the `games` folder is located in the same directory you installed the scripts to. If you need to change the location of the `games` folder, edit `03-Game-Installer.sh` and modify the `GAMES_PATH` variable.
-
+By default, the `games` directory is located in the same directory where you installed the scripts. If you need to change its location, edit `03-Game-Installer.sh` and modify the `GAMES_PATH` variable. Alternatively, you can replace the `games` directory with a symbolic link that points to the storage location of your games. Another option is to create symbolic links in the `CD`, `DVD`, or `POPS` subdirectories, linking to the individual `ISO`, `ZSO`, or `VCD` files that you wish to sync.
 
 ### General Notes:
 - PSBBN requires a Fat PS2 console** with expansion bay and an official Sony Network Adapter
-- I would highly recommend using a **Kaico IDE to SATA Upgrade Kit** and a SATA SSD. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface.
+- I would highly recommend using a **Kaico or BitFunx IDE to SATA Upgrade Kit** and a SATA SSD. The **Kingston A400 SSDs** have been tried and tested with PSBBN and work very well. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface.
 - PS2 games must be in ISO or ZSO format. PS1 games must be in VCD format
 - PSBBN startup time increases when no active internet connection is available
+- If the shortcut to OPL/NHDDL in the Navigator Menu displays the error "Game not found," remove the shortcut. You can then re-add it from the Game Channel.
 - To quit PS1 games, press `L1 + SELECT + START`
 - If you are using OPL as your game launcher, to quit PS2 games, press `L1 + L2 + R1 + R2 + SELECT + START` and to power off the console press `L1 + L2 + L3 + R1 + R2 + R3`
 - The `root` password for Linux is `password`. There is also a `ps2` user account with the password set as `password`
