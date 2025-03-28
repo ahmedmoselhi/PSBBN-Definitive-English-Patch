@@ -12,6 +12,7 @@ POPSTARTER="${ASSETS_DIR}/POPStarter/POPSTARTER.ELF"
 NEUTRINO_DIR="${ASSETS_DIR}/neutrino"
 LOG_FILE="${TOOLKIT_PATH}/game-installer.log"
 MISSING_ART=${TOOLKIT_PATH}/missing-art.log
+MISSING_APP_ART=${TOOLKIT_PATH}/missing-app-art.log
 
 
 # Modify this path if your games are stored in a different location:
@@ -119,6 +120,7 @@ rm "${ARTWORK_DIR}/tmp"/* >> "${LOG_FILE}" 2>&1
 
 clean_up
 rm $MISSING_ART 2>>"${LOG_FILE}"
+rm $MISSING_APP_ART 2>>"${LOG_FILE}"
 
 echo "                  _____                        _____          _        _ _           ";
 echo "                 |  __ \                      |_   _|        | |      | | |          ";
@@ -216,7 +218,7 @@ echo | tee -a "${LOG_FILE}"
 echo "GAMES_PATH is valid: $GAMES_PATH" | tee -a "${LOG_FILE}"
 
 # Create necessary folders if they don't exist
-for folder in APPS ART CFG CHT LNG THM VMC POPS CD DVD bbnl; do
+for folder in APPS ART CFG CHT LNG THM VMC POPS CD DVD; do
     dir="${GAMES_PATH}/${folder}"
     [[ -d "$dir" ]] || sudo mkdir -p "$dir" || { 
         echo "Error: Failed to create $dir. Make sure you have write permissions to $GAMES_PATH" | tee -a "${LOG_FILE}"
@@ -225,6 +227,8 @@ for folder in APPS ART CFG CHT LNG THM VMC POPS CD DVD bbnl; do
         exit 1
     }
 done
+
+mkdir -p "${ICONS_DIR}/bbnl"
 
 echo | tee -a "${LOG_FILE}"
 echo "Please choose a game launcher:"
@@ -249,7 +253,7 @@ echo "$DESC selected." >> "${LOG_FILE}"
 echo  >> "${LOG_FILE}"
 
 # Delete old game partitions
-delete_partition=$(sudo "${HELPER_DIR}/HDL Dump.elf" toc "$DEVICE" | grep -o 'PP\.[^ ]\+' | grep -Ev '^(PP\.WLE|PP\.DISC)$')
+delete_partition=$(sudo "${HELPER_DIR}/HDL Dump.elf" toc "$DEVICE" | grep -o 'PP\.[^ ]\+')
 COMMANDS="device ${DEVICE}\n"
 
 while IFS= read -r partition; do
@@ -260,75 +264,202 @@ COMMANDS+="rmpart +OPL\n"
 COMMANDS+="exit"
 
 echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+
 echo | tee -a "${LOG_FILE}"
-echo "Checking installed apps:" | tee -a "${LOG_FILE}"
 
-# Check if PP.DISC exists and create it if not
-if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc "${DEVICE}" | grep -q 'PP.DISC'; then
-    echo >> "${LOG_FILE}"
-    echo "Creating PP.DISC partition..." | tee -a "${LOG_FILE}"
+echo "Preparing to sync apps..." | tee -a "${LOG_FILE}"
+
+# Check if any ELF files exist in the source directory
+if ! ls "${GAMES_PATH}/APPS/"*.elf "${GAMES_PATH}/APPS/"*.ELF >/dev/null 2>&1; then
+    echo "No apps found." | tee -a "${LOG_FILE}"
+fi
+
+# Process each ELF file in the source directory
+for file in "${GAMES_PATH}/APPS/"*.elf "${GAMES_PATH}/APPS/"*.ELF; do
+    [ -e "$file" ] || continue  # Skip if no ELF files exist
+    
+    # Extract filename without path and extension
+    base_name=$(basename "$file")
+    base_name_no_ext="${base_name%.*}"
+
+    app_name="${base_name_no_ext%%(*}" # Remove anything after an open bracket '('
+    app_name="${app_name%%v[0-9]*}" # Remove versioning (e.g., v12)
+    app_name=$(echo "$app_name" | sed -E 's/[cC][oO][mM][pP][rR][eE][sS][sS][eE][dD].*//') # Remove "compressed"
+    app_name=$(echo "$app_name" | sed -E 's/[pP][aA][cC][kK][eE][dD].*//') # Remove "packed"
+
+    AppDB_check=$(echo "$app_name" | sed 's/[ _-]//g' | tr 'a-z' 'A-Z')
+
+    # Check $HELPER_DIR/AppDB.csv for match in first column to $AppDB_check, set $cleaned_name based on second column from file if found. If no match found, set $cleaned_name with the remaining code
+    match=$(awk -F'|' -v key="$AppDB_check" '$1 && index(key, $1) == 1 {print $2; exit}' "$HELPER_DIR/AppDB.csv")
+
+    if [[ -n "$match" ]]; then
+        cleaned_name="$match"
+    else
+        # Use the processed name if no match is found
+        app_name="${app_name//[_-]/ }"  # Replace underscores and hyphens with spaces
+        app_name="${app_name%"${app_name##*[![:space:]]}"}" # Trim trailing spaces again
+        app_name_before=$(echo "$app_name") # Save the string
+        app_name=$(echo "$app_name" | sed 's/\([a-z]\)\([A-Z]\)/\1 \2/g') # Add a space before capital letters when preceded by a lowercase letter
+
+        # Check if spaces were added by comparing before and after
+        if [[ "$app_name" != "$app_name_before" ]]; then
+            space_added=true
+        else
+            space_added=false
+        fi
+
+        # Process for title case and exceptions
+        input_str="$app_name"
+
+        # List of terms to ensure spaces before and after
+        terms=("3d" "3D" "ps2" "PS2" "ps1" "PS1")
+    
+        # Loop over the terms
+        for term in "${terms[@]}"; do
+            input_str="${input_str//${term}/ ${term}}"  # Ensure space before the term
+            input_str="${input_str//${term}/${term} }"  # Ensure space after the term
+        done
+
+        # Special case for "hdd" and "HDD" - add spaces only if the string is longer than 5 characters
+        if [[ ${#input_str} -gt 5 ]]; then
+            input_str="${input_str//hdd/ hdd }"
+            input_str="${input_str//HDD/ HDD }"
+        fi
+
+        # Check if the string contains any lowercase letters
+        if ! echo "$input_str" | grep -q '[a-z]'; then
+            input_str="${input_str,,}"  # Convert the entire string to lowercase
+        fi
+
+        result=""
+        # Now process each word
+        for word in $input_str; do
+            # Handle words 3 characters or shorter, but only if no space was added by sed
+            if [[ ${#word} -le 3 ]] && ! $space_added; then
+                result+=" ${word^^}"  # Convert to uppercase
+            # Handle consonant-only words (e.g., SMS)
+            elif [[ "$word" =~ ^[b-df-hj-np-tv-z0-9]+$ ]]; then
+                result+=" ${word^^}"  # Uppercase if the word has only consonants and numbers
+            else
+                result+=" ${word^}"  # Capitalize first letter for all other words
+            fi
+
+        cleaned_name="${result# }"
+        done
+
+        # Remove leading space and ensure no double spaces are left
+        result="${result#"${result%%[![:space:]]*}"}"  # Remove leading spaces
+        cleaned_name=$(echo "$result" | sed 's/  / /g')  # Replace double spaces with single spaces
+    fi
+
+    folder_name=$(echo "$cleaned_name" | tr '[:lower:]' '[:upper:]' | tr -cd 'A-Z0-9' | cut -c1-11)  # Replace spaces with underscores & capitalize
+
+    # Create the new folder in the destination directory
+    mkdir -p "${ICONS_DIR}/$folder_name"
+
+    # Generate the info.sys file
+    info_sys_filename="${ICONS_DIR}/$folder_name/info.sys"
+    cat > "$info_sys_filename" <<EOL
+title = $cleaned_name
+title_id = $folder_name
+title_sub_id = 0
+release_date = 
+developer_id = 
+publisher_id = 
+note = 
+content_web = 
+image_topviewflag = 0
+image_type = 0
+image_count = 1
+image_viewsec = 600
+copyright_viewflag = 0
+copyright_imgcount = 0
+genre = 
+parental_lock = 1
+effective_date = 0
+expire_date = 0
+violence_flag = 0
+content_type = 255
+content_subtype = 0
+EOL
+    echo "Created info.sys: $info_sys_filename"  | tee -a "${LOG_FILE}"
+
+    if [[ "$folder_name" == "LAUNCHELF" ]]; then
+        bbnl_cfg="$ICONS_DIR/bbnl/WLE.cfg"
+    elif [[ "$folder_name" == "LAUNCHDISC" ]]; then
+        bbnl_cfg="$ICONS_DIR/bbnl/DISC.cfg"
+    else
+        bbnl_cfg="$ICONS_DIR/bbnl/$folder_name.cfg"
+    fi
+    cat > "$bbnl_cfg" <<EOL
+file_name=/APPS/$base_name
+title_id=$folder_name
+launcher=ELF
+EOL
+    echo "Created BBNL config: $folder_name.cfg"  | tee -a "${LOG_FILE}"
+    echo "$cleaned_name=mass:/APPS/$base_name" >> "${ICONS_DIR}/bbnl/conf_apps.cfg" 2>> "${LOG_FILE}"
+
+    png_file="${ARTWORK_DIR}/${folder_name}.png"
+    # Copy the matching PNG file from ART_DIR, or default to APP.png
+    if [ -f "$png_file" ]; then
+        cp "$png_file" "$ICONS_DIR/$folder_name/jkt_001.png"
+        cp "$png_file" "$GAMES_PATH/ART/${base_name}_COV.png"
+        echo "Artwork found locally for $base_name"  | tee -a "${LOG_FILE}"
+    else
+        echo "Artwork not found locally. Attempting to download from the PSBBN art database..." | tee -a "${LOG_FILE}"
+        wget --quiet --timeout=10 --tries=3 --output-document="$png_file" \
+        "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/apps/${folder_name}.png"
+            if [[ -s "$png_file" ]]; then
+                echo "Successfully downloaded artwork for $base_name" | tee -a "${LOG_FILE}"
+                cp "$png_file" "$ICONS_DIR/$folder_name/jkt_001.png"
+                cp "$png_file" "$GAMES_PATH/ART/${base_name}_COV.png"
+            else
+                rm "$png_file"
+                echo "Artwork not found for $base_name. Using default APP image." | tee -a "${LOG_FILE}"
+                cp "$ARTWORK_DIR/APP.png" "${ICONS_DIR}/$folder_name/jkt_001.png"
+                echo "$folder_name,$cleaned_name,$base_name" >> "${MISSING_APP_ART}"
+            fi
+    fi
+done
+
+cd "${ASSETS_DIR}/BBNL"
+
+# Loop through each folder in DST_DIR, excluding 'art', sorted in reverse alphabetical order
+find "$ICONS_DIR" -mindepth 1 -maxdepth 1 -type d ! -name "art" ! -name "bbnl" | sort -r | while IFS= read -r dir; do
     COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="rmpart PP.WLE\n"
-    COMMANDS+="mkpart PP.DISC 128M PFS\n"
-    COMMANDS+="mount PP.DISC\n"
+    # Set pp_name based on the folder name
+    if [[ "$(basename "$dir")" == "LAUNCHELF" ]]; then
+        pp_name="WLE"
+    elif [[ "$(basename "$dir")" == "LAUNCHDISC" ]]; then
+        pp_name="DISC"
+    else
+        pp_name=$(basename "$dir")
+    fi
+    COMMANDS+="mkpart PP.$pp_name 128M PFS\n"
+    COMMANDS+="mount PP.$pp_name\n"
+    if [ "$pp_name" = "DISC" ]; then
+        COMMANDS+="lcd '${ASSETS_DIR}/DISC'\n"
+        COMMANDS+="put PS1VModeNeg.elf\n"
+    fi
     COMMANDS+="mkdir res\n"
     COMMANDS+="cd res\n"
-    COMMANDS+="lcd '${ASSETS_DIR}/DISC'\n"
+    COMMANDS+="lcd '${ICONS_DIR}/$(basename "$dir")'\n"
     COMMANDS+="put info.sys\n"
     COMMANDS+="put jkt_001.png\n"
     COMMANDS+="cd /\n"
     COMMANDS+="umount\n"
     COMMANDS+="exit"
+
+    echo "Creating PP.$pp_name" | tee -a "${LOG_FILE}"
     echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-    cd "${ASSETS_DIR}/DISC"
-    sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" PP.DISC >> "${LOG_FILE}" 2>&1
-fi
+    sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "PP.$pp_name" >> "${LOG_FILE}" 2>&1
 
-echo >> "${LOG_FILE}"
-echo "Updating Disc Launcher..." | tee -a "${LOG_FILE}"
-COMMANDS="device ${DEVICE}\n"
-COMMANDS+="mount PP.DISC\n"
-COMMANDS+="lcd '${ASSETS_DIR}/DISC'\n"
-COMMANDS+="rm disc-launcher.KELF\n"
-COMMANDS+="put disc-launcher.KELF\n"
-COMMANDS+="rm PS1VModeNeg.elf\n"
-COMMANDS+="put PS1VModeNeg.elf\n"
-COMMANDS+="umount\n"
-COMMANDS+="exit"
-
-echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-
-# Check if PP.WLE exists and create it if not
-if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc "${DEVICE}" | grep -q 'PP.WLE'; then
-    echo >> "${LOG_FILE}"
-    echo "Creating PP.WLE partition..." | tee -a "${LOG_FILE}"
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="mkpart PP.WLE 128M PFS\n"
-    COMMANDS+="mount PP.WLE\n"
-    COMMANDS+="mkdir res\n"
-    COMMANDS+="cd res\n"
-    COMMANDS+="lcd '${ASSETS_DIR}/WLE'\n"
-    COMMANDS+="put info.sys\n"
-    COMMANDS+="put jkt_001.png\n"
-    COMMANDS+="cd /\n"
-    COMMANDS+="umount\n"
-    COMMANDS+="exit"
-    echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-    cd "${ASSETS_DIR}/WLE"
-    sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" PP.WLE >> "${LOG_FILE}" 2>&1
-fi
-
-echo >> "${LOG_FILE}"
-echo "Updating WLaunchELF..." | tee -a "${LOG_FILE}"
-COMMANDS="device ${DEVICE}\n"
-COMMANDS+="mount PP.WLE\n"
-COMMANDS+="lcd '${ASSETS_DIR}/WLE'\n"
-COMMANDS+="rm WLE.KELF\n"
-COMMANDS+="put WLE.KELF\n"
-COMMANDS+="umount\n"
-COMMANDS+="exit"
-
-echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+    if [ "$pp_name" = "DISC" ]; then
+        cd "${ASSETS_DIR}/DISC"
+        sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "PP.$pp_name" >> "${LOG_FILE}" 2>&1
+        cd "${ASSETS_DIR}/BBNL"
+    fi
+done
 
 # Create PP.LAUNCHER
 echo >> "${LOG_FILE}"
@@ -342,12 +473,16 @@ COMMANDS+="cd res\n"
 if [ "$LAUNCHER" = "OPL" ]; then
     COMMANDS+="lcd '${ASSETS_DIR}/OPL'\n"
     COMMANDS+="put info.sys\n"
-    COMMANDS+="put jkt_001.png\n"
+    COMMANDS+="lcd '${ARTWORK_DIR}'\n"
+    COMMANDS+="put OPENPS2LOAD.png\n"
+    COMMANDS+="rename OPENPS2LOAD.png jkt_001.png\n"
     COMMANDS+="cd /\n"
 elif [ "$LAUNCHER" = "NEUTRINO" ]; then
     COMMANDS+="lcd '${ASSETS_DIR}/NHDDL'\n"
     COMMANDS+="put info.sys\n"
-    COMMANDS+="put jkt_001.png\n"
+    COMMANDS+="lcd '${ARTWORK_DIR}'\n"
+    COMMANDS+="put NHDDL.png\n"
+    COMMANDS+="rename NHDDL.png jkt_001.png\n"
     COMMANDS+="cd /\n"
 fi
 
@@ -356,24 +491,26 @@ COMMANDS+="exit"
 
 echo >> "${LOG_FILE}"
 echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-
-cd "${ASSETS_DIR}/BBNL"
 sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" PP.LAUNCHER >> "${LOG_FILE}" 2>&1
 
 cd "${TOOLKIT_PATH}"
 
-# Activate the virtual environment
 echo | tee -a "${LOG_FILE}"
-echo "Activate Python virtual environment..." | tee -a "${LOG_FILE}"
-sleep 5
-source "${TOOLKIT_PATH}/venv/bin/activate" 2>>"${LOG_FILE}"
 
-# Check if activation was successful
-if [ $? -ne 0 ]; then
-    echo "Failed to activate the Python virtual environment." | tee -a "${LOG_FILE}"
-    read -n 1 -s -r -p "Press any key to exit..."
-    echo
-    exit 1
+echo "Activating Python virtual environment..." | tee -a "${LOG_FILE}"
+sleep 5
+
+# Try activating the virtual environment twice before failing
+if ! source "${TOOLKIT_PATH}/venv/bin/activate" 2>>"${LOG_FILE}"; then
+    echo "Failed to activate the Python virtual environment. Retrying..." | tee -a "${LOG_FILE}"
+    sleep 2
+    
+    if ! source "${TOOLKIT_PATH}/venv/bin/activate" 2>>"${LOG_FILE}"; then
+        echo "Failed to activate the Python virtual environment." | tee -a "${LOG_FILE}"
+        read -n 1 -s -r -p "Press any key to exit..."
+        echo
+        exit 1
+    fi
 fi
 
 if [[ "$LAUNCHER" == "NEUTRINO" ]]; then
@@ -529,6 +666,46 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
         node "${HELPER_DIR}/art_downloader.js" "$game_id" 2>&1 | tee -a "${LOG_FILE}"
     fi
   fi
+
+  # Skip downloading if disc_type is "POPS"
+  if [[ "$disc_type" == "POPS" ]]; then
+    continue
+  fi
+
+  png_file_cover="${GAMES_PATH}/ART/${game_id}_COV.png"
+  png_file_disc="${GAMES_PATH}/ART/${game_id}_ICO.png"
+  if [[ -f "$png_file_cover" ]]; then
+    echo "OPL Artwork for game ID $game_id already exists. Skipping download." | tee -a "${LOG_FILE}"
+  else
+    # Attempt to download artwork using wget
+    echo "OPL Artwork not found locally. Attempting to download from archive.org..." | tee -a "${LOG_FILE}"
+    wget --quiet --timeout=10 --tries=3 --output-document="$png_file_cover" \
+        "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS2/${game_id}/${game_id}_COV.png"
+    #wget --quiet --timeout=10 --tries=3 --output-document="$png_file_disc" \
+    #    "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS2/${game_id}/${game_id}_ICO.png"
+
+    missing_files=()
+
+    if [[ ! -s "$png_file_cover" ]]; then
+        [[ -f "$png_file_cover" ]] && rm "$png_file_cover"
+        missing_files+=("cover")
+    fi
+
+    if [[ ! -s "$png_file_disc" ]]; then
+        [[ -f "$png_file_disc" ]] && rm "$png_file_disc"
+        missing_files+=("disc")
+    fi
+
+    if [[ -f "$png_file_cover" || -f "$png_file_disc" ]]; then
+        if [[ ${#missing_files[@]} -eq 0 ]]; then
+            echo "Successfully downloaded OPL artwork for game ID: $game_id" | tee -a "${LOG_FILE}"
+        else
+            echo "Successfully downloaded some OPL artwork for game ID: $game_id, but missing: ${missing_files[*]}" | tee -a "${LOG_FILE}"
+        fi
+    else
+        echo "Failed to download OPL artwork for game ID: $game_id" | tee -a "${LOG_FILE}"
+    fi
+  fi
 done < "$ALL_GAMES"
 
 echo | tee -a "${LOG_FILE}"
@@ -577,8 +754,6 @@ cp ${ARTWORK_DIR}/tmp/* ${ARTWORK_DIR} >> "${LOG_FILE}" 2>&1
 
 echo | tee -a "${LOG_FILE}"
 echo "Creating game assets..."  | tee -a "${LOG_FILE}"
-
-mkdir -p "${ICONS_DIR}/bbnl"
 
 # Read the file line by line
 while IFS='|' read -r game_title game_id publisher disc_type file_name; do
@@ -720,6 +895,7 @@ if [[ "$LAUNCHER" == "OPL" ]]; then
 # Generate the BBNL cfg file for OPL
     cat > "$ICONS_DIR/bbnl/LAUNCHER.cfg" <<EOL
 file_name=/bbnl/OPNPS2LD.ELF
+title_id=OPENPS2LOAD
 launcher=ELF
 EOL
 fi
@@ -728,6 +904,7 @@ if [[ "$LAUNCHER" == "NEUTRINO" ]]; then
 # Generate the BBNL cfg file for NHDDL
     cat > "$ICONS_DIR/bbnl/LAUNCHER.cfg" <<EOL
 file_name=/bbnl/nhddl.elf
+title_id=NHDDL
 launcher=ELF
 arg=-mode=ata
 EOL
@@ -802,30 +979,30 @@ fi
 # Syncing PS1 games
 if [ -n "$files_only_in_ps2" ] || [ -n "$files_only_in_local" ]; then
     cd "$POPS_FOLDER" >> "${LOG_FILE}" 2>&1
-    combined_commands="device ${DEVICE}\n"
-    combined_commands+="mount __.POPS\n"
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="mount __.POPS\n"
 
     # Add delete commands for files_only_in_ps2
     if [ -n "$files_only_in_ps2" ]; then
         while IFS= read -r file; do
-            combined_commands+="rm \"$file\"\n"
+            COMMANDS+="rm \"$file\"\n"
         done <<< "$files_only_in_ps2"
     fi
 
     # Add put commands for files_only_in_local
     if [ -n "$files_only_in_local" ]; then
         while IFS= read -r file; do
-            combined_commands+="put \"$file\"\n"
+            COMMANDS+="put \"$file\"\n"
         done <<< "$files_only_in_local"
     fi
 
-    combined_commands+="umount\n"
-    combined_commands+="exit"
+    COMMANDS+="umount\n"
+    COMMANDS+="exit"
 
     # Execute the combined commands with PFS Shell
     echo | tee -a "${LOG_FILE}"
     echo "Syncing PS1 games to HDD..." | tee -a "${LOG_FILE}"
-    echo -e "$combined_commands" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+    echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
     echo | tee -a "${LOG_FILE}"
     echo "PS1 games synced successfully." | tee -a "${LOG_FILE}"
     echo | tee -a "${LOG_FILE}"
@@ -962,6 +1139,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+sudo mv "${TOOLKIT_PATH}/OPL/bbnl/conf_apps.cfg" "${TOOLKIT_PATH}/OPL" >> "${LOG_FILE}" 2>&1
+
 echo | tee -a "${LOG_FILE}"
 echo "Syncing PS2 games..." | tee -a "${LOG_FILE}"
 sudo rsync -rL --progress --ignore-existing --delete --exclude=".*" "${GAMES_PATH}/CD/" "${TOOLKIT_PATH}/OPL/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
@@ -984,9 +1163,20 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+echo | tee -a "${LOG_FILE}"
+echo "Syncing Apps..." | tee -a "${LOG_FILE}"
+sudo rsync -rut --progress --delete --exclude=".*" "${GAMES_PATH}/APPS/" "${TOOLKIT_PATH}/OPL/APPS/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+if [ $? -ne 0 ]; then
+    echo
+    echo
+    echo "Error: Failed to sync Apps. See ${LOG_FILE} for details." | tee -a "${LOG_FILE}"
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
+    exit 1
+fi
+
 # Define the directories to check
 dirs=(
-    "${GAMES_PATH}/APPS"
     "${GAMES_PATH}/ART"
     "${GAMES_PATH}/CFG"
     "${GAMES_PATH}/CHT"
@@ -1025,9 +1215,13 @@ if ! $files_exist; then
 fi
 
 echo | tee -a "${LOG_FILE}"
+echo "APPS on PS2 drive:" >> "${LOG_FILE}"
+ls -1 "${TOOLKIT_PATH}/OPL/APPS/" | grep -i "\.elf$" >> "${LOG_FILE}" 2>&1
+echo | tee -a "${LOG_FILE}"
 echo "PS2 Games on PS2 drive:" >> "${LOG_FILE}"
 ls -1 "${TOOLKIT_PATH}/OPL/CD/" >> "${LOG_FILE}" 2>&1
 ls -1 "${TOOLKIT_PATH}/OPL/DVD/" >> "${LOG_FILE}" 2>&1
+
 echo >> "${LOG_FILE}" 2>&1
 echo "PS2 games successfully synced" | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
@@ -1038,6 +1232,7 @@ sudo umount -l "${TOOLKIT_PATH}"/OPL
 # Submit missing artwork to the PSBBN Art Database
 
 cp $MISSING_ART $ARTWORK_DIR/tmp >> "${LOG_FILE}" 2>&1
+cp $MISSING_APP_ART $ARTWORK_DIR/tmp >> "${LOG_FILE}" 2>&1
 
 if [ "$(ls -A "${ARTWORK_DIR}/tmp")" ]; then
     echo | tee -a "${LOG_FILE}"
