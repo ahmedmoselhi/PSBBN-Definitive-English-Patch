@@ -332,14 +332,17 @@ for file in "${GAMES_PATH}/APPS/"*.elf "${GAMES_PATH}/APPS/"*.ELF; do
         fi
 
         result=""
+        # Define words to exclude from uppercase conversion (only consonant-only words)
+        exclude_list="by cry cyst crypt dry fly fry glyph gym gypsy hymn lynx my myth myrrh ply pry rhythm shy sky spy sly sty sync tryst why wry"
+
         # Now process each word
         for word in $input_str; do
             # Handle words 3 characters or shorter, but only if no space was added by sed
-            if [[ ${#word} -le 3 ]] && ! $space_added; then
+            if [[ ${#word} -le 3 ]] && ! $space_added && ! echo "$exclude_list" | grep -wi -q "$word"; then
                 result+=" ${word^^}"  # Convert to uppercase
-            # Handle consonant-only words (e.g., SMS)
-            elif [[ "$word" =~ ^[b-df-hj-np-tv-z0-9]+$ ]]; then
-                result+=" ${word^^}"  # Uppercase if the word has only consonants and numbers
+            # Handle consonant-only words (only if not in exclusion list)
+            elif [[ "$word" =~ ^[b-df-hj-np-tv-z0-9]+$ ]] && ! echo "$exclude_list" | grep -w -q "$word"; then
+                result+=" ${word^^}"  # Uppercase if the word is consonant-only and not in the exclusion list
             else
                 result+=" ${word^}"  # Capitalize first letter for all other words
             fi
