@@ -91,9 +91,9 @@ while true; do
     echo | tee -a "${INSTALL_LOG}"
         
     read -p "Choose your PS2 HDD from the list above (e.g., /dev/sdx): " DEVICE
-    
-    # Validate input
-    if [[ $DEVICE =~ ^/dev/sd[a-z]$ ]]; then
+        
+    # Check if the device exists
+    if [[ -n "$DEVICE" ]] && lsblk -dp -n -o NAME | grep -q "^$DEVICE$"; then
         # Check the size of the chosen device
         SIZE_CHECK=$(lsblk -o NAME,SIZE -b | grep -w $(basename $DEVICE) | awk '{print $2}')
 
@@ -106,26 +106,26 @@ while true; do
             read -n 1 -s -r -p "Press any key to exit."
             echo
             exit 1
-        fi
-
-        echo
-        echo -e "Are you sure you want to write to ${DEVICE}?" | tee -a "${INSTALL_LOG}"
-        read -p "This will erase all data on the drive. (yes/no): " CONFIRM
-        if [[ $CONFIRM == "yes" ]]; then
-            break
         else
-            echo "Aborted." | tee -a "${INSTALL_LOG}"
-            read -n 1 -s -r -p "Press any key to exit..."
             echo
-            exit 1
+            echo -e "Selected drive: \"${DEVICE}\"" | tee -a "${INSTALL_LOG}"
+            echo
+            echo -e "Are you sure you want to write to ${DEVICE}?" | tee -a "${INSTALL_LOG}"
+            read -p "This will erase all data on the drive. (yes/no): " CONFIRM
+            if [[ $CONFIRM == "yes" ]]; then
+                break
+            else
+                echo "Aborted." | tee -a "${INSTALL_LOG}"
+                read -n 1 -s -r -p "Press any key to exit..."
+                echo
+                exit 1
+            fi
         fi
     else
         echo
         echo "Error: Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
         read -n 1 -s -r -p "Press any key to try again..."
-        clear
         echo
-        continue
     fi
 done
 

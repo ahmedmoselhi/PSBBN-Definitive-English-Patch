@@ -165,24 +165,38 @@ echo "                                         Written by CosmicScale"
         
     read -p "Choose your PS2 HDD from the list above (e.g., /dev/sdx): " DEVICE
         
-    # Validate input format (must start with /dev/)
-    if [[ $DEVICE == /dev/* ]]; then
-        # Check if the device exists
-        if lsblk -p | grep -q "^${DEVICE}"; then
+    # Check if the device exists and is valid
+    if [[ -n "$DEVICE" ]] && lsblk -dp -n -o NAME | grep -q "^$DEVICE$"; then
+        echo
+        echo -e "Selected drive: \"${DEVICE}\"" | tee -a "${LOG_FILE}"
+
+        # Run HDL Dump and capture output
+        output=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc ${DEVICE} 2>&1)
+        # Check for the word "aborting" in the output
+        if echo "$output" | grep -qE "aborting|No medium found"; then
             echo
-            echo -e "Selected drive: \"${DEVICE}\"" | tee -a "${LOG_FILE}"
-            break
-        else
+            echo "Error: APA partition is broken on ${DEVICE}." | tee -a "${LOG_FILE}"
+            read -n 1 -s -r -p "Press any key to exit..."
             echo
-            echo "Error: Device ${DEVICE} not found. Please choose a valid disk from the list."
+            exit 1
         fi
+        
+        # Check if 'OPL' is found in the 'lsblk' output and if it matches the device
+        if ! lsblk -p -o NAME,LABEL | grep -q "${DEVICE}3"; then
+            echo
+            echo "Error: OPL partition not found on ${DEVICE}" | tee -a "${LOG_FILE}"
+            read -n 1 -s -r -p "Press any key to exit..."
+            echo
+            exit 1
+        fi
+
+        break
     else
         echo
         echo "Error: Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
+        read -n 1 -s -r -p "Press any key to try again..."
+        echo
     fi
-    
-    read -n 1 -s -r -p "Press any key to try again..."
-    echo
 done
 
 # Find all mounted volumes associated with the device
