@@ -69,12 +69,14 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
         console.log(`Navigating to: ${url}`);
         await page.goto(url, { waitUntil: 'networkidle2' });
 
-        // Find the first image with src starting with 'https://assets-prd.ignimgs.com'
+        // Find the first valid image with src starting with 'https://assets-prd.ignimgs.com'
         let imgUrl = await page.evaluate(() => {
-            const img = document.querySelector('img[src^="https://assets-prd.ignimgs.com"]');
-
-            if (img) {
-                return img.src.split('?')[0]; // Remove query parameters
+            const imgs = Array.from(document.querySelectorAll('img[src^="https://assets-prd.ignimgs.com"]'));
+            for (const img of imgs) {
+                const cleanSrc = img.src.split('?')[0]; // Remove query parameters
+                if (cleanSrc !== 'https://assets-prd.ignimgs.com/2025/04/03/switch2-doodle-1743697401557.png') {
+                    return cleanSrc;
+                }
             }
             return null;
         });
