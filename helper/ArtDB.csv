@@ -4416,9 +4416,9 @@ SLES_004.43|invasion
 SLUS_007.09|invasion-from-beyond
 SLPS_005.51|ippatsu-gyakuten-gamble-king-densetsu
 SLPS_003.41|irem-arcade-classics
-SLES_002.81|iron-man-x-o-manowar-in-heavy-metal
-SLPS_004.55|iron-man-x-o-manowar-in-heavy-metal
-SLUS_002.35|iron-man-x-o-manowar-in-heavy-metal
+SLES_002.81|iron-man-xo-manowar-in-heavy-metal
+SLPS_004.55|iron-man-xo-manowar-in-heavy-metal
+SLUS_002.35|iron-man-xo-manowar-in-heavy-metal
 SLES_032.50|iron-soldier-3
 SLUS_010.61|iron-soldier-3
 SLUS_007.75|irritating-stick
@@ -6001,8 +6001,8 @@ SLES_024.02|mánager-de-liga
 SLPS_012.81|mobius-link-3d
 SLPM_862.17|n-gauge-unten-kibun-game-gatan-goton
 SLPM_867.66|n-gauge-unten-kibun-game-gatan-goton
-SLES_020.86|n-gen-racing
-SLUS_011.55|n-gen-racing
+SLES_020.86|ngen-racing
+SLUS_011.55|ngen-racing
 SLES_008.09|n2o-nitrous-oxide
 SLUS_006.37|n2o-nitrous-oxide
 SLES_021.91|nascar-2000
@@ -11013,7 +11013,7 @@ SLPS_022.67|zoku-mikagura-shoujo-tanteidan-kanketsu-hen
 SLPS_022.68|zoku-mikagura-shoujo-tanteidan-kanketsu-hen
 SLPS_022.69|zoku-mikagura-shoujo-tanteidan-kanketsu-hen
 SLPS_005.34|zoop
-SLUS_000.78|zoop-americas-largest-killer-of-time
+SLUS_000.78|zoop
 SLPS_002.71|zork-i-the-great-underground-empire
 SLPM_865.23|zutto-issho-with-me-everytime
 SLPS_012.38|zutto-issho-with-me-everytime
@@ -17442,7 +17442,7 @@ SLUS_204.38|nhl-hitz-20-03
 SLES_518.40|nhl-hitz-pro
 SLUS_206.91|nhl-hitz-pro
 SLUS_211.14|nhra-championship-drag-racing
-SLUS_215.47|nhra-drag-racing-countdown-to-the-championship
+SLUS_215.47|nhra-countdown-to-the-championship
 SLUS_218.55|nppl-championship-paintball-2009
 SLUS_214.32|nra-gun-club
 SLES_505.56|nyr-new-york-race
@@ -21039,10 +21039,10 @@ SLPM_663.82|tenshou-gakuen-gensouroku
 SLPM_655.20|tentama-2-wins-shokai
 SLPM_664.86|tentama-1st-sunny-side
 SLPS_252.98|tentama-1st-sunny-side
-SLES_520.39|terminator-3-la-rebelión-de-las-máquinas
-SLES_521.51|terminator-3-le-macchine-ribelli
-SLES_519.57|terminator-3-le-soulèvement-des-machines
-SLES_520.38|terminator-3-rebellion-der-maschinen
+SLES_520.39|terminator-3-rise-of-the-machines
+SLES_521.51|terminator-3-rise-of-the-machines
+SLES_519.57|terminator-3-rise-of-the-machines
+SLES_520.38|terminator-3-rise-of-the-machines
 SCAJ_200.58|terminator-3-rise-of-the-machines
 SLES_521.52|terminator-3-rise-of-the-machines
 SLPM_654.42|terminator-3-rise-of-the-machines
