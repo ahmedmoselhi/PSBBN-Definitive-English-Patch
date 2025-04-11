@@ -13,6 +13,7 @@ TEMPGBA|TempGBA
 XEBPLUS|Xtreme Elite Boot Plus
 PS2OGCARDTEST|Original Card Test
 MCA|Memory Card Annihilator
+MEMCARDANNIHILATOR|Memory Card Annihilator
 SMS|Simple Media System
 HDDOSD|HDD-OSD
 HDL|HD Loader
@@ -23,3 +24,7 @@ HDLSERVER093|HDL Server
 GSM038|GSM
 POPSLOADER|POPSLoader
 PS2HDDTESTER|HDD Tester
+3DPINBALLPLAYER|3D Pinball
+3DPINBALL|3D Pinball
+3DPINBALLPS2|3D Pinball
+APOLLO|Apollo Save Tool
