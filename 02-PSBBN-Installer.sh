@@ -407,21 +407,21 @@ function function_apajail_magic_number() {
 
 function function_apa_checksum_fix() {
 	sudo dd if=${DEVICE} of=/tmp/apa_header_full.bin bs=512 count=2 >> "${INSTALL_LOG}" 2>&1
-	"${TOOLKIT_PATH}/helper/PS2 APA Header Checksum Fixer.elf" /tmp/apa_header_full.bin | sed -n 8p | awk '{print $6}' | xxd -r -p > /tmp/apa_header_checksum.bin
+	"${TOOLKIT_PATH}/helper/PS2 APA Header Checksum Fixer.elf" /tmp/apa_header_full.bin | sed -n 8p | awk '{print $6}' | xxd -r -p > /tmp/apa_header_checksum.bin 2>> "${INSTALL_LOG}"
 	sudo dd if=/tmp/apa_header_checksum.bin of=${DEVICE} conv=notrunc >> "${INSTALL_LOG}" 2>&1
 	}
 
 function function_clear_temp() {
-	sudo rm /tmp/apa_header_address.bin		&> /dev/null
-	sudo rm /tmp/apa_header_boot.bin			&> /dev/null
-	sudo rm /tmp/apa_header_checksum.bin	&> /dev/null
-	sudo rm /tmp/apa_header_full.bin			&> /dev/null
-	sudo rm /tmp/apa_journal.bin				&> /dev/null
-	sudo rm /tmp/apa_header_probe.bin		&> /dev/null
-	sudo rm /tmp/apa_header_size.bin			&> /dev/null
-	sudo rm /tmp/apajail_magic_number.bin	&> /dev/null
-	sudo rm /tmp/apa_index.xz					&> /dev/null
-	sudo rm /tmp/gpt_2nd.xz						&> /dev/null
+	sudo rm /tmp/apa_header_address.bin		&> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_header_boot.bin			&> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_header_checksum.bin	&> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_header_full.bin			&> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_journal.bin				&> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_header_probe.bin		&> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_header_size.bin			&> "${INSTALL_LOG}"
+	sudo rm /tmp/apajail_magic_number.bin	&> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_index.xz					&> "${INSTALL_LOG}"
+	sudo rm /tmp/gpt_2nd.xz						&> "${INSTALL_LOG}"
 	}
 
 echo | tee -a "${INSTALL_LOG}"
@@ -449,21 +449,21 @@ PARTITION_NUMBER=3
 
 # Finalising recovery:
 if [ ! -d "${TOOLKIT_PATH}/storage/hdd/recovery" ]; then
-	mkdir -p "${TOOLKIT_PATH}/storage/hdd/recovery"
+	mkdir -p "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
 fi
 if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
-	sudo mount ${DEVICE}p2 "${TOOLKIT_PATH}/storage/hdd/recovery"
-	else sudo mount ${DEVICE}2 "${TOOLKIT_PATH}/storage/hdd/recovery"
+	sudo mount ${DEVICE}p2 "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
+	else sudo mount ${DEVICE}2 "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
 fi
 sudo dd if=${DEVICE} bs=128M count=1 status=noxfer 2>> "${INSTALL_LOG}" | xz -z > /tmp/apa_index.xz 2>> "${INSTALL_LOG}"
-sudo cp /tmp/apa_index.xz "${TOOLKIT_PATH}/storage/hdd/recovery"
+sudo cp /tmp/apa_index.xz "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
 LBA_MAX=$(sudo blockdev --getsize ${DEVICE})
 LBA_GPT_BUP=$(echo $(($LBA_MAX-33)))
 sudo dd if=${DEVICE} skip=${LBA_GPT_BUP} bs=512 count=33 status=noxfer 2>> "${INSTALL_LOG}" | xz -z > /tmp/gpt_2nd.xz 2>> "${INSTALL_LOG}"
-sudo cp /tmp/gpt_2nd.xz "${TOOLKIT_PATH}/storage/hdd/recovery"
-sync
-sudo umount -l "${TOOLKIT_PATH}/storage/hdd/recovery"
-rmdir "${TOOLKIT_PATH}/storage/hdd/recovery"
+sudo cp /tmp/gpt_2nd.xz "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
+sync 2>> "${INSTALL_LOG}"
+sudo umount -l "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
+rmdir "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
 
 function_apa_checksum_fix
 
@@ -502,7 +502,7 @@ else
 fi
 
 # Check if 'OPL' is found in the 'lsblk' output and if it matches the device
-if ! lsblk -p -o NAME,LABEL | grep -q "${DEVICE}3"; then
+if ! lsblk -p -o NAME,LABEL | sed 's/[├└─]//g' | awk -v part="${DEVICE}3" '$1 == part && $2 == "OPL"' | grep -q .; then
     echo "Error: APA-Jail failed on ${DEVICE}." | tee -a "${INSTALL_LOG}"
     read -n 1 -s -r -p "Press any key to exit..."
     echo
