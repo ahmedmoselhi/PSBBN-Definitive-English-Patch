@@ -76,6 +76,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 - Added cover art from the [OPL Manager Art DB backups](https://oplmanager.com/site/index.php?backups). Artwork for PS2 games is now displayed in OPL/NHDDL
 - Added homebrew support to the `03-Game-Installer.sh` script. `ELF` files placed in the local `games/APPS` folder on your PC will be installed and will appear in the Game Channel in PSBBN and the Apps tab in OPL
 - Apps now support Game ID for both the the Pixel FX Retro GEM and MemCard Pro/SD2PSX
+- Added support for the [Save Application System (SAS)](https://ps2wiki.github.io/sas-apps-archive/). `PSU` files can now also be placed in the local `games/APPS` folder on your PC and will be installed by the `03-Game-Installer.sh` script. 
 
 
 ## New installation scripts
@@ -108,7 +109,7 @@ sudo apt install git
 - Runs [APA-Jail](#notes-on-apa-jail), creating an exFAT partition using all remaining disk space beyond the first 128 GB (up to 2 TB)
 
 ### Game installer script: 
-`03-Game-Installer.sh` fully automates the installation of PS1 and PS2 games, as well as homebrew apps. Simply place your files in the `games` folder on your computer: PS2 `ISO` or `ZSO` files in the `CD`/`DVD` folders, PS1 `VCD` files in the `POPS` folder, and `ELF` files in the `APPS` folder.
+`03-Game-Installer.sh` fully automates the installation of PS1 and PS2 games, as well as homebrew apps. Simply place your files in the `games` folder on your computer: PS2 `ISO` or `ZSO` files in the `CD`/`DVD` folders, PS1 `VCD` files in the `POPS` folder, and `ELF` or [SAS-compliant](#notes-on-save-application-system-sas) `PSU` files in the `APPS` folder.
 
 The script will:
 - Gives you a choice of [Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) or [Neutrino](https://github.com/rickgaiser/neutrino) for the game launcher
@@ -122,12 +123,12 @@ The script will:
 
 To add or delete games/apps, simply add or remove them from the `games` folder on your computer, then run the script again to synchronise. All games and apps are kept in alphabetical order, with games also grouped by series in the Game Channel on PSBBN.
 
-By default, the `games` directory is located in the same directory where you installed the scripts. If you need to change its location, edit `03-Game-Installer.sh` and modify the `GAMES_PATH` variable. Alternatively, you can replace the `games` directory with a symbolic link that points to the storage location of your games. Another option is to create symbolic links in the `CD`, `DVD`, `POPS`, or `APPS` subdirectories, linking to the individual `ISO`, `ZSO`, `VCD`, or `ELF` files that you wish to sync.
+By default, the `games` directory is located in the same directory where you installed the scripts. If you need to change its location, edit `03-Game-Installer.sh` and modify the `GAMES_PATH` variable. Alternatively, you can replace the `games` directory with a symbolic link that points to the storage location of your games. Another option is to create symbolic links in the `CD`, `DVD`, `POPS`, or `APPS` subdirectories, linking to the individual `ISO`, `ZSO`, `VCD`,`ELF` or `PSU` files that you wish to sync.
 
 ### General Notes:
 - PSBBN requires a Fat PS2 console** with expansion bay and an official Sony Network Adapter
 - I would highly recommend using a **Kaico or BitFunx IDE to SATA Upgrade Kit** and a SATA SSD. The **Kingston A400 SSDs** have been tried and tested with PSBBN and work very well. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface.
-- PS2 games must be in ISO or ZSO format. PS1 games must be in VCD format. Apps must be in the `ELF` format
+- PS2 games must be in ISO or ZSO format. PS1 games must be in VCD format. Apps must be in the `ELF` or [SAS-compliant](#notes-on-save-application-system-sas) `PSU` format
 - PSBBN startup time increases when no active internet connection is available
 - If the shortcut to [OPL](https://github.com/ps2homebrew/Open-PS2-Loader)/[NHDDL](https://github.com/pcm720/nhddl) in the Navigator Menu displays the error "Game not found," remove the shortcut. You can then manually re-add it from the Game Channel
 - To quit PS1 games, press `L1 + SELECT + START`
@@ -178,6 +179,10 @@ If games still do not appear in the [OPL](https://github.com/ps2homebrew/Open-PS
 4. Try using a different HDD/SSD and re-run `02-PSBBN-Installer.sh`
 5. Try using a different SATA mod for your PS2
 
+### Notes on Save Application System (SAS):
+
+Save Application System (SAS) is a new standard for distributing homebrew applications for the PS2. Currently in beta, but already has over 20 apps available for download on the [Save Application System Apps Archive](https://ps2wiki.github.io/sas-apps-archive/). All SAS-compliant apps come packed in a `PSU` file and include icons and metadata, making it the recommended way to install homebrew on PSBBN.
+
 ### Notes on APA-Jail:
 
 ![APA-Jail Type-A2](https://github.com/user-attachments/assets/8c83dab7-f49f-4a77-b641-9f63d92c85e7)
@@ -203,14 +208,17 @@ The exFAT partition can be accessed on a PC and on the PS2 by [BBN Launcher](htt
 - [Neutrino](https://github.com/rickgaiser/neutrino) by [Rick Gaiser](https://github.com/rickgaiser)
 - [NHDDL](https://github.com/pcm720/nhddl) written by [pcm720](https://github.com/pcm720)
 - [Retro GEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher) written by [CosmicScale](https://github.com/CosmicScale)
-- Uses APA-Jail code from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) by [Berion](https://www.psx-place.com/resources/authors/berion.1431/)
-- `APA Partition Header Checksumer` by Pinky from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) project. Linux port by Bucanero
+- Uses APA-Jail code from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) by [Berion](https://www.psx-place.com/members/berion.1431/)
+- [APA Partition Header Checksumer](https://www.psx-place.com/resources/apa-partition-header-checksumer.1057/) by [Pink1](https://www.psx-place.com/members/pink1.1907/) and [Berion](https://www.psx-place.com/members/berion.1431/). Linux port by [Bucanero](https://github.com/Bucanero)
+- `PSU Extractor.elf` written by [Bucanero](https://github.com/Bucanero) from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) project
 - `ziso.py` from [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) written by Virtuous Flame
+- `icon_sys_to_txt.py` written by [NathanNeurotic (Ripto)](https://github.com/NathanNeurotic)
 - Online channels resurrected, translated, maintained and hosted by vitas155 at [psbbn.ru](https://psbbn.ru/)
 - PlayStation Now! and Konami online channels re-translated by [CosmicScale](https://github.com/CosmicScale)
 - [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database) created and maintained by [CosmicScale](https://github.com/CosmicScale)
 - Uses PS2 cover art from the [OPL Manager Art DB backups](https://oplmanager.com/site/index.php?backups)
 - Uses App icons from [OPL B-APPS Cover Pack](https://www.psx-place.com/resources/opl-b-apps-cover-pack.1440/) and [OPL Discs & Boxes Pack](https://www.psx-place.com/resources/opl-discs-boxes-pack.1439/) courtesy of [Berion](https://www.psx-place.com/resources/authors/berion.1431/)
+- Thanks to everyone on the [Save Application System team](https://ps2wiki.github.io/documentation/homebrew/PS2-App-System/SAS/index.html#Credits) for their ongoing work on the [Save Application System Apps Archive](https://ps2wiki.github.io/sas-apps-archive/)
 - This project also uses [PFS Shell](https://github.com/ps2homebrew/pfsshell), [HDL Dump](https://github.com/ps2homebrew/hdl-dump), [wLaunchELF](https://github.com/ps2homebrew/wLaunchELF) and [PS1VModeNeg](https://github.com/ps2homebrew/PS1VModeNeg)
 
 ---

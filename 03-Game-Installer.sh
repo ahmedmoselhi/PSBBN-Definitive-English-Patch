@@ -110,6 +110,11 @@ for item in "$ICONS_DIR"/*; do
     fi
 done
 
+# Find and delete all subdirectories in APPS direcrtory
+while IFS= read -r dir; do
+    rm -rf -- "$dir"
+done < <(find "${GAMES_PATH}/APPS" -mindepth 1 -maxdepth 1 -type d | sort -r)
+
 rm "${TOOLKIT_PATH}/package.json" >> "${LOG_FILE}" 2>&1
 rm "${TOOLKIT_PATH}/package-lock.json" >> "${LOG_FILE}" 2>&1
 rm "${PS1_LIST}" >> "${LOG_FILE}" 2>&1
@@ -234,13 +239,23 @@ echo "GAMES_PATH is valid: $GAMES_PATH" | tee -a "${LOG_FILE}"
 # Create necessary folders if they don't exist
 for folder in APPS ART CFG CHT LNG THM VMC POPS CD DVD; do
     dir="${GAMES_PATH}/${folder}"
-    [[ -d "$dir" ]] || sudo mkdir -p "$dir" || { 
+    [[ -d "$dir" ]] || mkdir -p "$dir" || { 
         echo "Error: Failed to create $dir. Make sure you have write permissions to $GAMES_PATH" | tee -a "${LOG_FILE}"
         read -n 1 -s -r -p "Press any key to exit..."
         echo
         exit 1
     }
 done
+
+# Check if GAMES_PATH is custom
+if [[ "${GAMES_PATH}" != "${TOOLKIT_PATH}/games" ]]; then
+    echo | tee -a "${LOG_FILE}"
+    echo "Using custom game path." | tee -a "${LOG_FILE}"
+    cp "${TOOLKIT_PATH}/games/APPS/BOOT.ELF" "${TOOLKIT_PATH}/games/APPS/Launch-Disc.elf" "${GAMES_PATH}/APPS" >> "${LOG_FILE}" 2>&1
+else
+    echo | tee -a "${LOG_FILE}"
+    echo "Using default game path." | tee -a "${LOG_FILE}"
+fi
 
 mkdir -p "${ICONS_DIR}/bbnl"
 
@@ -283,100 +298,325 @@ echo | tee -a "${LOG_FILE}"
 
 echo "Preparing to sync apps..." | tee -a "${LOG_FILE}"
 
-# Check if any ELF files exist in the source directory
-if ! ls "${GAMES_PATH}/APPS/"*.elf "${GAMES_PATH}/APPS/"*.ELF >/dev/null 2>&1; then
-    echo "No apps found." | tee -a "${LOG_FILE}"
-fi
+cd "${GAMES_PATH}/APPS"
 
-# Process each ELF file in the source directory
-for file in "${GAMES_PATH}/APPS/"*.elf "${GAMES_PATH}/APPS/"*.ELF; do
-    [ -e "$file" ] || continue  # Skip if no ELF files exist
+# Check if any .psu or .PSU files exist in the source directory
+if find "${GAMES_PATH}/APPS/" -maxdepth 1 -type f \( -name "*.psu" -o -name "*.PSU" \) | grep -q .; then
+    echo | tee -a "${LOG_FILE}"
+    echo "Processing PSU files:" | tee -a "${LOG_FILE}"
+    # Process each .psu file in the source directory
+        for file in "${GAMES_PATH}/APPS/"*.psu "${GAMES_PATH}/APPS/"*.PSU; do
+        [ -e "$file" ] || continue  # Skip if no PSU files exist
     
-    # Extract filename without path and extension
-    base_name=$(basename "$file")
-    base_name_no_ext="${base_name%.*}"
+        echo "Extracting $file..."
+        "${HELPER_DIR}/PSU Extractor.elf" "$file" >> "${LOG_FILE}" 2>&1
+       done
 
-    app_name="${base_name_no_ext%%(*}" # Remove anything after an open bracket '('
-    app_name="${app_name%%v[0-9]*}" # Remove versioning (e.g., v12)
-    app_name=$(echo "$app_name" | sed -E 's/[cC][oO][mM][pP][rR][eE][sS][sS][eE][dD].*//') # Remove "compressed"
-    app_name=$(echo "$app_name" | sed -E 's/[pP][aA][cC][kK][eE][dD].*//') # Remove "packed"
+    for dir in */; do
+    [[ -d "$dir" ]] || continue
 
-    AppDB_check=$(echo "$app_name" | sed 's/[ _-]//g' | tr 'a-z' 'A-Z')
+    # Check for .elf/.ELF file
+    if find "$dir" -maxdepth 1 -type f \( -iname "*.elf" \) | grep -q . && \
+        [[ -f "$dir/icon.sys" && -f "$dir/title.cfg" ]]; then
+        cp -r "$dir" "${ICONS_DIR}"
+    fi
+    done
 
-    # Check $HELPER_DIR/AppDB.csv for match in first column to $AppDB_check, set $cleaned_name based on second column from file if found. If no match found, set $cleaned_name with the remaining code
-    match=$(awk -F'|' -v key="$AppDB_check" '$1 && index(key, $1) == 1 {print $2; exit}' "$HELPER_DIR/AppDB.csv")
+    # Loop through each folder in DST_DIR, excluding 'art', sorted in reverse alphabetical order
+    find "$ICONS_DIR" -mindepth 1 -maxdepth 1 -type d ! -name "art" ! -name "bbnl" | sort -r | while IFS= read -r dir; do
 
-    if [[ -n "$match" ]]; then
-        cleaned_name="$match"
+    folder_name=$(basename "$dir")
+
+    # Find the first .ELF file in the extracted directory
+    elf_file=$(find "$dir" -maxdepth 1 -type f -iname "*.elf" | head -n 1)
+    # Extract only the filename if an ELF file was found
+    elf_filename=$(basename "$elf_file")
+    echo | tee -a "${LOG_FILE}"
+    echo "Found ELF file: $elf_filename" | tee -a "${LOG_FILE}"
+
+    if [ -f "$dir/list.icn" ]; then
+        mv "$dir/list.icn" "$dir/list.ico" 2>> "${LOG_FILE}"
+        [ -f "$dir/del.icn" ] && mv "$dir/del.icn" "$dir/del.ico" 2>> "${LOG_FILE}"
+        echo "list.icn found in $dir, converted to list.ico" | tee -a "${LOG_FILE}"
     else
-        # Use the processed name if no match is found
-        app_name="${app_name//[_-]/ }"  # Replace underscores and hyphens with spaces
-        app_name="${app_name%"${app_name##*[![:space:]]}"}" # Trim trailing spaces again
-        app_name_before=$(echo "$app_name") # Save the string
-        app_name=$(echo "$app_name" | sed 's/\([a-z]\)\([A-Z]\)/\1 \2/g') # Add a space before capital letters when preceded by a lowercase letter
-
-        # Check if spaces were added by comparing before and after
-        if [[ "$app_name" != "$app_name_before" ]]; then
-            space_added=true
-        else
-            space_added=false
-        fi
-
-        # Process for title case and exceptions
-        input_str="$app_name"
-
-        # List of terms to ensure spaces before and after
-        terms=("3d" "3D" "ps2" "PS2" "ps1" "PS1")
-    
-        # Loop over the terms
-        for term in "${terms[@]}"; do
-            input_str="${input_str//${term}/ ${term}}"  # Ensure space before the term
-            input_str="${input_str//${term}/${term} }"  # Ensure space after the term
-        done
-
-        # Special case for "hdd" and "HDD" - add spaces only if the string is longer than 5 characters
-        if [[ ${#input_str} -gt 5 ]]; then
-            input_str="${input_str//hdd/ hdd }"
-            input_str="${input_str//HDD/ HDD }"
-        fi
-
-        # Check if the string contains any lowercase letters
-        if ! echo "$input_str" | grep -q '[a-z]'; then
-            input_str="${input_str,,}"  # Convert the entire string to lowercase
-        fi
-
-        result=""
-        # Define words to exclude from uppercase conversion (only consonant-only words)
-        exclude_list="by cry cyst crypt dry fly fry glyph gym gypsy hymn lynx my myth myrrh ply pry rhythm shy sky spy sly sty sync tryst why wry"
-
-        # Now process each word
-        for word in $input_str; do
-            # Handle words 3 characters or shorter, but only if no space was added by sed
-            if [[ ${#word} -le 3 ]] && ! $space_added && ! echo "$exclude_list" | grep -wi -q "$word"; then
-                result+=" ${word^^}"  # Convert to uppercase
-            # Handle consonant-only words (only if not in exclusion list)
-            elif [[ "$word" =~ ^[b-df-hj-np-tv-z0-9]+$ ]] && ! echo "$exclude_list" | grep -w -q "$word"; then
-                result+=" ${word^^}"  # Uppercase if the word is consonant-only and not in the exclusion list
-            else
-                result+=" ${word^}"  # Capitalize first letter for all other words
-            fi
-
-        cleaned_name="${result# }"
-        done
-
-        # Remove leading space and ensure no double spaces are left
-        result="${result#"${result%%[![:space:]]*}"}"  # Remove leading spaces
-        cleaned_name=$(echo "$result" | sed 's/  / /g')  # Replace double spaces with single spaces
+        echo "list.icn not found in $dir, using default icon." | tee -a "${LOG_FILE}"
+        cp "${ASSETS_DIR}/app-list.ico" "$dir/list.ico" 2>> "${LOG_FILE}"
+        cp "${ASSETS_DIR}/app-del.ico" "$dir/del.ico" 2>> "${LOG_FILE}"
     fi
 
-    folder_name=$(echo "$cleaned_name" | tr '[:lower:]' '[:upper:]' | tr -cd 'A-Z0-9' | cut -c1-11)  # Replace spaces with underscores & capitalize
+    # Convert the icon.sys file
+    icon_sys_filename="$dir/icon.sys"
 
-    # Create the new folder in the destination directory
-    mkdir -p "${ICONS_DIR}/$folder_name"
+    python3 "${HELPER_DIR}/icon_sys_to_txt.py" "$icon_sys_filename" >> "${LOG_FILE}" 2>&1
+    mv "$dir/icon.txt" "$icon_sys_filename"
 
-    # Generate the info.sys file
-    info_sys_filename="${ICONS_DIR}/$folder_name/info.sys"
+    if [ $? -ne 0 ]; then
+        echo "Failed to convert icon.sys: $icon_sys_filename" | tee -a "${LOG_FILE}"
+    else
+        echo "Converted icon.sys: $icon_sys_filename"  | tee -a "${LOG_FILE}"
+    fi
+
+    while IFS='=' read -r key value; do
+        key=$(echo "$key" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        value=$(echo "$value" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+        # Remove non-ASCII and non-printable characters
+        value=$(printf '%s' "$value" | LC_ALL=C tr -cd '\40-\176')
+
+        case "$key" in
+            title) title="$value" ;;
+            boot) elf="$value" ;;
+            Developer) developer="$value" ;;
+        esac
+    done < "$dir/title.cfg"
+
+# Generate the info.sys file
+    info_sys_filename="$dir/info.sys"
     cat > "$info_sys_filename" <<EOL
+title = $title
+title_id = $folder_name
+title_sub_id = 0
+release_date = 
+developer_id = 
+publisher_id = $developer
+note = 
+content_web = 
+image_topviewflag = 0
+image_type = 0
+image_count = 1
+image_viewsec = 600
+copyright_viewflag = 0
+copyright_imgcount = 0
+genre = 
+parental_lock = 1
+effective_date = 0
+expire_date = 0
+violence_flag = 0
+content_type = 255
+content_subtype = 0
+EOL
+    echo "Created info.sys: $info_sys_filename"  | tee -a "${LOG_FILE}"
+
+    # Generate the bbnl cfg file
+    bbnl_filename="${ICONS_DIR}/bbnl/$folder_name.cfg"
+    cat > "$bbnl_filename" <<EOL
+file_name=/APPS/$folder_name/$elf_filename
+title_id=$folder_name
+launcher=ELF
+EOL
+    echo "Created bbnl config: $bbnl_filename"  | tee -a "${LOG_FILE}"
+
+    png_file="${ARTWORK_DIR}/${folder_name}.png"
+    # Copy the matching PNG file from ART_DIR, or default to APP.png
+    if [ -f "$png_file" ]; then
+        cp "$png_file" "${ICONS_DIR}/$folder_name/jkt_001.png" | tee -a "${LOG_FILE}"
+        cp "$png_file" "${GAMES_PATH}/ART/${elf}_COV.png" | tee -a "${LOG_FILE}"
+        echo "Artwork found locally for $title"  | tee -a "${LOG_FILE}"
+    else
+        echo "Artwork not found locally. Attempting to download from the PSBBN art database..." | tee -a "${LOG_FILE}"
+        wget --quiet --timeout=10 --tries=3 --output-document="$png_file" \
+        "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/apps/${folder_name}.png"
+            if [[ -s "$png_file" ]]; then
+                echo "Successfully downloaded artwork for $folder_name" | tee -a "${LOG_FILE}"
+                cp "$png_file" "${ICONS_DIR}/$folder_name/jkt_001.png" | tee -a "${LOG_FILE}"
+                cp "$png_file" "${GAMES_PATH}/ART/${elf}_COV.png" | tee -a "${LOG_FILE}"
+            else
+                rm "$png_file"
+                echo "Artwork not found for $folder_name. Using default APP image." | tee -a "${LOG_FILE}"
+                cp "$ARTWORK_DIR/APP.png" "${ICONS_DIR}/$folder_name/jkt_001.png" | tee -a "${LOG_FILE}"
+                echo "$folder_name,$title,$elf" >> "${MISSING_APP_ART}"
+            fi
+    fi
+
+    cp "${ASSETS_DIR}/BBNL"/{boot.kelf,system.cnf} "$dir"
+
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="mkpart PP.$folder_name 128M PFS\n"
+    COMMANDS+="mount PP.$folder_name\n"
+    COMMANDS+="mkdir res\n"
+    COMMANDS+="cd res\n"
+    COMMANDS+="lcd '${ICONS_DIR}/$folder_name'\n"
+    COMMANDS+="put info.sys\n"
+    COMMANDS+="put jkt_001.png\n"
+    COMMANDS+="cd /\n"
+    COMMANDS+="umount\n"
+    COMMANDS+="exit"
+
+    echo "Creating PP.$folder_name..." | tee -a "${LOG_FILE}"
+    echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+    cd "${ICONS_DIR}/$folder_name"
+    sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "PP.$folder_name" >> "${LOG_FILE}" 2>&1
+
+    done
+
+else
+    echo | tee -a "${LOG_FILE}"
+    echo "No PSU files found." | tee -a "${LOG_FILE}"
+fi
+
+existing_folders=()
+
+# Get all directories and add them to the exclusion list
+while IFS= read -r dir; do
+    folder_name=$(basename "$dir")
+    existing_folders+=("$folder_name")
+done < <(find "$ICONS_DIR" -mindepth 1 -maxdepth 1 -type d | sort -r)
+
+# Build the exclusion conditions dynamically based on the existing_folders array
+exclude_conditions=()
+for folder in "${existing_folders[@]}"; do
+    exclude_conditions+=("-not" "-name" "$folder")
+done
+
+# Check if any ELF files exist in the source directory
+if ! ls "${GAMES_PATH}/APPS/"*.elf "${GAMES_PATH}/APPS/"*.ELF >/dev/null 2>&1; then
+    echo | tee -a "${LOG_FILE}"
+    echo "No ELF files found." | tee -a "${LOG_FILE}"
+else
+    # Process each ELF file in the source directory
+    echo | tee -a "${LOG_FILE}"
+    echo "Processing ELF files:"| tee -a "${LOG_FILE}"
+    for file in "${GAMES_PATH}/APPS/"*.elf "${GAMES_PATH}/APPS/"*.ELF; do
+        [ -e "$file" ] || continue  # Skip if no ELF files exist
+        # Extract filename without path and extension
+        base_name=$(basename "$file")
+        base_name_no_ext="${base_name%.*}"
+        echo | tee -a "${LOG_FILE}"
+        echo "Found ELF file: $base_name" | tee -a "${LOG_FILE}"
+
+        app_name="${base_name_no_ext%%(*}" # Remove anything after an open bracket '('
+        app_name="${app_name%%[Vv][0-9]*}" # Remove versioning (e.g., v12 or V12)
+        app_name=$(echo "$app_name" | sed -E 's/[cC][oO][mM][pP][rR][eE][sS][sS][eE][dD].*//') # Remove "compressed"
+        app_name=$(echo "$app_name" | sed -E 's/[pP][aA][cC][kK][eE][dD].*//') # Remove "packed"
+        app_name=$(echo "$app_name" | sed 's/\.*$//') # Trim trailing full stops
+
+        AppDB_check=$(echo "$app_name" | sed 's/[ _-]//g' | tr 'a-z' 'A-Z')
+
+        # Check $HELPER_DIR/AppDB.csv for match in first column to $AppDB_check, set $cleaned_name based on second column from file if found. If no match found, set $cleaned_name with the remaining code
+        match=$(awk -F'|' -v key="$AppDB_check" '$1 && index(key, $1) == 1 {print $2; exit}' "$HELPER_DIR/AppDB.csv")
+
+        if [[ -n "$match" ]]; then
+            cleaned_name="$match"
+        else
+            # Use the processed name if no match is found
+            app_name="${app_name//[_-]/ }"  # Replace underscores and hyphens with spaces
+            app_name="${app_name%"${app_name##*[![:space:]]}"}" # Trim trailing spaces again
+            app_name=$(echo "$app_name" | sed 's/\.*$//') # Trim trailing full stops again
+            app_name_before=$(echo "$app_name") # Save the string
+            app_name=$(echo "$app_name" | sed 's/\([a-z]\)\([A-Z]\)/\1 \2/g') # Add a space before capital letters when preceded by a lowercase letter
+
+            # Check if spaces were added by comparing before and after
+            if [[ "$app_name" != "$app_name_before" ]]; then
+                space_added=true
+            else
+                space_added=false
+            fi
+
+            # Process for title case and exceptions
+            input_str="$app_name"
+
+            # List of terms to ensure spaces before and after
+            terms=("3d" "3D" "ps2" "PS2" "ps1" "PS1")
+    
+            # Loop over the terms
+            for term in "${terms[@]}"; do
+                input_str="${input_str//${term}/ ${term}}"  # Ensure space before the term
+                input_str="${input_str//${term}/${term} }"  # Ensure space after the term
+            done
+
+            # Special case for "hdd" and "HDD" - add spaces only if the string is longer than 5 characters
+            if [[ ${#input_str} -gt 5 ]]; then
+                input_str="${input_str//hdd/ hdd }"
+                input_str="${input_str//HDD/ HDD }"
+            fi
+
+            # Check if the string contains any lowercase letters
+            if ! echo "$input_str" | grep -q '[a-z]'; then
+                input_str="${input_str,,}"  # Convert the entire string to lowercase
+            fi
+
+            result=""
+            # Define words to exclude from uppercase conversion (only consonant-only words)
+            exclude_list="by cry cyst crypt dry fly fry glyph gym gypsy hymn lynx my myth myrrh ply pry rhythm shy sky spy sly sty sync tryst why wry"
+
+            # Now process each word
+            for word in $input_str; do
+                # Handle words 3 characters or shorter, but only if no space was added by sed
+                if [[ ${#word} -le 3 ]] && ! $space_added && ! echo "$exclude_list" | grep -wi -q "$word"; then
+                    result+=" ${word^^}"  # Convert to uppercase
+                # Handle consonant-only words (only if not in exclusion list)
+                elif [[ "$word" =~ ^[b-df-hj-np-tv-z0-9]+$ ]] && ! echo "$exclude_list" | grep -w -q "$word"; then
+                    result+=" ${word^^}"  # Uppercase if the word is consonant-only and not in the exclusion list
+                else
+                    result+=" ${word^}"  # Capitalize first letter for all other words
+                fi
+
+            cleaned_name="${result# }"
+            done
+
+            # Remove leading space and ensure no double spaces are left
+            result="${result#"${result%%[![:space:]]*}"}"  # Remove leading spaces
+            cleaned_name=$(echo "$result" | sed 's/  / /g')  # Replace double spaces with single spaces
+        fi
+
+        folder_name=$(echo "$cleaned_name" | tr '[:lower:]' '[:upper:]' | tr -cd 'A-Z0-9' | cut -c1-11)  # Replace spaces with underscores & capitalize
+
+        # Create the new folder in the destination directory
+        mkdir -p "${ICONS_DIR}/$folder_name"
+
+        # Generate the icon.sys file
+        icon_sys_filename="${ICONS_DIR}/$folder_name/icon.sys"
+        cat > "$icon_sys_filename" <<EOL
+PS2X
+title0=$cleaned_name
+title1=
+bgcola=90
+bgcol0=192,192,192
+bgcol1=102,102,102
+bgcol2=40,40,40
+bgcol3=0,0,0
+lightdir0=0.5000,0.5000,0.5000
+lightdir1=0.0000,-0.4000,-0.1000
+lightdir2=-0.5000,-0.5000,0.5000
+lightcolamb=63,63,63
+lightcol0=61,61,3
+lightcol1=63,42,25
+lightcol2=17,17,48
+uninstallmes0=
+uninstallmes1=
+uninstallmes2=
+EOL
+        echo "Created icon.sys: $icon_sys_filename"  | tee -a "${LOG_FILE}"
+
+        # Generate the info.sys file
+        if [[ "$cleaned_name" == "PSBBN" ]]; then
+            info_sys_filename="${ICONS_DIR}/$folder_name/info.sys"
+            cat > "$info_sys_filename" <<EOL
+title = $cleaned_name
+title_id = $folder_name
+title_sub_id = 0
+release_date = 
+developer_id = 
+publisher_id = 
+note = 
+content_web = 
+image_topviewflag = 0
+image_type = 0
+image_count = 1
+image_viewsec = 600
+copyright_viewflag = 0
+copyright_imgcount = 0
+genre = 
+parental_lock = 1
+effective_date = 0
+expire_date = 0
+violence_flag = 0
+content_type = 256
+content_subtype = 0
+EOL
+        else
+            info_sys_filename="${ICONS_DIR}/$folder_name/info.sys"
+            cat > "$info_sys_filename" <<EOL
 title = $cleaned_name
 title_id = $folder_name
 title_sub_id = 0
@@ -399,50 +639,59 @@ violence_flag = 0
 content_type = 255
 content_subtype = 0
 EOL
-    echo "Created info.sys: $info_sys_filename"  | tee -a "${LOG_FILE}"
+            echo "Created info.sys: $info_sys_filename"  | tee -a "${LOG_FILE}"
+        fi
 
-    if [[ "$folder_name" == "LAUNCHELF" ]]; then
-        bbnl_cfg="$ICONS_DIR/bbnl/WLE.cfg"
-    elif [[ "$folder_name" == "LAUNCHDISC" ]]; then
-        bbnl_cfg="$ICONS_DIR/bbnl/DISC.cfg"
-    else
-        bbnl_cfg="$ICONS_DIR/bbnl/$folder_name.cfg"
-    fi
-    cat > "$bbnl_cfg" <<EOL
+        if [[ "$folder_name" == "LAUNCHELF" ]]; then
+            bbnl_cfg="${ICONS_DIR}/bbnl/WLE.cfg"
+        elif [[ "$folder_name" == "LAUNCHDISC" ]]; then
+            bbnl_cfg="${ICONS_DIR}/bbnl/DISC.cfg"
+        else
+            bbnl_cfg="$ICONS_DIR/bbnl/$folder_name.cfg"
+        fi
+        cat > "$bbnl_cfg" <<EOL
 file_name=/APPS/$base_name
 title_id=$folder_name
 launcher=ELF
 EOL
-    echo "Created BBNL config: $folder_name.cfg"  | tee -a "${LOG_FILE}"
-    echo "$cleaned_name=mass:/APPS/$base_name" >> "${ICONS_DIR}/bbnl/conf_apps.cfg" 2>> "${LOG_FILE}"
+        echo "Created BBNL config: $folder_name.cfg"  | tee -a "${LOG_FILE}"
+        echo "$cleaned_name=mass:/APPS/$base_name" >> "${ICONS_DIR}/bbnl/conf_apps.cfg" 2>> "${LOG_FILE}"
 
-    png_file="${ARTWORK_DIR}/${folder_name}.png"
-    # Copy the matching PNG file from ART_DIR, or default to APP.png
-    if [ -f "$png_file" ]; then
-        cp "$png_file" "$ICONS_DIR/$folder_name/jkt_001.png"
-        cp "$png_file" "$GAMES_PATH/ART/${base_name}_COV.png"
-        echo "Artwork found locally for $base_name"  | tee -a "${LOG_FILE}"
-    else
-        echo "Artwork not found locally. Attempting to download from the PSBBN art database..." | tee -a "${LOG_FILE}"
-        wget --quiet --timeout=10 --tries=3 --output-document="$png_file" \
-        "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/apps/${folder_name}.png"
-            if [[ -s "$png_file" ]]; then
-                echo "Successfully downloaded artwork for $base_name" | tee -a "${LOG_FILE}"
-                cp "$png_file" "$ICONS_DIR/$folder_name/jkt_001.png"
-                cp "$png_file" "$GAMES_PATH/ART/${base_name}_COV.png"
-            else
-                rm "$png_file"
-                echo "Artwork not found for $base_name. Using default APP image." | tee -a "${LOG_FILE}"
-                cp "$ARTWORK_DIR/APP.png" "${ICONS_DIR}/$folder_name/jkt_001.png"
-                echo "$folder_name,$cleaned_name,$base_name" >> "${MISSING_APP_ART}"
-            fi
-    fi
-done
+        cp "${ASSETS_DIR}/BBNL/boot.kelf" "${ICONS_DIR}/$folder_name" | tee -a "${LOG_FILE}"
+        cp "${ASSETS_DIR}/app-list.ico" "${ICONS_DIR}/$folder_name/list.ico" | tee -a "${LOG_FILE}"
+        cp "${ASSETS_DIR}/app-del.ico" "${ICONS_DIR}/$folder_name/del.ico" | tee -a "${LOG_FILE}"
+        cp "${ASSETS_DIR}/BBNL/system.cnf" "${ICONS_DIR}/$folder_name" | tee -a "${LOG_FILE}"
 
-cd "${ASSETS_DIR}/BBNL"
+        png_file="${ARTWORK_DIR}/${folder_name}.png"
+        # Copy the matching PNG file from ART_DIR, or default to APP.png
+        if [ -f "$png_file" ]; then
+            cp "$png_file" "${ICONS_DIR}/$folder_name/jkt_001.png" | tee -a "${LOG_FILE}"
+            cp "$png_file" "${GAMES_PATH}/ART/${base_name}_COV.png" | tee -a "${LOG_FILE}"
+            echo "Artwork found locally for $base_name"  | tee -a "${LOG_FILE}"
+        else
+            echo "Artwork not found locally. Attempting to download from the PSBBN art database..." | tee -a "${LOG_FILE}"
+            wget --quiet --timeout=10 --tries=3 --output-document="$png_file" \
+            "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/apps/${folder_name}.png"
+                if [[ -s "$png_file" ]]; then
+                    echo "Successfully downloaded artwork for $base_name" | tee -a "${LOG_FILE}"
+                    cp "$png_file" "${ICONS_DIR}/$folder_name/jkt_001.png" | tee -a "${LOG_FILE}"
+                    cp "$png_file" "${GAMES_PATH}/ART/${base_name}_COV.png" | tee -a "${LOG_FILE}"
+                else
+                    rm "$png_file"
+                    echo "Artwork not found for $base_name. Using default APP image." | tee -a "${LOG_FILE}"
+                    cp "$ARTWORK_DIR/APP.png" "${ICONS_DIR}/$folder_name/jkt_001.png" | tee -a "${LOG_FILE}"
+                    if [[ "$folder_name" != "PSBBN" ]]; then
+                        echo "$folder_name,$cleaned_name,$base_name" >> "${MISSING_APP_ART}"
+                    fi
+                fi
+        fi
+    done
+fi
 
-# Loop through each folder in DST_DIR, excluding 'art', sorted in reverse alphabetical order
-find "$ICONS_DIR" -mindepth 1 -maxdepth 1 -type d ! -name "art" ! -name "bbnl" | sort -r | while IFS= read -r dir; do
+echo | tee -a "${LOG_FILE}"
+
+# Loop through each folder in ICONS_DIR, excluding folders that have already been processed, sorted in reverse alphabetical order
+find "$ICONS_DIR" -mindepth 1 -maxdepth 1 -type d "${exclude_conditions[@]}" | sort -r | while IFS= read -r dir; do
     COMMANDS="device ${DEVICE}\n"
     # Set pp_name based on the folder name
     if [[ "$(basename "$dir")" == "LAUNCHELF" ]]; then
@@ -467,19 +716,19 @@ find "$ICONS_DIR" -mindepth 1 -maxdepth 1 -type d ! -name "art" ! -name "bbnl" |
     COMMANDS+="umount\n"
     COMMANDS+="exit"
 
-    echo "Creating PP.$pp_name" | tee -a "${LOG_FILE}"
+    echo "Creating PP.$pp_name..." | tee -a "${LOG_FILE}"
     echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+    cd "${ICONS_DIR}/$(basename "$dir")"
     sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "PP.$pp_name" >> "${LOG_FILE}" 2>&1
 
     if [ "$pp_name" = "DISC" ]; then
         cd "${ASSETS_DIR}/DISC"
         sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "PP.$pp_name" >> "${LOG_FILE}" 2>&1
-        cd "${ASSETS_DIR}/BBNL"
     fi
 done
 
 # Create PP.LAUNCHER
-echo >> "${LOG_FILE}"
+echo | tee -a "${LOG_FILE}"
 echo "Updating chosen game launcher..." | tee -a "${LOG_FILE}"
 COMMANDS="device ${DEVICE}\n"
 COMMANDS+="mkpart PP.LAUNCHER 128M PFS\n"
@@ -508,6 +757,16 @@ COMMANDS+="exit"
 
 echo >> "${LOG_FILE}"
 echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+
+
+if [ "$LAUNCHER" = "OPL" ]; then
+    cp "${ASSETS_DIR}/BBNL/boot.kelf" "${ASSETS_DIR}/BBNL/system.cnf" "${ASSETS_DIR}/OPL"
+    cd "${ASSETS_DIR}/OPL"
+elif [ "$LAUNCHER" = "NEUTRINO" ]; then
+    cp "${ASSETS_DIR}/BBNL/boot.kelf" "${ASSETS_DIR}/BBNL/system.cnf" "${ASSETS_DIR}/NHDDL"
+    cd "${ASSETS_DIR}/NHDDL"
+fi
+
 sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" PP.LAUNCHER >> "${LOG_FILE}" 2>&1
 
 cd "${TOOLKIT_PATH}"
@@ -1160,31 +1419,33 @@ sudo mv "${TOOLKIT_PATH}/OPL/bbnl/conf_apps.cfg" "${TOOLKIT_PATH}/OPL" >> "${LOG
 
 echo | tee -a "${LOG_FILE}"
 echo "Syncing PS2 games..." | tee -a "${LOG_FILE}"
-sudo rsync -rL --progress --ignore-existing --delete --exclude=".*" "${GAMES_PATH}/CD/" "${TOOLKIT_PATH}/OPL/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
-if [ $? -ne 0 ]; then
-    echo
-    echo
-    echo "Error: Failed to sync PS2 games. See ${LOG_FILE} for details." | tee -a "${LOG_FILE}"
-    read -n 1 -s -r -p "Press any key to exit..."
-    echo
-    exit 1
-fi
 
+# Sync PS2 CD games
+sudo rsync -rL --progress --ignore-existing --delete --exclude=".*" "${GAMES_PATH}/CD/" "${TOOLKIT_PATH}/OPL/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+cd_status=$?
+
+# Sync PS2 DVD games
 sudo rsync -rL --progress --ignore-existing --delete --exclude=".*" "${GAMES_PATH}/DVD/" "${TOOLKIT_PATH}/OPL/DVD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
-if [ $? -ne 0 ]; then
-    echo
+dvd_status=$?
+
+# Check if either failed
+if [ $cd_status -ne 0 ] || [ $dvd_status -ne 0 ]; then
     echo
     echo "Error: Failed to sync PS2 games. See ${LOG_FILE} for details." | tee -a "${LOG_FILE}"
     read -n 1 -s -r -p "Press any key to exit..."
     echo
     exit 1
+else
+    echo | tee -a "${LOG_FILE}"
+    echo "PS2 games successfully synced." | tee -a "${LOG_FILE}"
 fi
 
 echo | tee -a "${LOG_FILE}"
 echo "Syncing Apps..." | tee -a "${LOG_FILE}"
-sudo rsync -rut --progress --delete --exclude=".*" "${GAMES_PATH}/APPS/" "${TOOLKIT_PATH}/OPL/APPS/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+echo
+sudo rsync -rut --progress --delete --exclude=".*" --exclude="*.psu" --exclude="*.PSU" "${GAMES_PATH}/APPS/" "${TOOLKIT_PATH}/OPL/APPS/" >> "${LOG_FILE}" 2>&1
+echo >> "${LOG_FILE}"
 if [ $? -ne 0 ]; then
-    echo
     echo
     echo "Error: Failed to sync Apps. See ${LOG_FILE} for details." | tee -a "${LOG_FILE}"
     read -n 1 -s -r -p "Press any key to exit..."
@@ -1231,16 +1492,14 @@ if ! $files_exist; then
     echo "No OPL files to copy." | tee -a "${LOG_FILE}"
 fi
 
-echo | tee -a "${LOG_FILE}"
+echo >> "${LOG_FILE}"
 echo "APPS on PS2 drive:" >> "${LOG_FILE}"
-ls -1 "${TOOLKIT_PATH}/OPL/APPS/" | grep -i "\.elf$" >> "${LOG_FILE}" 2>&1
-echo | tee -a "${LOG_FILE}"
+ls -1 "${TOOLKIT_PATH}/OPL/APPS/" >> "${LOG_FILE}" 2>&1
+echo >> "${LOG_FILE}"
 echo "PS2 Games on PS2 drive:" >> "${LOG_FILE}"
 ls -1 "${TOOLKIT_PATH}/OPL/CD/" >> "${LOG_FILE}" 2>&1
 ls -1 "${TOOLKIT_PATH}/OPL/DVD/" >> "${LOG_FILE}" 2>&1
 
-echo >> "${LOG_FILE}" 2>&1
-echo "PS2 games successfully synced" | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
 echo "Unmounting OPL partition..." | tee -a "${LOG_FILE}"
 sync

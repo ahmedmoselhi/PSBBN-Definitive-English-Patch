@@ -1,6 +1,12 @@
 venv/
 node_modules/
 assets/POPS-binaries-main/
+assets/OPL/boot.kelf
+assets/OPL/system.cnf
+assets/NHDDL/boot.kelf
+assets/NHDDL/system.cnf
+games/ART/*.png
+games/APPS/*.psu
 *.log
 *.gz
 *.zip
