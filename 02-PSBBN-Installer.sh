@@ -412,16 +412,16 @@ function function_apa_checksum_fix() {
 	}
 
 function function_clear_temp() {
-	sudo rm /tmp/apa_header_address.bin		&> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_header_boot.bin			&> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_header_checksum.bin	&> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_header_full.bin			&> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_journal.bin				&> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_header_probe.bin		&> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_header_size.bin			&> "${INSTALL_LOG}"
-	sudo rm /tmp/apajail_magic_number.bin	&> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_index.xz					&> "${INSTALL_LOG}"
-	sudo rm /tmp/gpt_2nd.xz						&> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_header_address.bin		&>> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_header_boot.bin			&>> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_header_checksum.bin	&>> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_header_full.bin			&>> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_journal.bin				&>> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_header_probe.bin		&>> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_header_size.bin			&>> "${INSTALL_LOG}"
+	sudo rm /tmp/apajail_magic_number.bin	&>> "${INSTALL_LOG}"
+	sudo rm /tmp/apa_index.xz					&>> "${INSTALL_LOG}"
+	sudo rm /tmp/gpt_2nd.xz						&>> "${INSTALL_LOG}"
 	}
 
 echo | tee -a "${INSTALL_LOG}"

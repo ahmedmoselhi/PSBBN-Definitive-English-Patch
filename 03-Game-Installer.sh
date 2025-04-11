@@ -35,6 +35,16 @@ if [[ ! -f "${HELPER_DIR}/PFS Shell.elf" || ! -f "${HELPER_DIR}/HDL Dump.elf" ]]
 fi
 
 echo "########################################################################################################">> "${LOG_FILE}";
+
+if [ $? -ne 0 ]; then
+    echo
+    echo
+    echo "Error: Cannot write to log file."
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
+    exit 1
+fi
+
 date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
@@ -115,17 +125,17 @@ while IFS= read -r dir; do
     rm -rf -- "$dir"
 done < <(find "${GAMES_PATH}/APPS" -mindepth 1 -maxdepth 1 -type d | sort -r)
 
-rm "${TOOLKIT_PATH}/package.json" >> "${LOG_FILE}" 2>&1
-rm "${TOOLKIT_PATH}/package-lock.json" >> "${LOG_FILE}" 2>&1
-rm "${PS1_LIST}" >> "${LOG_FILE}" 2>&1
-rm "${PS2_LIST}" >> "${LOG_FILE}" 2>&1
-rm "${ALL_GAMES}" >> "${LOG_FILE}" 2>&1
-rm "${ARTWORK_DIR}/tmp"/* >> "${LOG_FILE}" 2>&1
+rm -f "${TOOLKIT_PATH}/package.json" >> "${LOG_FILE}" 2>&1
+rm -f "${TOOLKIT_PATH}/package-lock.json" >> "${LOG_FILE}" 2>&1
+rm -f "${PS1_LIST}" >> "${LOG_FILE}" 2>&1
+rm -f "${PS2_LIST}" >> "${LOG_FILE}" 2>&1
+rm -f "${ALL_GAMES}" >> "${LOG_FILE}" 2>&1
+rm -f "${ARTWORK_DIR}/tmp"/* >> "${LOG_FILE}" 2>&1
 }
 
 clean_up
-rm $MISSING_ART 2>>"${LOG_FILE}"
-rm $MISSING_APP_ART 2>>"${LOG_FILE}"
+rm -f $MISSING_ART 2>>"${LOG_FILE}"
+rm -f $MISSING_APP_ART 2>>"${LOG_FILE}"
 
 echo "                  _____                        _____          _        _ _           ";
 echo "                 |  __ \                      |_   _|        | |      | | |          ";
@@ -420,7 +430,7 @@ EOL
                 cp "$png_file" "${ICONS_DIR}/$folder_name/jkt_001.png" | tee -a "${LOG_FILE}"
                 cp "$png_file" "${GAMES_PATH}/ART/${elf}_COV.png" | tee -a "${LOG_FILE}"
             else
-                rm "$png_file"
+                rm -f "$png_file"
                 echo "Artwork not found for $folder_name. Using default APP image." | tee -a "${LOG_FILE}"
                 cp "$ARTWORK_DIR/APP.png" "${ICONS_DIR}/$folder_name/jkt_001.png" | tee -a "${LOG_FILE}"
                 echo "$folder_name,$title,$elf" >> "${MISSING_APP_ART}"
@@ -676,7 +686,7 @@ EOL
                     cp "$png_file" "${ICONS_DIR}/$folder_name/jkt_001.png" | tee -a "${LOG_FILE}"
                     cp "$png_file" "${GAMES_PATH}/ART/${base_name}_COV.png" | tee -a "${LOG_FILE}"
                 else
-                    rm "$png_file"
+                    rm -f "$png_file"
                     echo "Artwork not found for $base_name. Using default APP image." | tee -a "${LOG_FILE}"
                     cp "$ARTWORK_DIR/APP.png" "${ICONS_DIR}/$folder_name/jkt_001.png" | tee -a "${LOG_FILE}"
                     if [[ "$folder_name" != "PSBBN" ]]; then
@@ -936,7 +946,7 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
       echo "Successfully downloaded artwork for game ID: $game_id" | tee -a "${LOG_FILE}"
     else
       # If wget fails, run the art downloader
-        [[ -f "$png_file" ]] && rm "$png_file"
+        [[ -f "$png_file" ]] && rm -f "$png_file"
         echo "Trying IGN for game ID: $game_id" | tee -a "${LOG_FILE}"
         node "${HELPER_DIR}/art_downloader.js" "$game_id" 2>&1 | tee -a "${LOG_FILE}"
     fi
@@ -962,12 +972,12 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
     missing_files=()
 
     if [[ ! -s "$png_file_cover" ]]; then
-        [[ -f "$png_file_cover" ]] && rm "$png_file_cover"
+        [[ -f "$png_file_cover" ]] && rm -f "$png_file_cover"
         missing_files+=("cover")
     fi
 
     if [[ ! -s "$png_file_disc" ]]; then
-        [[ -f "$png_file_disc" ]] && rm "$png_file_disc"
+        [[ -f "$png_file_disc" ]] && rm -f "$png_file_disc"
         missing_files+=("disc")
     fi
 
@@ -1015,10 +1025,10 @@ if compgen -G "${input_dir}/*" > /dev/null; then
                 echo "Resizing and cropping $file"
                 convert "$file" -resize 256x256^ -crop 256x256+0+44 -depth 8 -alpha off "$output"
             fi
-            rm "$file"
+            rm -f "$file"
         else
             echo "Skipping $file: does not meet size requirements" | tee -a "${LOG_FILE}"
-            rm "$file"
+            rm -f "$file"
         fi
     done
 else
@@ -1188,7 +1198,7 @@ fi
 echo
 echo "Preparing to sync PS1 games..." | tee -a "${LOG_FILE}"
 
-sudo rm "$POPS_FOLDER"/*.[eE][lL][fF] >> "${LOG_FILE}" 2>&1
+sudo rm -f "$POPS_FOLDER"/*.[eE][lL][fF] >> "${LOG_FILE}" 2>&1
 
 # Get the local POPS folder size in MB
 POPS_SIZE=$(du -s --block-size=1M "$POPS_FOLDER" | awk '{print $1}')
@@ -1260,7 +1270,7 @@ if [ -n "$files_only_in_ps2" ] || [ -n "$files_only_in_local" ]; then
     # Add delete commands for files_only_in_ps2
     if [ -n "$files_only_in_ps2" ]; then
         while IFS= read -r file; do
-            COMMANDS+="rm \"$file\"\n"
+            COMMANDS+="rm -f \"$file\"\n"
         done <<< "$files_only_in_ps2"
     fi
 
@@ -1402,7 +1412,7 @@ fi
 
 echo | tee -a "${LOG_FILE}"
 echo "Copying BBNL configs..." | tee -a "${LOG_FILE}"
-sudo rm "${TOOLKIT_PATH}"/OPL/bbnl/*.cfg >> "${LOG_FILE}" 2>&1
+sudo rm -f "${TOOLKIT_PATH}"/OPL/bbnl/*.cfg >> "${LOG_FILE}" 2>&1
 sudo cp "${ICONS_DIR}"/bbnl/*.cfg "${TOOLKIT_PATH}/OPL/bbnl" >> "${LOG_FILE}" 2>&1
 
 if [ $? -ne 0 ]; then
