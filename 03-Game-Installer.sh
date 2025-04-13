@@ -196,12 +196,8 @@ echo "                                         Written by CosmicScale"
             exit 1
         fi
         
-        # Check if 'OPL' is found in the 'lsblk' output and if it matches the device
-        lsblk_output=$(lsblk -p -o NAME,LABEL | sed 's/[├└─]//g')
-        echo >> "${LOG_FILE}"
-        echo "$lsblk_output" >> "${LOG_FILE}"
-
-        if ! echo "$lsblk_output" | awk -v part="${DEVICE}3" '$1 == part && $2 == "OPL"' | grep -q .; then
+        # Check if 'OPL' partition exists with blkid
+        if ! sudo blkid "${DEVICE}3" | grep -q OPL; then
             echo "Error: OPL partition not found on ${DEVICE}" | tee -a "${LOG_FILE}"
             read -n 1 -s -r -p "Press any key to exit..."
             echo
