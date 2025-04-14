@@ -34,15 +34,17 @@ if [[ ! -f "${HELPER_DIR}/PFS Shell.elf" || ! -f "${HELPER_DIR}/HDL Dump.elf" ]]
     exit 1
 fi
 
-echo "########################################################################################################">> "${LOG_FILE}";
-
+echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
 if [ $? -ne 0 ]; then
-    echo
-    echo
-    echo "Error: Cannot write to log file."
-    read -n 1 -s -r -p "Press any key to exit..."
-    echo
-    exit 1
+    sudo rm -f "${LOG_FILE}"
+    echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo
+        echo "Error: Cannot to create log file."
+        read -n 1 -s -r -p "Press any key to exit..."
+        echo
+        exit 1
+    fi
 fi
 
 date >> "${LOG_FILE}"
@@ -1221,6 +1223,7 @@ if [ "$POPS_SIZE" -gt "$THRESHOLD" ]; then
     echo
     read -n 1 -s -r -p "Press any key to exit..."
     echo
+    clean_up
     exit 1
 fi
 
@@ -1325,6 +1328,7 @@ if [ $? -ne 0 ]; then
     echo "Error: Failed to mount ${DEVICE}3" | tee -a "${LOG_FILE}"
     read -n 1 -s -r -p "Press any key to exit..."
     echo
+    clean_up
     exit 1;
 fi
 
@@ -1335,6 +1339,7 @@ for folder in APPS ART CFG CHT LNG THM VMC CD DVD bbnl; do
         echo "Error: Failed to create $dir." | tee -a "${LOG_FILE}"
         read -n 1 -s -r -p "Press any key to exit..."
         echo
+        clean_up
         exit 1
     }
 done
@@ -1358,6 +1363,7 @@ if [ "$PS2_SIZE" -gt "$THRESHOLD" ]; then
     echo
     read -n 1 -s -r -p "Press any key to exit..."
     echo
+    clean_up
     exit 1
 fi
 
@@ -1371,6 +1377,7 @@ if [ $? -ne 0 ]; then
     echo "Error: Failed to install POPStarter. See ${LOG_FILE} for details." | tee -a "${LOG_FILE}"
     read -n 1 -s -r -p "Press any key to exit..."
     echo
+    clean_up
     exit 1
 fi
 
@@ -1383,6 +1390,7 @@ if [ $? -ne 0 ]; then
     echo "Error: Failed to install OPL. See ${LOG_FILE} for details." | tee -a "${LOG_FILE}"
     read -n 1 -s -r -p "Press any key to exit..."
     echo
+    clean_up
     exit 1
 fi
 
@@ -1421,6 +1429,7 @@ if [ $? -ne 0 ]; then
     echo "Error: Failed to copy BBNL config files. See ${LOG_FILE} for details." | tee -a "${LOG_FILE}"
     read -n 1 -s -r -p "Press any key to exit..."
     echo
+    clean_up
     exit 1
 fi
 
@@ -1443,6 +1452,7 @@ if [ $cd_status -ne 0 ] || [ $dvd_status -ne 0 ]; then
     echo "Error: Failed to sync PS2 games. See ${LOG_FILE} for details." | tee -a "${LOG_FILE}"
     read -n 1 -s -r -p "Press any key to exit..."
     echo
+    clean_up
     exit 1
 else
     echo | tee -a "${LOG_FILE}"
@@ -1459,6 +1469,7 @@ if [ $? -ne 0 ]; then
     echo "Error: Failed to sync Apps. See ${LOG_FILE} for details." | tee -a "${LOG_FILE}"
     read -n 1 -s -r -p "Press any key to exit..."
     echo
+    clean_up
     exit 1
 fi
 

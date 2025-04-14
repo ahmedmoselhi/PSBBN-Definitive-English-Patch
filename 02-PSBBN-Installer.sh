@@ -18,7 +18,19 @@ if [[ ! -f "${TOOLKIT_PATH}/helper/PFS Shell.elf" || ! -f "${TOOLKIT_PATH}/helpe
     exit 1
 fi
 
-echo "########################################################################################################">> "${INSTALL_LOG}";
+echo "########################################################################################################" | tee -a "${INSTALL_LOG}" >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+    sudo rm -f "${INSTALL_LOG}"
+    echo "########################################################################################################" | tee -a "${INSTALL_LOG}" >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo
+        echo "Error: Cannot to create log file."
+        read -n 1 -s -r -p "Press any key to exit..."
+        echo
+        exit 1
+    fi
+fi
+
 date >> "${INSTALL_LOG}"
 echo >> "${INSTALL_LOG}"
 cat /etc/*-release >> "${INSTALL_LOG}" 2>&1
@@ -179,7 +191,7 @@ if [ -z "$LATEST_VERSION" ]; then
         LATEST_FILE=$(basename "$IMAGE_FILE")
         echo "Found local file: ${LATEST_FILE}" | tee -a "${INSTALL_LOG}"
     else
-        rm "$HTML_FILE"
+        rm -f "$HTML_FILE"
         echo "Failed to download PSBBN image file. Aborting." | tee -a "${INSTALL_LOG}"
         read -p "Press any key to exit..."
         exit 1
@@ -193,7 +205,7 @@ fi
 for file in "${ASSETS_DIR}"/psbbn-definitive-image*.gz; do
     if [[ -f "$file" && "$(basename "$file")" != "$LATEST_FILE" ]]; then
         echo "Deleting old file: $file" | tee -a "${INSTALL_LOG}"
-        rm "$file"
+        rm -f "$file"
     fi
 done
 
@@ -219,7 +231,7 @@ else
 fi
 
 # Clean up
-rm "$HTML_FILE"
+rm -f "$HTML_FILE"
 
 echo | tee -a "${INSTALL_LOG}"
 echo "Checking for POPS binaries..."
@@ -412,16 +424,11 @@ function function_apa_checksum_fix() {
 	}
 
 function function_clear_temp() {
-	sudo rm /tmp/apa_header_address.bin		&>> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_header_boot.bin			&>> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_header_checksum.bin	&>> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_header_full.bin			&>> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_journal.bin				&>> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_header_probe.bin		&>> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_header_size.bin			&>> "${INSTALL_LOG}"
-	sudo rm /tmp/apajail_magic_number.bin	&>> "${INSTALL_LOG}"
-	sudo rm /tmp/apa_index.xz					&>> "${INSTALL_LOG}"
-	sudo rm /tmp/gpt_2nd.xz						&>> "${INSTALL_LOG}"
+	sudo rm -f /tmp/apa_header_checksum.bin	&>> "${INSTALL_LOG}"
+	sudo rm -f /tmp/apa_header_full.bin			&>> "${INSTALL_LOG}"
+	sudo rm -f /tmp/apajail_magic_number.bin	&>> "${INSTALL_LOG}"
+	sudo rm -f /tmp/apa_index.xz					&>> "${INSTALL_LOG}"
+	sudo rm -f /tmp/gpt_2nd.xz						&>> "${INSTALL_LOG}"
 	}
 
 echo | tee -a "${INSTALL_LOG}"
