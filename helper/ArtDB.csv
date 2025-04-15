@@ -11945,8 +11945,8 @@ SLPM_650.14|bouken-jidai-katsugeki-goemon
 SLPM_650.66|bouken-jidai-katsugeki-goemon
 SLPM_656.17|bouken-jidai-katsugeki-goemon
 SLPS_252.79|bouken-shounen-club-gahou
-SLPS_254.70|bouken-ou-beet-darkness-century
-SLPM_611.16|bouken-ou-beet-darkness-century
+SLPS_254.70|bouken-ou-beat-darkness-century
+SLPM_611.16|bouken-ou-beat-darkness-century
 SLPM_660.60|boukoku-no-aegis-2035-warship-gunner
 SLPM_669.39|boukoku-no-aegis-2035-warship-gunner
 SLES_518.61|bowling-xciting
@@ -15721,6 +15721,7 @@ SCPS_150.45|ka-2-lets-go-hawaii
 SLES_521.79|kaan-barbarians-blade
 SCAJ_200.80|kaena
 SLPS_252.95|kaena
+SCES_522.50|kaena
 SLPM_622.54|kaerazu-no-mori
 SLPS_259.79|kaeru-batake-de-tsukamaete
 SLPS_259.88|kaeru-batake-de-tsukamaete-natsu-chigira-sansen
@@ -15755,8 +15756,8 @@ SLPS_730.07|kamaitachi-no-yoru-2-kangoku-jima-no-warabe-uta-special-eizou
 SLPM_664.52|kamaitachi-no-yoru-x3-mikazuki-jima-jiken-no-shinsou
 SLPS_203.29|kamen-rider-555
 SLPS_204.02|kamen-rider-blade
-SLPS_204.47|kamen-rider-hibiki-shokai-seisanban
-SLPS_204.48|kamen-rider-hibiki-taiko-no-tatsujin-special-version
+SLPS_204.47|kamen-rider-hibiki
+SLPS_204.48|kamen-rider-hibiki
 SLPS_204.83|kamen-rider-kabuto
 SLPM_602.79|kamen-rider-kabuto
 SLPS_259.44|kamen-rider-climax-heroes
@@ -20635,6 +20636,7 @@ SCKA_200.97|super-robot-taisen-og-original-generations
 SLPS_257.33|super-robot-taisen-og-original-generations
 SCKA_201.31|super-robot-taisen-z
 SLPS_258.87|super-robot-taisen-z
+SLPS_732.70|super-robot-taisen-z
 SCKA_201.36|super-robot-taisen-z-special-disc
 SLPS_259.20|super-robot-taisen-z-special-disc
 SLPS_252.96|super-robot-taisen-scramble-commander
@@ -21001,8 +21003,8 @@ SLPM_658.17|tennis-no-oujisama-love-of-prince-sweet
 SLPM_658.77|tennis-no-oujisama-rush-dream
 SLPM_657.56|tennis-no-oujisama-rush-dream-shokai-seisanban
 SLPM_660.14|tennis-no-oujisama-rush-dream-shokai-seisanban
-SLPM_656.80|tennis-no-oujisama-saikyou-team-o-kessei-seyo
-SLPM_660.13|tennis-no-oujisama-saikyou-team-o-kessei-seyo
+SLPM_656.80|tennis-no-ouji-sama-saikyou-team-wo-kessei-seyo
+SLPM_660.13|tennis-no-ouji-sama-saikyou-team-wo-kessei-seyo
 SLPM_653.27|tennis-no-oujisama-smash-hit
 SLPM_653.21|tennis-no-oujisama-smash-hit
 SLPM_653.22|tennis-no-oujisama-smash-hit
@@ -22597,4 +22599,3 @@ SLPS_256.17|etude-prologue-yureugoku-kokoro-no-katachi
 SCKA_200.95|okami
 SLES_544.39|okami
 SLUS_211.15|okami
-SCES_522.50|Kaena
