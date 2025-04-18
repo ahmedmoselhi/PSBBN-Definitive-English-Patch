@@ -444,11 +444,11 @@ echo -e ",128GiB,17\n,32MiB,17\n,,07" | sudo sfdisk ${DEVICE}
 sudo partprobe ${DEVICE}
 if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
 	sudo mkfs.ext2 -L "RECOVERY" ${DEVICE}p2
-	sudo mkfs.exfat -c 32K -L "OPL" ${DEVICE}p3
+	sudo "${TOOLKIT_PATH}/helper/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}p3
 	else
 		sleep 4
 		sudo mkfs.ext2 -L "RECOVERY" ${DEVICE}2
-		sudo mkfs.exfat -c 32K -L "OPL" ${DEVICE}3
+		sudo "${TOOLKIT_PATH}/helper/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}3
 fi
 } >> "${INSTALL_LOG}" 2>&1
 
@@ -509,8 +509,12 @@ else
     exit 1
 fi
 
+echo | tee -a "${INSTALL_LOG}"
+lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT >> "${INSTALL_LOG}"
+
 # Check if 'OPL' partition exists with blkid
 if ! sudo blkid "${DEVICE}3" | grep -q OPL; then
+    echo | tee -a "${INSTALL_LOG}"
     echo "Error: APA-Jail failed on ${DEVICE}." | tee -a "${INSTALL_LOG}"
     read -n 1 -s -r -p "Press any key to exit..."
     echo
