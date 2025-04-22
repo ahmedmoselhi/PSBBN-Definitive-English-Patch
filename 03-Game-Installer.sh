@@ -116,8 +116,8 @@ fi
 function clean_up() {
 # Loop through all items in the target directory
 for item in "$ICONS_DIR"/*; do
-    # Check if the item is a directory and not the 'art' folder
-    if [ -d "$item" ] && [ "$(basename "$item")" != "art" ]; then
+    # Check if the item is a directory and not the 'art' or 'ico' folder
+    if [ -d "$item" ] && [ "$(basename "$item")" != "art" ] && [ "$(basename "$item")" != "ico" ]; then
         rm -rf "$item" >> "${LOG_FILE}" 2>&1
     fi
 done
@@ -262,7 +262,7 @@ done
 if [[ "${GAMES_PATH}" != "${TOOLKIT_PATH}/games" ]]; then
     echo | tee -a "${LOG_FILE}"
     echo "Using custom game path." | tee -a "${LOG_FILE}"
-    cp "${TOOLKIT_PATH}/games/APPS/BOOT.ELF" "${TOOLKIT_PATH}/games/APPS/Launch-Disc.elf" "${GAMES_PATH}/APPS" >> "${LOG_FILE}" 2>&1
+    cp "${TOOLKIT_PATH}/games/APPS/"{BOOT.ELF,Launch-Disc.elf,HDD-OSD.elf,PSBBN.ELF} "${GAMES_PATH}/APPS" >> "${LOG_FILE}" 2>&1
 else
     echo | tee -a "${LOG_FILE}"
     echo "Using default game path." | tee -a "${LOG_FILE}"
@@ -333,8 +333,8 @@ if find "${GAMES_PATH}/APPS/" -maxdepth 1 -type f \( -name "*.psu" -o -name "*.P
     fi
     done
 
-    # Loop through each folder in DST_DIR, excluding 'art', sorted in reverse alphabetical order
-    find "$ICONS_DIR" -mindepth 1 -maxdepth 1 -type d ! -name "art" ! -name "bbnl" | sort -r | while IFS= read -r dir; do
+    # Loop through each folder in DST_DIR, excluding 'art', 'bbnl' and 'ico', sorted in reverse alphabetical order
+    find "$ICONS_DIR" -mindepth 1 -maxdepth 1 -type d ! -name "art" ! -name "bbnl" ! -name "ico" | sort -r | while IFS= read -r dir; do
 
     folder_name=$(basename "$dir")
 
@@ -351,8 +351,8 @@ if find "${GAMES_PATH}/APPS/" -maxdepth 1 -type f \( -name "*.psu" -o -name "*.P
         echo "list.icn found in $dir, converted to list.ico" | tee -a "${LOG_FILE}"
     else
         echo "list.icn not found in $dir, using default icon." | tee -a "${LOG_FILE}"
-        cp "${ASSETS_DIR}/app-list.ico" "$dir/list.ico" 2>> "${LOG_FILE}"
-        cp "${ASSETS_DIR}/app-del.ico" "$dir/del.ico" 2>> "${LOG_FILE}"
+        cp "${ICONS_DIR}/ico/app.ico" "$dir/list.ico" 2>> "${LOG_FILE}"
+        cp "${ICONS_DIR}/ico/app-del.ico" "$dir/del.ico" 2>> "${LOG_FILE}"
     fi
 
     # Convert the icon.sys file
@@ -581,18 +581,18 @@ else
 PS2X
 title0=$cleaned_name
 title1=
-bgcola=90
-bgcol0=192,192,192
-bgcol1=102,102,102
-bgcol2=40,40,40
+bgcola=0
+bgcol0=0,0,0
+bgcol1=0,0,0
+bgcol2=0,0,0
 bgcol3=0,0,0
-lightdir0=0.5000,0.5000,0.5000
-lightdir1=0.0000,-0.4000,-0.1000
-lightdir2=-0.5000,-0.5000,0.5000
-lightcolamb=63,63,63
-lightcol0=61,61,3
-lightcol1=63,42,25
-lightcol2=17,17,48
+lightdir0=1.0,-1.0,1.0
+lightdir1=-1.0,1.0,-1.0
+lightdir2=0.0,0.0,0.0
+lightcolamb=64,64,64
+lightcol0=64,64,64
+lightcol1=16,16,16
+lightcol2=0,0,0
 uninstallmes0=
 uninstallmes1=
 uninstallmes2=
@@ -669,9 +669,19 @@ EOL
         echo "$cleaned_name=mass:/APPS/$base_name" >> "${ICONS_DIR}/bbnl/conf_apps.cfg" 2>> "${LOG_FILE}"
 
         cp "${ASSETS_DIR}/BBNL/boot.kelf" "${ICONS_DIR}/$folder_name" | tee -a "${LOG_FILE}"
-        cp "${ASSETS_DIR}/app-list.ico" "${ICONS_DIR}/$folder_name/list.ico" | tee -a "${LOG_FILE}"
-        cp "${ASSETS_DIR}/app-del.ico" "${ICONS_DIR}/$folder_name/del.ico" | tee -a "${LOG_FILE}"
         cp "${ASSETS_DIR}/BBNL/system.cnf" "${ICONS_DIR}/$folder_name" | tee -a "${LOG_FILE}"
+
+        if [[ "$folder_name" == "LAUNCHELF" ]]; then
+            cp "${ICONS_DIR}/ico/wle.ico" "${ICONS_DIR}/$folder_name/list.ico" | tee -a "${LOG_FILE}"
+            cp "${ICONS_DIR}/ico/wle-del.ico" "${ICONS_DIR}/$folder_name/del.ico" | tee -a "${LOG_FILE}"
+        elif [[ "$folder_name" == "PSBBN" ]]; then
+            cp "${ICONS_DIR}/ico/psbbn.ico" "${ICONS_DIR}/$folder_name/list.ico" | tee -a "${LOG_FILE}"
+        elif [[ "$folder_name" == "HDDOSD" ]]; then
+            cp "${ICONS_DIR}/ico/hdd-osd.ico" "${ICONS_DIR}/$folder_name/list.ico" | tee -a "${LOG_FILE}"
+        else
+            cp "${ICONS_DIR}/ico/app.ico" "${ICONS_DIR}/$folder_name/list.ico" | tee -a "${LOG_FILE}"
+            cp "${ICONS_DIR}/ico/app-del.ico" "${ICONS_DIR}/$folder_name/del.ico" | tee -a "${LOG_FILE}"
+        fi
 
         png_file="${ARTWORK_DIR}/${folder_name}.png"
         # Copy the matching PNG file from ART_DIR, or default to APP.png
@@ -729,11 +739,12 @@ find "$ICONS_DIR" -mindepth 1 -maxdepth 1 -type d "${exclude_conditions[@]}" | s
 
     echo "Creating PP.$pp_name..." | tee -a "${LOG_FILE}"
     echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-    cd "${ICONS_DIR}/$(basename "$dir")"
-    sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "PP.$pp_name" >> "${LOG_FILE}" 2>&1
 
     if [ "$pp_name" = "DISC" ]; then
         cd "${ASSETS_DIR}/DISC"
+        sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "PP.$pp_name" >> "${LOG_FILE}" 2>&1
+    else
+        cd "${ICONS_DIR}/$(basename "$dir")"
         sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "PP.$pp_name" >> "${LOG_FILE}" 2>&1
     fi
 done
@@ -1049,12 +1060,11 @@ while IFS='|' read -r game_title game_id publisher disc_type file_name; do
   game_dir="$ICONS_DIR/$game_id"
   mkdir -p "$game_dir" | tee -a "${LOG_FILE}"
 
-   # Determine the launcher value for this specific game
-  if [[ "$disc_type" == "POPS" ]]; then
-    launcher_value="POPS"
-    cp "${ASSETS_DIR}/POPStarter/"{1.png,2.png,bg.png,man.xml} "$game_dir"
-  else
-    launcher_value="$LAUNCHER"
+  cp "${ASSETS_DIR}/BBNL/boot.kelf" "${game_dir}" | tee -a "${LOG_FILE}"
+  cp "${ASSETS_DIR}/BBNL/system.cnf" "${game_dir}" | tee -a "${LOG_FILE}"
+
+  if [[ "$disc_type" == "POPS" ]]; then  
+    cp "${ASSETS_DIR}/POPStarter/"{1.png,2.png,bg.png,man.xml} "${game_dir}" >> "${LOG_FILE}" 2>&1
   fi
 
   # Generate the info.sys file
@@ -1084,6 +1094,36 @@ content_subtype = 0
 EOL
   echo "Created info.sys: $info_sys_filename"  | tee -a "${LOG_FILE}"
 
+  if [ ${#game_title} -gt 48 ]; then
+    game_title_icon="${game_title:0:45}..."
+  else
+    game_title_icon="$game_title"
+  fi
+
+# Generate the icon.sys file
+  info_sys_filename="$game_dir/icon.sys"
+  cat > "$info_sys_filename" <<EOL
+PS2X
+title0=$game_title_icon
+title1=$publisher
+bgcola=0
+bgcol0=0,0,0
+bgcol1=0,0,0
+bgcol2=0,0,0
+bgcol3=0,0,0
+lightdir0=1.0,-1.0,1.0
+lightdir1=-1.0,1.0,-1.0
+lightdir2=0.0,0.0,0.0
+lightcolamb=64,64,64
+lightcol0=64,64,64
+lightcol1=16,16,16
+lightcol2=0,0,0
+uninstallmes0=
+uninstallmes1=
+uninstallmes2=
+EOL
+  echo "Created info.sys: $info_sys_filename"  | tee -a "${LOG_FILE}"
+
   # Copy the matching .png file and rename it to jkt_001.png
   png_file="${TOOLKIT_PATH}/icons/art/${game_id}.png"
   if [[ -f "$png_file" ]]; then
@@ -1101,10 +1141,46 @@ EOL
     fi
   fi
 
+  ico_file="${ICONS_DIR}/ico/$game_id.ico"
+
+  if [[ -f "$ico_file" ]]; then
+    echo "Icon for $game_title already exists. Skipping download." | tee -a "${LOG_FILE}"
+    echo "Copying $game_id.ico" | tee -a "${LOG_FILE}"
+    cp "${ICONS_DIR}/ico/$game_id.ico" "${game_dir}/list.ico" >> "${LOG_FILE}" 2>&1
+  else
+    # Attempt to download icon using wget
+    echo "Icon not found locally for $game_title. Attempting to download from the HDD-OSD icon database..." | tee -a "${LOG_FILE}"
+    wget --quiet --timeout=10 --tries=3 --output-document="$ico_file" \
+        "https://raw.githubusercontent.com/CosmicScale/HDD-OSD-Icon-Database/main/ico/${game_id}.ico"
+    if [[ -s "$ico_file" ]]; then
+      echo "Successfully downloaded icon for game ID: $game_id" | tee -a "${LOG_FILE}"
+      echo "Copying $game_id.ico" | tee -a "${LOG_FILE}"
+      cp "${ICONS_DIR}/ico/$game_id.ico" "${game_dir}/list.ico" >> "${LOG_FILE}" 2>&1
+    else
+      # If wget fails, run the art downloader
+        [[ -f "$ico_file" ]] && rm -f "$ico_file"
+
+            case "$disc_type" in
+            DVD)
+                echo "$game_id.ico not found, using default DVD icon" | tee -a "${LOG_FILE}"
+                cp "${ICONS_DIR}/ico/dvd.ico" "${game_dir}/list.ico" >> "${LOG_FILE}" 2>&1
+            ;;
+            CD)
+                echo "$game_id.ico not found, using default CD icon." | tee -a "${LOG_FILE}"
+                cp "${ICONS_DIR}/ico/cd.ico" "${game_dir}/list.ico" >> "${LOG_FILE}" 2>&1
+            ;;
+            POPS)
+                echo "$game_id.ico not found, using default PS1 icon." | tee -a "${LOG_FILE}"
+                cp "${ICONS_DIR}/ico/ps1.ico" "${game_dir}/list.ico" >> "${LOG_FILE}" 2>&1
+            ;;
+        esac
+    fi
+  fi
+
 done < "$ALL_GAMES"
 
 echo | tee -a "${LOG_FILE}"
-echo "All info.sys, and .png files have been created in their respective sub-folders." | tee -a "${LOG_FILE}"
+echo "All icons and metadata files have been created in their respective sub-folders." | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
 echo "Creating Launcher partitions and installing game assets..." | tee -a "${LOG_FILE}"
 
@@ -1169,6 +1245,7 @@ title_id=$game_id
 disc_type=$disc_type
 launcher=$launcher_value
 EOL
+    cd "${ICONS_DIR}/${game_id}"
     sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "${PARTITION_LABEL}" >> "${LOG_FILE}" 2>&1
 
     function_space
