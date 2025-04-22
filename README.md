@@ -81,7 +81,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 ## New installation scripts
 
-These scripts are essential for unlocking all the new features exclusive to version 2.0. They require a x86 Linux environment to run. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive or a virtual machine. Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based distributions using `dnf` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
+These scripts are essential for unlocking all the new features exclusive to version 2.0. They require a x86-64 Linux environment to run. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive, [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install), or a virtual machine. Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based distributions using `dnf` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
 
 ## Video Tutorial:
 
@@ -207,15 +207,18 @@ The exFAT partition can be accessed on a PC and on the PS2 by [BBN Launcher](htt
 - [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) with BDM contributions from [KrahJohlito](https://github.com/KrahJohlito) and Auto Launch modifications by [CosmicScale](https://github.com/CosmicScale)
 - [Neutrino](https://github.com/rickgaiser/neutrino) by [Rick Gaiser](https://github.com/rickgaiser)
 - [NHDDL](https://github.com/pcm720/nhddl) written by [pcm720](https://github.com/pcm720)
+- [POPStarter](https://bitbucket.org/ShaolinAssassin/popstarter-documentation-stuff/wiki/Home) written by KrHACKen
 - [Retro GEM Disc Launcher](https://github.com/CosmicScale/Retro-GEM-PS2-Disc-Launcher) written by [CosmicScale](https://github.com/CosmicScale)
 - Uses APA-Jail code from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) by [Berion](https://www.psx-place.com/members/berion.1431/)
 - [APA Partition Header Checksumer](https://www.psx-place.com/resources/apa-partition-header-checksumer.1057/) by [Pink1](https://www.psx-place.com/members/pink1.1907/) and [Berion](https://www.psx-place.com/members/berion.1431/). Linux port by [Bucanero](https://github.com/Bucanero)
 - `PSU Extractor.elf` written by [Bucanero](https://github.com/Bucanero) from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) project
 - `ziso.py` from [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) written by Virtuous Flame
 - `icon_sys_to_txt.py` written by [NathanNeurotic (Ripto)](https://github.com/NathanNeurotic)
+- `mkfs.exfat` from [exfatprogs](https://github.com/exfatprogs/exfatprogs)
 - Online channels resurrected, translated, maintained and hosted by vitas155 at [psbbn.ru](https://psbbn.ru/)
 - PlayStation Now! and Konami online channels re-translated by [CosmicScale](https://github.com/CosmicScale)
 - [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database) created and maintained by [CosmicScale](https://github.com/CosmicScale)
+- [HDD-OSD Icon Database](https://github.com/CosmicScale/HDD-OSD-Icon-Database) created and maintained by [CosmicScale](https://github.com/CosmicScale)
 - Uses PS2 cover art from the [OPL Manager Art DB backups](https://oplmanager.com/site/index.php?backups)
 - Uses App icons from [OPL B-APPS Cover Pack](https://www.psx-place.com/resources/opl-b-apps-cover-pack.1440/) and [OPL Discs & Boxes Pack](https://www.psx-place.com/resources/opl-discs-boxes-pack.1439/) courtesy of [Berion](https://www.psx-place.com/resources/authors/berion.1431/)
 - Thanks to everyone on the [Save Application System team](https://ps2wiki.github.io/documentation/homebrew/PS2-App-System/SAS/index.html#Credits) for their ongoing work on the [Save Application System Apps Archive](https://ps2wiki.github.io/sas-apps-archive/)
@@ -331,8 +334,8 @@ There's an excellent guide [here](https://bungiefan.tripod.com/psbbninstall_01.h
 You will be asked to enter your network settings. Make sure your Ethernet cable is connected. Everything is still in Japanese, but it's relatively straightforward:
 1. Press the `circle` button on the first screen.
 2. On the next screen, select the **bottom** option, "Do not use PPPoE" and press `circle`.
-3. On the next screen, select the **top** option, “Auto" for you IP address and press `circle`.
-4. On the next screen, select the **top** option, “Auto” for DNS settings and press `circle`.
+3. On the next screen, select the **top** option, "Auto" for you IP address and press `circle`.
+4. On the next screen, select the **top** option, "Auto" for DNS settings and press `circle`.
 5. Press `right` on the d-pad to proceed to the next screen.
 6. Select the **bottom** option, "Do not change router settings" and press `circle`.
 7. Finally, press `circle` again to confirm your settings.
