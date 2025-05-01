@@ -84,7 +84,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 ## New installation scripts
 
-These scripts are essential for unlocking all the new features exclusive to version 2.0. The scripts require an x86-64 Linux environment. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive, [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/install), or a virtual machine. Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based distributions using `dnf` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
+These scripts are essential for unlocking all the new features exclusive to version 2.0. The scripts require an x86-64 Linux environment. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive, Windows users can also use [Windows Subsystem for Linux (WSL)](https://gist.github.com/Dam-0/de0d41eeabea2aac6eb84fb3bbf433f1). Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based distributions using `dnf` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
 
 ## Video Tutorial:
 
@@ -342,7 +342,7 @@ Before installing the English patch, you **must** power off your console to stan
 When you connect the drive to your PS2 console and power it on, PSBBN should automatically launch.
 
 #### Fat PS2 console models SCPH-3000x-500xx:
-If your console boots to the regular OSD or freezes at the `PlayStation 2` logo, it means that your drive has not been recognised or you are experiencing another hardware issue. You should check the following:
+If your console boots to the regular OSD or freezes, it means that your drive has not been recognised or you are experiencing a hardware issue. You should check the following:
 1. Make sure you are using an official Sony Network Adapter; 3rd-party adapters are not supported
 2. Ensure the network adapter and drive are securely connected to the console
 3. Check that the connectors on the console and network adapter are clean and free of dust/debris
