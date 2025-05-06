@@ -9,6 +9,13 @@ INSTALL_LOG="${TOOLKIT_PATH}/PSBBN-installer.log"
 
 clear
 
+if [[ "$(uname -m)" != "x86_64" ]]; then
+  echo "Error: This script requires an x86-64 CPU architecture. Detected: $(uname -m)"
+  read -n 1 -s -r -p "Press any key to exit."
+  echo
+  exit 1
+fi
+
 cd "${TOOLKIT_PATH}"
 
 # Check if the helper files exists
@@ -120,9 +127,9 @@ while true; do
             exit 1
         else
             echo
-            echo -e "Selected drive: \"${DEVICE}\"" | tee -a "${INSTALL_LOG}"
+            echo "Selected drive: ${DEVICE}" | tee -a "${INSTALL_LOG}"
             echo
-            echo -e "Are you sure you want to write to ${DEVICE}?" | tee -a "${INSTALL_LOG}"
+            echo "Are you sure you want to write to ${DEVICE}?" | tee -a "${INSTALL_LOG}"
             read -p "This will erase all data on the drive. (yes/no): " CONFIRM
             if [[ $CONFIRM == "yes" ]]; then
                 break

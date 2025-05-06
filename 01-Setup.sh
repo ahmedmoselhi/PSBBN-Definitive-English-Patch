@@ -4,6 +4,14 @@ echo -e "\e[8;30;100t"
 TOOLKIT_PATH="$(pwd)"
 
 clear
+
+if [[ "$(uname -m)" != "x86_64" ]]; then
+  echo "Error: This script requires an x86-64 CPU architecture. Detected: $(uname -m)"
+  read -n 1 -s -r -p "Press any key to exit."
+  echo
+  exit 1
+fi
+
 cd "${TOOLKIT_PATH}"
 
 # Check if the helper files exists

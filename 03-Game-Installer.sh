@@ -25,6 +25,13 @@ ALL_GAMES="${TOOLKIT_PATH}/master.list"
 
 clear
 
+if [[ "$(uname -m)" != "x86_64" ]]; then
+  echo "Error: This script requires an x86-64 CPU architecture. Detected: $(uname -m)"
+  read -n 1 -s -r -p "Press any key to exit."
+  echo
+  exit 1
+fi
+
 cd "${TOOLKIT_PATH}"
 
 # Check if the helper files exists
@@ -185,7 +192,7 @@ echo "                                         Written by CosmicScale"
     # Check if the device exists and is valid
     if [[ -n "$DEVICE" ]] && lsblk -dp -n -o NAME | grep -q "^$DEVICE$"; then
         echo
-        echo -e "Selected drive: \"${DEVICE}\"" | tee -a "${LOG_FILE}"
+        echo "Selected drive: ${DEVICE}" | tee -a "${LOG_FILE}"
 
         # Run HDL Dump and capture output
         output=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc ${DEVICE} 2>&1)
@@ -1568,7 +1575,7 @@ for dir in "${dirs[@]}"; do
     if [ -d "$dir" ] && [ -n "$(find "$dir" -type f ! -name '.*' -print -quit 2>/dev/null)" ]; then
         # Create the subdirectory in the destination path using the directory name
         folder_name=$(basename "$dir")
-        dest_dir=""${TOOLKIT_PATH}"/OPL/$folder_name"
+        dest_dir="${TOOLKIT_PATH}/OPL/$folder_name"
         
         # Copy non-hidden files to the corresponding destination subdirectory
         if [ "$folder_name" == "CFG" ] || [ "$folder_name" == "VMC" ]; then
