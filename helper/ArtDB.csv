@@ -1003,7 +1003,7 @@ SLES_002.58|break-point
 SLPM_860.44|break-point
 SLPS_001.29|break-thru
 SLPS_023.75|break-volley
-SLUS_011.70|breakout
+SLUS_011.70|breakout-3d
 SLES_028.54|breakout-a-story-of-bat-meets-ball
 SLES_013.04|breath-of-fire-iii
 SLES_013.19|breath-of-fire-iii
@@ -2578,8 +2578,8 @@ SLPS_014.14|dynamite-soccer-98
 PAPX_900.43|dynamite-soccer-98
 SLES_008.85|dynasty-warriors
 SLUS_004.38|dynasty-warriors
-SLES_038.05|et-the-extra-terrestrial-interplanetary-mission
-SLUS_013.85|et-the-extra-terrestrial-interplanetary-mission
+SLES_038.05|et-interplanetary-mission
+SLUS_013.85|et-interplanetary-mission
 SCED_039.14|e3-demo-2002
 SLES_025.38|ea-sports-superbike-2000
 SLUS_010.52|ea-sports-superbike-2000
@@ -3617,8 +3617,8 @@ SLPS_911.20|gakkou-o-tsukurou-lets-make-a-school
 SLPS_018.52|gakuen-sentai-solblast
 SLES_022.12|galaga-destination-earth
 SLUS_012.58|galaga-destination-earth
-SCES_002.69|galaxian³
-SLPS_002.70|galaxian³
+SCES_002.69|galaxian3
+SLPS_002.70|galaxian3
 SLES_001.97|galaxy-fight
 SLPS_001.38|galaxy-fight-universal-warriors
 SLPS_025.96|gale-gunner
@@ -5246,8 +5246,8 @@ SLPM_866.77|love-hina-2-kotoba-wa-konayuki-no-you-ni
 SLPM_866.52|love-hina-ai-wa-kotoba-no-naka-ni
 SLPS_030.97|love-para-lovely-tokyo-para-para-musume
 SLPS_013.70|love-therapy
-SLPS_021.12|love²-torokko
-SLPM_804.14|love²-torokko
+SLPS_021.12|love2-torokko
+SLPM_804.14|love2-torokko
 SLPS_005.60|lulu-un-conte-interactif-de-romain-victor-pujebet
 SLPS_017.84|lucifer-ring
 SLPS_008.11|luciferd
@@ -5932,7 +5932,7 @@ SCPS_100.01|motor-toon-grand-prix
 SCUS_943.55|motor-toon-grand-prix
 SCES_002.45|motor-toon-grand-prix-2
 SCPS_100.18|motor-toon-grand-prix-2
-SCPS_100.19|motor-toon-grand-prix-2-taisen-senyou-disc
+SCPS_100.19|motor-toon-grand-prix-2
 SCPS_910.27|motor-toon-grand-prix-usa-edition
 SLES_005.56|motorhead
 SLUS_007.17|motorhead
@@ -13686,7 +13686,7 @@ SLES_513.92|evolution-snowboarding
 SLKA_250.14|evolution-snowboarding
 SLPM_652.31|evolution-snowboarding
 SLUS_205.46|evolution-snowboarding
-SLES_526.01|exzeus
+SLES_526.01|exzeus-2006
 SLPS_250.87|exciting-pro-wres-3
 SLPS_734.09|exciting-pro-wres-3
 SLPS_250.83|exciting-pro-wres-3
@@ -19296,7 +19296,7 @@ SLUS_209.99|sega-superstars
 SLED_528.75|sega-superstars
 SLES_549.46|sega-superstars-tennis
 SLUS_217.33|sega-superstars-tennis
-SCED_507.61|sega³-demo
+SCED_507.61|sega3-demo
 SCPS_110.16|seigi-no-mikata
 SLPM_659.37|seikai-no-senki
 SLPM_666.92|seikai-no-senki
@@ -20553,7 +20553,7 @@ SLES_511.60|sub-rebellion
 SLUS_205.48|sub-rebellion
 SLKA_250.84|sudogo-battle-01
 SLPM_550.47|sugar-spice-ano-ko-no-suteki-na-nani-mo-kamo
-SLPS_255.87|sugar²-rune-koi-mo-oshare-mo-pick-up
+SLPS_255.87|sugar2-rune-koi-mo-oshare-mo-pick-up
 SLPM_551.47|arcana-heart-2
 SLPM_624.37|sui-sui-sweet-amai-koi-no-mitsuke-kata
 SLPM_657.51|suigetsu-mayoi-gokoro
@@ -20718,7 +20718,7 @@ SLES_548.26|surfs-up
 SLUS_215.72|surfs-up
 SLPS_201.97|surfing-air-show-with-ratboy
 SLUS_200.92|surfing-h3o
-SLES_500.56|surfing-h³o
+SLES_500.56|surfing-h3o
 SLPS_200.29|surfroid-densetsu-no-surfer
 SLPM_601.18|surfroid-densetsu-no-surfer
 SCPS_150.12|surveillance-kanshisha
