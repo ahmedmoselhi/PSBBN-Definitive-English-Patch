@@ -44,6 +44,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 - Some minor fixes to the English translation
 
 # Updates
+## PSBBN Definitive English Patch 2.0 Update (Jan 22, 2025) – [Click to Watch](https://www.youtube.com/watch?v=sHz0yKYybhk)
 - Added Game ID support for the Pixel FX Retro GEM. Works for both PS1 and PS2 games
 - PS2 games now launch up to 5 seconds faster
 - Resolved conflict with mass storage devices (USB, iLink, MX4SIO). Games now launch without issues if these devices are connected
@@ -63,8 +64,12 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 - The scripts now auto-update when an update is available
 - Optimised art work
 - Art downloads from IGN are now automatically contributed to the [PSBBN art database](https://github.com/CosmicScale/psbbn-art-database), and missing artwork is also automatically reported. Manual submissions are welcome, see the [PSBBN art database GitHub page](https://github.com/CosmicScale/psbbn-art-database) for details
+
+## PSBBN Neutrino Update (Feb 19, 2025) - [Click to Watch](https://www.youtube.com/watch?v=0vpSiAa6ITc)
 - [OPL-Launcher-BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) has been replaced by [BBN Launcher (BBNL)](https://github.com/pcm720/bbnl)
 - Added [Neutrino](https://github.com/rickgaiser/neutrino) support. You can now choose between [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) and [Neutrino](https://github.com/rickgaiser/neutrino) as your game launcher
+
+## Homebrew Launcher & more! (Mar 28, 2025) - [Click to Watch](https://www.youtube.com/watch?v=q9LvE_OPIPo)
 - [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) updated to version 1.2.0-Beta-2201-4b6cc21:
   - Limited max BDM UDMA mode to UDMA4 to avoid compatibility issues with various SATA/IDE2SD adapters
 - Added a manual for PS1 games. It can be accessed in the Game Channel by selecting a game, pressing Triangle, and then selecting `Manual`
@@ -78,10 +83,13 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 - Added cover art from the [OPL Manager Art DB backups](https://oplmanager.com/site/index.php?backups). Artwork for PS2 games is now displayed in OPL/NHDDL
 - Added homebrew support to the `03-Game-Installer.sh` script. `ELF` files placed in the local `games/APPS` folder on your PC will be installed and appear in the Game Channel in PSBBN and the Apps tab in OPL
 - Apps now support Game ID for both the the Pixel FX Retro GEM and MemCard Pro/SD2PSX
+
+## SAS, HDD-OSD, PS2BBL & more! (May 01, 2025) - [Click to Watch](https://www.youtube.com/watch?v=vpbHlS8nY58)
 - Added support for the [Save Application System (SAS)](https://ps2wiki.github.io/sas-apps-archive/). `PSU` files can now also be placed in the local `games/APPS` folder on your PC and will be installed by the `03-Game-Installer.sh` script
 - Added support for HDD-OSD to the `03-Game-Installer.sh` script. 3D icons are now downloaded from the [HDD-OSD Icon Database](https://github.com/cosmicscale/hdd-osd-icon-database)
-- New script: `04-Extras.sh`. Added ability to install HDD-OSD and [PlayStation 2 Basic Boot Loader (PS2BBL)](https://israpps.github.io/PlayStation2-Basic-BootLoader/)  
-
+- New script: `04-Extras.sh`. Added ability to install HDD-OSD and [PlayStation 2 Basic Boot Loader (PS2BBL)](https://israpps.github.io/PlayStation2-Basic-BootLoader/)
+- Make your own HDD-OSD icons with the [HDD-OSD Icon Templates](https://github.com/CosmicScale/HDD-OSD-Icon-Database/releases/download/v1.0.0/HDD-OSD-Icon-Templates.zip)
+- Translate PSBBN using the [Translation Pack](https://mega.nz/file/iBUh2SaT#TrbFtoj6rjONfaiYnfyCxLPms01iJclva_gr6bJAFd0) to localize the software into different languages.
 
 # New installation scripts
 
@@ -334,7 +342,6 @@ Before installing the English patch, you **must** power off your console to stan
 - You may need to manually change the title of your "Favorite" folders if they were created before you [Patched an existing PSBBN install](#patch-an-existing-psbbn-install).
 
 </details>
-<br>
 
 # Troubleshooting
 
