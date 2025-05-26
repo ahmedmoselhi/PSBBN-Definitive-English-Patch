@@ -72,9 +72,13 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
         // Find the first valid image with src starting with 'https://assets-prd.ignimgs.com'
         let imgUrl = await page.evaluate(() => {
             const imgs = Array.from(document.querySelectorAll('img[src^="https://assets-prd.ignimgs.com"]'));
+            const ignored = [
+                'https://assets-prd.ignimgs.com/2025/04/03/switch2-doodle-1743697401557.png',
+                'https://assets-prd.ignimgs.com/avatars/4ec71177e4b0ca04b5aab1c8/Nix_-_IGN_-_202x-1691124964030.png'
+            ];
             for (const img of imgs) {
                 const cleanSrc = img.src.split('?')[0]; // Remove query parameters
-                if (cleanSrc !== 'https://assets-prd.ignimgs.com/2025/04/03/switch2-doodle-1743697401557.png') {
+                if (!ignored.includes(cleanSrc)) {
                     return cleanSrc;
                 }
             }
