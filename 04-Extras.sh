@@ -8,6 +8,29 @@ HELPER_DIR="${TOOLKIT_PATH}/helper"
 ASSETS_DIR="${TOOLKIT_PATH}/assets"
 LOG_FILE="${TOOLKIT_PATH}/extras.log"
 
+error_msg() {
+    type=$1
+    error_1="$2"
+    error_2="$3"
+    error_3="$4"
+    error_4="$5"
+
+    echo
+    echo "$type: $error_1" | tee -a "${LOG_FILE}"
+    [ -n "$error_2" ] && echo "$error_2" | tee -a "${LOG_FILE}"
+    [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
+    [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
+    echo
+    if [ "$type" = "Error" ]; then
+        read -n 1 -s -r -p "Press any key to exit..."
+        echo
+        exit 1;
+    else
+        read -n 1 -s -r -p "Press any key to continue..."
+        echo
+    fi
+}
+
 cd "${TOOLKIT_PATH}"
 
 echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
@@ -23,13 +46,52 @@ if [ $? -ne 0 ]; then
     fi
 fi
 
+# Check if the current directory is a Git repository
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  echo "This is not a Git repository. Skipping update check." | tee -a "${LOG_FILE}"
+else
+  # Fetch updates from the remote
+  git fetch >> "${LOG_FILE}" 2>&1
+
+  # Check the current status of the repository
+  LOCAL=$(git rev-parse @)
+  REMOTE=$(git rev-parse @{u})
+  BASE=$(git merge-base @ @{u})
+
+  if [ "$LOCAL" = "$REMOTE" ]; then
+    echo "The repository is up to date." | tee -a "${LOG_FILE}"
+  else
+    echo "Downloading updates..."
+    # Get a list of files that have changed remotely
+    UPDATED_FILES=$(git diff --name-only "$LOCAL" "$REMOTE")
+
+    if [ -n "$UPDATED_FILES" ]; then
+      echo "Files updated in the remote repository:" | tee -a "${LOG_FILE}"
+      echo "$UPDATED_FILES" | tee -a "${LOG_FILE}"
+
+      # Reset only the files that were updated remotely (discard local changes to them)
+      echo "$UPDATED_FILES" | xargs git checkout -- >> "${LOG_FILE}" 2>&1
+
+      # Pull the latest changes
+      if ! git pull --ff-only >> "${LOG_FILE}" 2>&1; then
+        error_msg "Error" "Update failed. Delete the PSBBN-Definitive-English-Patch directory and run the command:" " " "git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git" " " "Then try running the script again."
+      fi
+      echo
+      echo "The repository has been successfully updated." | tee -a "${LOG_FILE}"
+      read -n 1 -s -r -p "Press any key to exit, then run the script again."
+      echo
+      exit 0
+    fi
+  fi
+fi
+
 date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
 
 if [[ "$(uname -m)" != "x86_64" ]]; then
   echo "Error: This script requires an x86-64 CPU architecture. Detected: $(uname -m)" | tee -a "${LOG_FILE}"
-  read -n 1 -s -r -p "Press any key to return to exit..."
+  read -n 1 -s -r -p "Press any key to exit..."
   echo
   exit 1
 fi
@@ -64,17 +126,14 @@ function detect_drive() {
         fi
     done
 
-    # Run HDL Dump and capture output
-    output=$(sudo "${HELPER_DIR}/HDL Dump.elf" toc ${DEVICE} 2>&1)
-    # Check for the word "aborting" in the output
-    if echo "$output" | grep -qE "aborting|No medium found"; then
+    if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc $DEVICE >> "${LOG_FILE}" 2>&1; then
         echo
-        echo "Error: APA partition is broken on ${DEVICE}."
+        echo "Error: APA partition is broken on ${DEVICE}." | tee -a "${LOG_FILE}"
         read -n 1 -s -r -p "Press any key to return to the main menu..."
         return 1
     else
         echo
-        echo "PS2 HDD detected as $DEVICE"
+        echo "PS2 HDD detected as $DEVICE" | tee -a "${LOG_FILE}"
     fi
 }
 
