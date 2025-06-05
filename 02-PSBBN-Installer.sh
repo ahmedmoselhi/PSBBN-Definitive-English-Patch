@@ -1,34 +1,142 @@
-#!/bin/bash
-# Set terminal size: 100 columns and 40 rows
-echo -e "\e[8;45;100t"
+#!/usr/bin/env bash
+
+# Check if the shell is bash
+if [ -z "$BASH_VERSION" ]; then
+    echo "Error: This script must be run using Bash. Try running it with: bash $0" >&2
+    exit 1
+fi
 
 # Set paths
 TOOLKIT_PATH="$(pwd)"
 ASSETS_DIR="${TOOLKIT_PATH}/assets"
-INSTALL_LOG="${TOOLKIT_PATH}/PSBBN-installer.log"
+HELPER_DIR="${TOOLKIT_PATH}/helper"
+OPL="${TOOLKIT_PATH}/OPL"
+LOG_FILE="${TOOLKIT_PATH}/PSBBN-installer.log"
+version_check="2.10"
+
+prevent_sleep_start() {
+    if command -v xdotool >/dev/null; then
+        (
+            while true; do
+                xdotool key shift >/dev/null 2>&1
+                sleep 50
+            done
+        ) &
+        SLEEP_PID=$!
+
+    elif command -v dbus-send >/dev/null; then
+        if dbus-send --session --dest=org.freedesktop.ScreenSaver \
+            --type=method_call --print-reply \
+            /ScreenSaver org.freedesktop.DBus.Introspectable.Introspect \
+            >/dev/null 2>&1; then
+
+            (
+                while true; do
+                    dbus-send --session \
+                        --dest=org.freedesktop.ScreenSaver \
+                        --type=method_call \
+                        /ScreenSaver org.freedesktop.ScreenSaver.SimulateUserActivity \
+                        >/dev/null 2>&1
+                    sleep 50
+                done
+            ) &
+            SLEEP_PID=$!
+
+        elif dbus-send --session --dest=org.kde.screensaver \
+            --type=method_call --print-reply \
+            /ScreenSaver org.freedesktop.DBus.Introspectable.Introspect \
+            >/dev/null 2>&1; then
+
+            (
+                while true; do
+                    dbus-send --session \
+                        --dest=org.kde.screensaver \
+                        --type=method_call \
+                        /ScreenSaver org.kde.screensaver.simulateUserActivity \
+                        >/dev/null 2>&1
+                    sleep 50
+                done
+            ) &
+            SLEEP_PID=$!
+        fi
+    fi
+}
+
+prevent_sleep_stop() {
+    if [[ -n "$SLEEP_PID" ]]; then
+        kill "$SLEEP_PID" 2>/dev/null
+        wait "$SLEEP_PID" 2>/dev/null
+        unset SLEEP_PID
+    fi
+}
+
+# Clean up on exit (even if interrupted)
+trap prevent_sleep_stop EXIT
+
+error_msg() {
+    type=$1
+    error_1="$2"
+    error_2="$3"
+    error_3="$4"
+    error_4="$5"
+
+    echo
+    echo "$type: $error_1" | tee -a "${LOG_FILE}"
+    [ -n "$error_2" ] && echo "$error_2" | tee -a "${LOG_FILE}"
+    [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
+    [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
+    echo
+    if [ "$type" = "Error" ]; then
+        read -n 1 -s -r -p "Press any key to exit..."
+        echo
+        exit 1;
+    else
+        read -n 1 -s -r -p "Press any key to continue..."
+        echo
+    fi
+}
+
+UNMOUNT_OPL() {
+    sync
+    if ! sudo umount -l "${TOOLKIT_PATH}/OPL" >> "${LOG_FILE}" 2>&1; then
+        error_msg "Error" "Failed to unmount $DEVICE"
+    fi
+}
+
+PFS_COMMANDS() {
+PFS_COMMANDS=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1)
+if echo "$PFS_COMMANDS" | grep -q "Exit code is"; then
+    error_msg "Error" "PFS Shell returned an error. See ${LOG_FILE}"
+fi
+}
+
+MOUNT_OPL() {
+    echo | tee -a "${LOG_FILE}"
+    echo "Mounting OPL partition and creating folders..." | tee -a "${LOG_FILE}"
+    mkdir -p "${OPL}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${OPL}."
+
+    sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
+
+    # Handle possibility host system's `mount` is using Fuse
+    if [ $? -ne 0 ] && hash mount.exfat-fuse; then
+        echo "Attempting to use exfat.fuse..." | tee -a "${LOG_FILE}"
+        sudo mount.exfat-fuse -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
+    fi
+
+    if [ $? -ne 0 ]; then
+        error_msg "Error" "Failed to mount ${DEVICE}3"
+    fi
+}
 
 clear
 
-if [[ "$(uname -m)" != "x86_64" ]]; then
-  echo "Error: This script requires an x86-64 CPU architecture. Detected: $(uname -m)"
-  read -n 1 -s -r -p "Press any key to exit."
-  echo
-  exit 1
-fi
+# Set terminal size: 100 columns and 40 rows
+echo -e "\e[8;45;100t"
 
-cd "${TOOLKIT_PATH}"
-
-# Check if the helper files exists
-if [[ ! -f "${TOOLKIT_PATH}/helper/PFS Shell.elf" || ! -f "${TOOLKIT_PATH}/helper/HDL Dump.elf" ]]; then
-    echo "Required helper files not found. Please make sure you are in the 'PSBBN-Definitive-English-Patch'"
-    echo "directory and try again."
-    exit 1
-fi
-
-echo "########################################################################################################" | tee -a "${INSTALL_LOG}" >/dev/null 2>&1
+echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
 if [ $? -ne 0 ]; then
-    sudo rm -f "${INSTALL_LOG}"
-    echo "########################################################################################################" | tee -a "${INSTALL_LOG}" >/dev/null 2>&1
+    sudo rm -f "${LOG_FILE}"
+    echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo
         echo "Error: Cannot to create log file."
@@ -38,19 +146,30 @@ if [ $? -ne 0 ]; then
     fi
 fi
 
-date >> "${INSTALL_LOG}"
-echo >> "${INSTALL_LOG}"
-cat /etc/*-release >> "${INSTALL_LOG}" 2>&1
-echo >> "${INSTALL_LOG}"
-echo "Path set to: $TOOLKIT_PATH" >> "${INSTALL_LOG}"
-echo "Helper files found." >> "${INSTALL_LOG}"
+if [[ "$(uname -m)" != "x86_64" ]]; then
+    error_msg "Error" "Unsupported CPU architecture: $(uname -m). This script requires x86-64."
+fi
+
+cd "${TOOLKIT_PATH}"
+
+# Check if the helper files exists
+if [[ ! -f "${HELPER_DIR}/PFS Shell.elf" || ! -f "${HELPER_DIR}/HDL Dump.elf" ]]; then
+    error_msg "Error" "Helper files not found. Scripts must be from the 'PSBBN-Definitive-English-Patch' directory."
+fi
+
+date >> "${LOG_FILE}"
+echo >> "${LOG_FILE}"
+cat /etc/*-release >> "${LOG_FILE}" 2>&1
+echo >> "${LOG_FILE}"
+echo "Path set to: $TOOLKIT_PATH" >> "${LOG_FILE}"
+echo "Helper files found." >> "${LOG_FILE}"
 
 # Check if the current directory is a Git repository
 if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-  echo "This is not a Git repository. Skipping update check." | tee -a "${INSTALL_LOG}"
+  echo "This is not a Git repository. Skipping update check." | tee -a "${LOG_FILE}"
 else
   # Fetch updates from the remote
-  git fetch >> "${INSTALL_LOG}" 2>&1
+  git fetch >> "${LOG_FILE}" 2>&1
 
   # Check the current status of the repository
   LOCAL=$(git rev-parse @)
@@ -58,38 +177,38 @@ else
   BASE=$(git merge-base @ @{u})
 
   if [ "$LOCAL" = "$REMOTE" ]; then
-    echo "The repository is up to date." | tee -a "${INSTALL_LOG}"
+    echo "The repository is up to date." | tee -a "${LOG_FILE}"
   else
     echo "Downloading updates..."
     # Get a list of files that have changed remotely
     UPDATED_FILES=$(git diff --name-only "$LOCAL" "$REMOTE")
 
     if [ -n "$UPDATED_FILES" ]; then
-      echo "Files updated in the remote repository:" | tee -a "${INSTALL_LOG}"
-      echo "$UPDATED_FILES" | tee -a "${INSTALL_LOG}"
+      echo "Files updated in the remote repository:" | tee -a "${LOG_FILE}"
+      echo "$UPDATED_FILES" | tee -a "${LOG_FILE}"
 
       # Reset only the files that were updated remotely (discard local changes to them)
-      echo "$UPDATED_FILES" | xargs git checkout -- >> "${INSTALL_LOG}" 2>&1
+      echo "$UPDATED_FILES" | xargs git checkout -- >> "${LOG_FILE}" 2>&1
 
       # Pull the latest changes
-      git pull --ff-only >> "${INSTALL_LOG}" 2>&1
+      git pull --ff-only >> "${LOG_FILE}" 2>&1
       if [[ $? -ne 0 ]]; then
         echo
         echo "Error: Update failed. Delete the PSBBN-Definitive-English-Patch directory and run the command:"
         echo
         echo "git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git"
         echo
-        read -n 1 -s -r -p "Then try running the script again. Press any key to exit"
+        read -n 1 -s -r -p "Then try running the script again. Press any key to exit..."
         echo
         exit 1
       fi
       echo
-      echo "The repository has been successfully updated." | tee -a "${INSTALL_LOG}"
+      echo "The repository has been successfully updated." | tee -a "${LOG_FILE}"
       read -n 1 -s -r -p "Press any key to exit, then run the script again."
       echo
       exit 0
     else
-      echo "The repository is up to date." | tee -a "${INSTALL_LOG}"
+      echo "The repository is up to date." | tee -a "${LOG_FILE}"
     fi
   fi
 fi
@@ -105,9 +224,9 @@ while true; do
     echo "                                                                                    ";
     echo "                                       Written by CosmicScale"
     echo
-    echo | tee -a "${INSTALL_LOG}"
-    lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT | tee -a "${INSTALL_LOG}"
-    echo | tee -a "${INSTALL_LOG}"
+    echo | tee -a "${LOG_FILE}"
+    lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT | tee -a "${LOG_FILE}"
+    echo | tee -a "${LOG_FILE}"
         
     read -p "Choose your PS2 HDD from the list above (e.g., /dev/sdx): " DEVICE
         
@@ -120,31 +239,24 @@ while true; do
         size_gb=$(echo "$SIZE_CHECK / 1000000000" | bc)
         
         if (( size_gb < 200 )); then
-            echo
-            echo "Error: Device is $size_gb GB. Required minimum is 200 GB."
-            read -n 1 -s -r -p "Press any key to exit."
-            echo
-            exit 1
+            error_msg "Error" "Device is $size_gb GB. Required minimum is 200 GB."
         else
             echo
-            echo "Selected drive: ${DEVICE}" | tee -a "${INSTALL_LOG}"
+            echo "Selected drive: ${DEVICE}" | tee -a "${LOG_FILE}"
             echo
-            echo "Are you sure you want to write to ${DEVICE}?" | tee -a "${INSTALL_LOG}"
+            echo "Are you sure you want to write to ${DEVICE}?" | tee -a "${LOG_FILE}"
             read -p "This will erase all data on the drive. (yes/no): " CONFIRM
             if [[ $CONFIRM == "yes" ]]; then
                 break
             else
-                echo "Aborted." | tee -a "${INSTALL_LOG}"
+                echo "Aborted." | tee -a "${LOG_FILE}"
                 read -n 1 -s -r -p "Press any key to exit..."
                 echo
                 exit 1
             fi
         fi
     else
-        echo
-        echo "Error: Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
-        read -n 1 -s -r -p "Press any key to try again..."
-        echo
+        error_msg "Error" "Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
     fi
 done
 
@@ -152,30 +264,30 @@ done
 mounted_volumes=$(lsblk -ln -o MOUNTPOINT "$DEVICE" | grep -v "^$")
 
 # Iterate through each mounted volume and unmount it
-echo | tee -a "${INSTALL_LOG}"
+echo | tee -a "${LOG_FILE}"
 echo "Unmounting volumes associated with $DEVICE..."
 for mount_point in $mounted_volumes; do
-    echo "Unmounting $mount_point..." | tee -a "${INSTALL_LOG}"
+    echo "Unmounting $mount_point..." | tee -a "${LOG_FILE}"
     if sudo umount "$mount_point"; then
-        echo "Successfully unmounted $mount_point." | tee -a "${INSTALL_LOG}"
+        echo "Successfully unmounted $mount_point." | tee -a "${LOG_FILE}"
     else
-        echo "Failed to unmount $mount_point. Please unmount manually." | tee -a "${INSTALL_LOG}"
-        read -n 1 -s -r -p "Press any key to exit..."
-        echo
-        exit 1
+        error_msg "Error" "Failed to unmount $mount_point. Please unmount manually." | tee -a "${LOG_FILE}"
     fi
 done
 
 echo "All volumes unmounted for $DEVICE."
 
+prevent_sleep_start
+
 # URL of the webpage
 URL="https://archive.org/download/psbbn-definitive-english-patch-v2"
-echo | tee -a "${INSTALL_LOG}"
-echo "Checking for latest version of the PSBBN Definitive English patch..." | tee -a "${INSTALL_LOG}"
+echo | tee -a "${LOG_FILE}"
+echo -n "Checking for latest version of the PSBBN Definitive English patch..." | tee -a "${LOG_FILE}"
+echo | tee -a "${LOG_FILE}"
 
 # Download the HTML of the page
 HTML_FILE=$(mktemp)
-wget -O "$HTML_FILE" "$URL" >> "${INSTALL_LOG}" 2>&1
+wget -O "$HTML_FILE" "$URL" >> "${LOG_FILE}" 2>&1
 
 # Extract .gz filenames from the HTML
 COMBINED_LIST=$(grep -oP 'psbbn-definitive-image-v[0-9]+\.[0-9]+\.gz' "$HTML_FILE")
@@ -190,260 +302,197 @@ VERSION_LIST=$(echo "$COMBINED_LIST" | \
 LATEST_VERSION=$(echo "$VERSION_LIST" | tail -n 1)
 
 if [ -z "$LATEST_VERSION" ]; then
-    echo "Could not find the latest version." | tee -a "${INSTALL_LOG}"
+    echo "Could not find the latest version." | tee -a "${LOG_FILE}"
     # If $LATEST_VERSION is empty, check for psbbn-definitive-image*.gz files
     IMAGE_FILE=$(ls "${ASSETS_DIR}"/psbbn-definitive-image*.gz 2>/dev/null)
     if [ -n "$IMAGE_FILE" ]; then
         # If image file exists, set LATEST_FILE to the image file name
         LATEST_FILE=$(basename "$IMAGE_FILE")
-        echo "Found local file: ${LATEST_FILE}" | tee -a "${INSTALL_LOG}"
+        echo "Found local file: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
     else
         rm -f "$HTML_FILE"
-        echo "Failed to download PSBBN image file. Aborting." | tee -a "${INSTALL_LOG}"
-        read -p "Press any key to exit..."
-        exit 1
+        error_msg "Error" "Failed to download PSBBN image file. Aborting." | tee -a "${LOG_FILE}"
     fi
 else
+    # Set the default latest file based on remote version
     LATEST_FILE="psbbn-definitive-image-v${LATEST_VERSION}.gz"
-    echo "Latest version of PSBBN Definitive English patch is v${LATEST_VERSION}" | tee -a "${INSTALL_LOG}"
+    echo "Latest version of PSBBN Definitive English patch is v${LATEST_VERSION}" | tee -a "${LOG_FILE}"
+
+    # Check if any local file is newer than the remote version
+    IMAGE_FILE=$(ls "${ASSETS_DIR}"/psbbn-definitive-image*.gz 2>/dev/null | sort -V | tail -n1)
+    if [ -n "$IMAGE_FILE" ]; then
+        LOCAL_VERSION=$(echo "$IMAGE_FILE" | sed -E 's/.*-v([0-9.]+)\.gz/\1/')
+        # Compare local vs remote version
+        if [ "$(printf '%s\n' "$LATEST_VERSION" "$LOCAL_VERSION" | sort -V | tail -n1)" != "$LATEST_VERSION" ]; then
+            LATEST_VERSION="$LOCAL_VERSION"
+            LATEST_FILE=$(basename "$IMAGE_FILE")
+            echo "Newer local file found: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
+        fi
+    fi
 fi
 
-# Check for and delete older files
-for file in "${ASSETS_DIR}"/psbbn-definitive-image*.gz; do
-    if [[ -f "$file" && "$(basename "$file")" != "$LATEST_FILE" ]]; then
-        echo "Deleting old file: $file" | tee -a "${INSTALL_LOG}"
-        rm -f "$file"
-    fi
-done
+if [ "$(printf '%s\n' "$version_check" "$LATEST_VERSION" | sort -V | head -n1)" = "$version_check" ]; then
+    echo "Latest version: $LATEST_VERSION"
+else
+    error_msg "Error" "Latest version $LATEST_VERSION is older than required version $version_check. Please try again later."
+fi
 
 # Check if the latest file exists in ${ASSETS_DIR}
 if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
-    echo "File ${LATEST_FILE} exists in ${ASSETS_DIR}." | tee -a "${INSTALL_LOG}"
-    echo "Skipping download" | tee -a "${INSTALL_LOG}"
+    echo "File ${LATEST_FILE} exists in ${ASSETS_DIR}." | tee -a "${LOG_FILE}"
+    echo "Skipping download." | tee -a "${LOG_FILE}"
 else
+    # Check for and delete older files
+    for file in "${ASSETS_DIR}"/psbbn-definitive-image*.gz; do
+        if [[ -f "$file" && "$(basename "$file")" != "$LATEST_FILE" ]]; then
+            echo "Deleting old file: $file" | tee -a "${LOG_FILE}"
+            rm -f "$file"
+        fi
+    done
+
     # Construct the full URL for the .gz file and download it
     ZIP_URL="$URL/$LATEST_FILE"
-    echo "Downloading ${LATEST_FILE}..." | tee -a "${INSTALL_LOG}"
+    echo "Downloading ${LATEST_FILE}..." | tee -a "${LOG_FILE}"
     axel -n 8 -a "$ZIP_URL" -o "${ASSETS_DIR}"
 
     # Check if the file was downloaded successfully
     if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
-        echo "Download completed: ${LATEST_FILE}" | tee -a "${INSTALL_LOG}"
+        echo "Download completed: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
     else
-        echo "Download failed for ${LATEST_FILE}. Please check your internet connection and try again." | tee -a "${INSTALL_LOG}"
-        read -n 1 -s -r -p "Press any key to exit..."
-        echo
-        exit 1
+        error_msg "Error" "Download failed for ${LATEST_FILE}. Please check your internet connection and try again." | tee -a "${LOG_FILE}"
     fi
 fi
 
 # Clean up
 rm -f "$HTML_FILE"
 
-echo | tee -a "${INSTALL_LOG}"
-echo "Checking for POPS binaries..."
-
-# Check POPS files exist
-if [[ -f "${ASSETS_DIR}/POPS-binaries-main/POPS.ELF" && -f "${ASSETS_DIR}/POPS-binaries-main/IOPRP252.IMG" ]]; then
-    echo "Both POPS.ELF and IOPRP252.IMG exist in ${ASSETS_DIR}." | tee -a "${INSTALL_LOG}"
-    echo "Skipping download" | tee -a "${INSTALL_LOG}"
-else
-    echo "One or both files are missing in ${ASSETS_DIR}." | tee -a "${INSTALL_LOG}"
-    # Check if POPS-binaries-main.zip exists
-    if [[ -f "${ASSETS_DIR}/POPS-binaries-main.zip" && ! -f "${ASSETS_DIR}/POPS-binaries-main.zip.st" ]]; then
-        echo | tee -a "${INSTALL_LOG}"
-        echo "POPS-binaries-main.zip found in ${ASSETS_DIR}. Extracting..." | tee -a "${INSTALL_LOG}"
-        unzip -o "${ASSETS_DIR}/POPS-binaries-main.zip" -d "${ASSETS_DIR}" >> "${INSTALL_LOG}" 2>&1
-    else
-        echo | tee -a "${INSTALL_LOG}"
-        echo "Downloading POPS binaries..." | tee -a "${INSTALL_LOG}"
-        axel -a https://archive.org/download/pops-binaries-PS2/POPS-binaries-main.zip -o "${ASSETS_DIR}"
-        unzip -o "${ASSETS_DIR}/POPS-binaries-main.zip" -d "${ASSETS_DIR}" >> "${INSTALL_LOG}" 2>&1
-    fi
-    # Check if both POPS.ELF and IOPRP252.IMG exist after extraction
-    if [[ -f "${ASSETS_DIR}/POPS-binaries-main/POPS.ELF" && -f "${ASSETS_DIR}/POPS-binaries-main/IOPRP252.IMG" ]]; then
-        echo | tee -a "${INSTALL_LOG}"
-        echo "POPS binaries successfully extracted." | tee -a "${INSTALL_LOG}"
-    else
-        echo | tee -a "${INSTALL_LOG}"
-        echo "Error: One or both files (POPS.ELF, IOPRP252.IMG) are missing after extraction." | tee -a "${INSTALL_LOG}"
-        read -n 1 -s -r -p "You can install POPS manually later. Press any key to continue..." | tee -a "${INSTALL_LOG}"
-        echo
-    fi
-fi
-
 PSBBN_IMAGE="${ASSETS_DIR}/${LATEST_FILE}"
 
 # Write the PSBBN image
-echo | tee -a "${INSTALL_LOG}"
-echo "Writing the PSBBN image to ${DEVICE}..." | tee -a "${INSTALL_LOG}"
-if gunzip -c ${PSBBN_IMAGE} | sudo dd of=${DEVICE} bs=4M status=progress 2>&1 | tee -a "${INSTALL_LOG}" ; then
+echo | tee -a "${LOG_FILE}"
+echo "Writing the PSBBN image to ${DEVICE}..." | tee -a "${LOG_FILE}"
+if gunzip -c ${PSBBN_IMAGE} | sudo dd of=${DEVICE} bs=4M status=progress 2>&1 | tee -a "${LOG_FILE}" ; then
     sync
     echo
     echo "Verifying installation..."
-    if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__common'; then
-        echo "Verification successful. PSBBN image installed successfully." | tee -a "${INSTALL_LOG}"
+    if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" >> "${LOG_FILE}" 2>&1; then
+        echo "Verification successful. PSBBN image installed successfully." | tee -a "${LOG_FILE}"
         read -n 1 -s -r -p "Press any key to continue.."
         echo
     else
-        echo "Error: Verification failed on ${DEVICE}." | tee -a "${INSTALL_LOG}"
-        read -n 1 -s -r -p "Press any key to exit..."
-        echo
-        exit 1
+        error_msg "Error" "Verification failed on ${DEVICE}." | tee -a "${LOG_FILE}"
     fi
 else
-    echo "Error: Failed to write the image to ${DEVICE}." | tee -a "${INSTALL_LOG}"
-    read -n 1 -s -r -p "Press any key to exit..."
-    echo
-    exit 1
+    error_msg "Error" "Failed to write the image to ${DEVICE}." | tee -a "${LOG_FILE}"
 fi
 
-# Function to find available space
-function function_space() {
+# Retreive avaliable space
 
 output=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc ${DEVICE} 2>&1)
 
-# Check for the word "aborting" in the output
-if echo "$output" | grep -q "aborting"; then
-    echo "${DEVICE}: APA partition is broken; aborting." | tee -a "${INSTALL_LOG}"
-    read -n 1 -s -r -p "Press any key to exit..."
-    echo
-    exit 1
-fi
-
 # Extract the "used" value, remove "MB" and any commas
 used=$(echo "$output" | awk '/used:/ {print $6}' | sed 's/,//; s/MB//')
-capacity=124416
+capacity=129960
 
 # Calculate available space (capacity - used)
-available=$((capacity - used))
-}
-
-# Call the function retreive avaliable space
-function_space
+available=$((capacity - used - 6400 - 128))
+free_space=$((available / 1024))
+max_music=$(((available - 1024) / 1024))
 
 # Prompt user for partition size for music, validate input, and keep asking until valid input is provided
 while true; do
-  clear
-  echo | tee -a "${INSTALL_LOG}"
+  clear  
+  echo | tee -a "${LOG_FILE}"
   echo "Partitioning the first 128 GB of the drive:"
   echo
-  echo "What size would you like the \"Music\" partition to be?" | tee -a "${INSTALL_LOG}"
-  echo "Minimum 10 GB, Maximum 40 GB" | tee -a "${INSTALL_LOG}"
+  echo "Available: $free_space GB" | tee -a "${LOG_FILE}"
+  echo
+  echo "What size would you like the \"Music\" partition to be?"
+  echo "Minimum 1 GB, maximum $max_music GB"
+  echo
   read -p "Enter partition size (in GB): " gb_size
 
   if [[ ! "$gb_size" =~ ^[0-9]+$ ]]; then
     echo
-    echo "Invalid input. Please enter a valid number." | tee -a "${INSTALL_LOG}"
+    echo "Invalid input. Please enter a valid number."
     sleep 3
     continue
   fi
 
-  if (( gb_size >= 10 && gb_size <= 40 )); then
-    music_partition=$((gb_size * 1024 - 2048))
-
-    echo | tee -a "${INSTALL_LOG}"
-    echo "You have selected $gb_size GB for the \"Music\" partition." | tee -a "${INSTALL_LOG}"
-    read -p "Do you wish to proceed? (y/n): " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-      while true; do
-        GB=$(((available - 14976 - music_partition ) / 1024))
-        echo | tee -a "${INSTALL_LOG}"
-        echo "What size would you like the \"POPS\" partition to be?" | tee -a "${INSTALL_LOG}"
-        echo "The \"POPS\" partition is where PS1 games are stored." | tee -a "${INSTALL_LOG}"
-        echo "Minimum 10 GB, Maximum $GB GB" | tee -a "${INSTALL_LOG}" | tee -a "${INSTALL_LOG}"
-        read -p "Enter partition size (in GB): " gb_size
-
-        if [[ ! "$gb_size" =~ ^[0-9]+$ ]]; then
-          echo
-          echo "Invalid input. Please enter a valid number." | tee -a "${INSTALL_LOG}"
-          continue
-        fi
-
-        if (( gb_size >= 10 && gb_size <= GB )); then
-          pops_partition=$((gb_size * 1024))
-          game_partitions=$(((available - 2048 - music_partition - pops_partition) / 128))
-
-          echo | tee -a "${INSTALL_LOG}"
-          echo "You have selected $gb_size GB for the \"POPS\" partition." | tee -a "${INSTALL_LOG}"
-          echo "This will allow for $game_partitions games in the PSBBN Game Channel." | tee -a "${INSTALL_LOG}"
-          echo
-          echo "If you require more games, reduce the size of your Music/POPS partitions." | tee -a "${INSTALL_LOG}"
-          read -p "Do you wish to proceed? (y/n): " confirm
-          if [[ "$confirm" =~ ^[Yy]$ ]]; then
-            break 2  # Exit both loops
-          else
-            break  # Restart partitioning from the beginning
-          fi
-        else
-          echo
-          echo "Invalid size. Please enter a value between 10 and $GB GB." | tee -a "${INSTALL_LOG}"
-        fi
-      done
+    if (( gb_size >= 1 && gb_size <= $max_music )); then
+        music_partition=$((gb_size * 1024))
+        while true; do
+            pops_partition=$((available - music_partition))
+            gb_size=$((pops_partition / 1024))
+            echo
+            echo "This leaves $gb_size GB for the POPS partition."
+            echo
+            read -p "Do you wish to proceed? (y/n): " confirm
+            if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                break 2  # Exit both loops
+            else
+                break  # Restart partitioning from the beginning
+            fi
+        done
+    else
+        echo
+        echo "Invalid size. Please enter a value between 1 and $max_music GB."
+        sleep 3
     fi
-  else
-    echo
-    echo "Invalid size. Please enter a value between 10 and 40 GB." | tee -a "${INSTALL_LOG}"
-    sleep 3
-  fi
 done
+
+echo >> "${LOG_FILE}"
+echo "Music partition size: $music_partition" >> "${LOG_FILE}"
+echo "POPS partition size: $pops_partition" >> "${LOG_FILE}"
 
 COMMANDS="device ${DEVICE}\n"
 COMMANDS+="mkpart __linux.8 ${music_partition}M REISER\n"
 COMMANDS+="mkpart __.POPS ${pops_partition}M PFS\n"
-COMMANDS+="exit"
-echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${INSTALL_LOG}" 2>&1
-
-echo | tee -a "${INSTALL_LOG}"
-echo "Installing POPS..." | tee -a "${INSTALL_LOG}"
-
-# Copy POPS files to __common
-COMMANDS="device ${DEVICE}\n"
+COMMANDS+="mkpart +OPL 128M PFS\n"
 COMMANDS+="mount __common\n"
 COMMANDS+="lcd '${TOOLKIT_PATH}/assets/POPStarter'\n"
 COMMANDS+="mkdir POPS\n"
+COMMANDS+="mkdir 'Your Saves'\n"
 COMMANDS+="cd POPS\n"
 COMMANDS+="put IGR_BG.TM2\n"
 COMMANDS+="put IGR_NO.TM2\n"
 COMMANDS+="put IGR_YES.TM2\n"
-COMMANDS+="lcd '${TOOLKIT_PATH}/assets/POPS-binaries-main'\n"
-COMMANDS+="put POPS.ELF\n"
-COMMANDS+="put IOPRP252.IMG\n"
 COMMANDS+="cd /\n"
 COMMANDS+="umount\n"
 COMMANDS+="exit"
 
-# Pipe all commands to PFS Shell for mounting, copying, and unmounting
-echo -e "$COMMANDS" | sudo "${TOOLKIT_PATH}/helper/PFS Shell.elf" >> "${INSTALL_LOG}" 2>&1
+PFS_COMMANDS
 
 
-#//////////////////////////////////////////////// APA-Jail code by Berion ////////////////////////////////////////////////
 
-function function_apajail_magic_number() {
+################################### APA-Jail code by Berion ###################################
+
+apajail_magic_number() {
 	echo ${MAGIC_NUMBER} | xxd -r -p > /tmp/apajail_magic_number.bin
-	sudo dd if=/tmp/apajail_magic_number.bin of=${DEVICE} bs=8 count=1 seek=28 conv=notrunc >> "${INSTALL_LOG}" 2>&1
+	sudo dd if=/tmp/apajail_magic_number.bin of=${DEVICE} bs=8 count=1 seek=28 conv=notrunc >> "${LOG_FILE}" 2>&1
 	}
 
-function function_apa_checksum_fix() {
-	sudo dd if=${DEVICE} of=/tmp/apa_header_full.bin bs=512 count=2 >> "${INSTALL_LOG}" 2>&1
-	"${TOOLKIT_PATH}/helper/PS2 APA Header Checksum Fixer.elf" /tmp/apa_header_full.bin | sed -n 8p | awk '{print $6}' | xxd -r -p > /tmp/apa_header_checksum.bin 2>> "${INSTALL_LOG}"
-	sudo dd if=/tmp/apa_header_checksum.bin of=${DEVICE} conv=notrunc >> "${INSTALL_LOG}" 2>&1
+apa_checksum_fix() {
+	sudo dd if=${DEVICE} of=/tmp/apa_header_full.bin bs=512 count=2 >> "${LOG_FILE}" 2>&1
+	"${TOOLKIT_PATH}/helper/PS2 APA Header Checksum Fixer.elf" /tmp/apa_header_full.bin | sed -n 8p | awk '{print $6}' | xxd -r -p > /tmp/apa_header_checksum.bin 2>> "${LOG_FILE}"
+	sudo dd if=/tmp/apa_header_checksum.bin of=${DEVICE} conv=notrunc >> "${LOG_FILE}" 2>&1
 	}
 
-function function_clear_temp() {
-	sudo rm -f /tmp/apa_header_checksum.bin	&>> "${INSTALL_LOG}"
-	sudo rm -f /tmp/apa_header_full.bin			&>> "${INSTALL_LOG}"
-	sudo rm -f /tmp/apajail_magic_number.bin	&>> "${INSTALL_LOG}"
-	sudo rm -f /tmp/apa_index.xz					&>> "${INSTALL_LOG}"
-	sudo rm -f /tmp/gpt_2nd.xz						&>> "${INSTALL_LOG}"
+clear_temp() {
+	sudo rm -f /tmp/apa_header_checksum.bin	&>> "${LOG_FILE}"
+	sudo rm -f /tmp/apa_header_full.bin			&>> "${LOG_FILE}"
+	sudo rm -f /tmp/apajail_magic_number.bin	&>> "${LOG_FILE}"
+	sudo rm -f /tmp/apa_index.xz					&>> "${LOG_FILE}"
+	sudo rm -f /tmp/gpt_2nd.xz						&>> "${LOG_FILE}"
 	}
 
-echo | tee -a "${INSTALL_LOG}"
-echo "Running APA-Jail by Berion..." | tee -a "${INSTALL_LOG}"
+echo | tee -a "${LOG_FILE}"
+echo -n "Running APA-Jail by Berion..." | tee -a "${LOG_FILE}"
+echo | tee -a "${LOG_FILE}"
 
 # Signature injection (type A2):
 MAGIC_NUMBER="4150414A2D413200"
-function_apajail_magic_number
+apajail_magic_number
 
 # Setting up MBR:
 {
@@ -457,78 +506,86 @@ if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
 		sudo mkfs.ext2 -L "RECOVERY" ${DEVICE}2
 		sudo "${TOOLKIT_PATH}/helper/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}3
 fi
-} >> "${INSTALL_LOG}" 2>&1
+} >> "${LOG_FILE}" 2>&1
 
 PARTITION_NUMBER=3
 
 # Finalising recovery:
 if [ ! -d "${TOOLKIT_PATH}/storage/hdd/recovery" ]; then
-	mkdir -p "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
+	mkdir -p "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${LOG_FILE}"
 fi
 if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
-	sudo mount ${DEVICE}p2 "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
-	else sudo mount ${DEVICE}2 "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
+	sudo mount ${DEVICE}p2 "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${LOG_FILE}"
+	else sudo mount ${DEVICE}2 "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${LOG_FILE}"
 fi
-sudo dd if=${DEVICE} bs=128M count=1 status=noxfer 2>> "${INSTALL_LOG}" | xz -z > /tmp/apa_index.xz 2>> "${INSTALL_LOG}"
-sudo cp /tmp/apa_index.xz "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
+sudo dd if=${DEVICE} bs=128M count=1 status=noxfer 2>> "${LOG_FILE}" | xz -z > /tmp/apa_index.xz 2>> "${LOG_FILE}"
+sudo cp /tmp/apa_index.xz "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${LOG_FILE}"
 LBA_MAX=$(sudo blockdev --getsize ${DEVICE})
 LBA_GPT_BUP=$(echo $(($LBA_MAX-33)))
-sudo dd if=${DEVICE} skip=${LBA_GPT_BUP} bs=512 count=33 status=noxfer 2>> "${INSTALL_LOG}" | xz -z > /tmp/gpt_2nd.xz 2>> "${INSTALL_LOG}"
-sudo cp /tmp/gpt_2nd.xz "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
-sync 2>> "${INSTALL_LOG}"
-sudo umount -l "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
-rmdir "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${INSTALL_LOG}"
+sudo dd if=${DEVICE} skip=${LBA_GPT_BUP} bs=512 count=33 status=noxfer 2>> "${LOG_FILE}" | xz -z > /tmp/gpt_2nd.xz 2>> "${LOG_FILE}"
+sudo cp /tmp/gpt_2nd.xz "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${LOG_FILE}"
+sync 2>> "${LOG_FILE}"
+sudo umount -l "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${LOG_FILE}"
+rmdir "${TOOLKIT_PATH}/storage/hdd/recovery" 2>> "${LOG_FILE}"
 
-function_apa_checksum_fix
+apa_checksum_fix
 
-function_clear_temp
+clear_temp
 
 unset LBA_GPT_BUP
 unset LBA_MAX
 unset MAGIC_NUMBER
 unset PARTITION_NUMBER
 
-#/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+###############################################################################################
 
 # Run the command and capture output
-echo >> "${INSTALL_LOG}"
-output=$(sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc ${DEVICE} 2>&1)
+echo >> "${LOG_FILE}"
+TOC_OUTPUT=$(sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" toc "${DEVICE}")
+STATUS=$?
 
-# Check for the word "aborting" in the output
-if echo "$output" | grep -q "aborting"; then
-    echo "Error: APA partition is broken on ${DEVICE}. Install failed." | tee -a "${INSTALL_LOG}"
-    read -n 1 -s -r -p "Press any key to exit..."
-    echo
-    exit 1
+if [ $STATUS -ne 0 ]; then
+    error_msg "Error" "APA partition is broken on ${DEVICE}. Install failed." | tee -a "${LOG_FILE}"
 fi
 
-if sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__.POPS' && \
-   sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" | grep -q '__linux.8'; then
-   echo
-   echo "POPS and Music partitions were created successfully." | tee -a "${INSTALL_LOG}"
-   sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" >> "${INSTALL_LOG}"
+if echo "${TOC_OUTPUT}" | grep -q '__.POPS' && echo "${TOC_OUTPUT}" | grep -q '__linux.8'; then
+    echo
+    echo "POPS and Music partitions were created successfully." | tee -a "${LOG_FILE}"
 else
     echo
-    echo "Error: Some partitions are missing on ${DEVICE}. See log for details." | tee -a "${INSTALL_LOG}"
-    sudo "${TOOLKIT_PATH}"/helper/HDL\ Dump.elf toc "${DEVICE}" >> "${INSTALL_LOG}"
-    read -n 1 -s -r -p "Press any key to exit..."
-    echo
-    exit 1
+    error_msg "Error" "Some partitions are missing on ${DEVICE}. See log for details." | tee -a "${LOG_FILE}"
 fi
-
-echo | tee -a "${INSTALL_LOG}"
-lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT >> "${INSTALL_LOG}"
 
 # Check if 'OPL' partition exists with blkid
 if ! sudo blkid "${DEVICE}3" | grep -q OPL; then
-    echo | tee -a "${INSTALL_LOG}"
-    echo "Error: APA-Jail failed on ${DEVICE}." | tee -a "${INSTALL_LOG}"
-    read -n 1 -s -r -p "Press any key to exit..."
-    echo
-    exit 1
+    error_msg "Error" "APA-Jail failed on ${DEVICE}." | tee -a "${LOG_FILE}"
+else
+    echo "APA-Jail completed successfully." | tee -a "${LOG_FILE}"
 fi
 
-echo | tee -a "${INSTALL_LOG}"
-echo "PSBBN successfully installed." | tee -a "${INSTALL_LOG}"
-read -n 1 -s -r -p "Press any key to exit. "
+MOUNT_OPL
+
+
+# Create necessary folders if they don't exist
+for folder in APPS ART CFG CHT LNG THM VMC CD DVD bbnl; do
+    dir="${OPL}/${folder}"
+    [[ -d "$dir" ]] || mkdir -p "$dir" || { 
+        error_msg "Error" "Failed to create $dir."
+    }
+done
+
+echo "$LATEST_VERSION" > "${OPL}/version.txt"
+echo "eng" >> "${OPL}/version.txt"
+
+UNMOUNT_OPL
+
+echo >> "${LOG_FILE}"
+echo "${TOC_OUTPUT}" >> "${LOG_FILE}"
+echo >> "${LOG_FILE}"
+lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT >> "${LOG_FILE}"
+
+echo | tee -a "${LOG_FILE}"
+echo "PSBBN successfully installed." | tee -a "${LOG_FILE}"
+echo
+read -n 1 -s -r -p "Press any key to exit..."
 echo

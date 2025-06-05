@@ -1,4 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Check if the shell is bash
+if [ -z "$BASH_VERSION" ]; then
+    echo "Error: This script must be run using Bash. Try running it with: bash $0" >&2
+    exit 1
+fi
+
 echo -e "\e[8;30;100t"
 
 TOOLKIT_PATH="$(pwd)"

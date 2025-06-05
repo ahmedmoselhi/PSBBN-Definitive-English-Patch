@@ -1,10 +1,8 @@
 import sys
-import math
 import os.path
 import subprocess
-import unicodedata
+import math
 import re
-from natsort import natsorted
 import shlex
 
 done = "Error: No games found."
@@ -18,19 +16,14 @@ def count_files(folder, extensions):
     global total
     for image in os.listdir(game_path + folder):
         if image.startswith('.'):
-            continue  # Skip hidden files
+            continue
         if any(image.lower().endswith(ext) for ext in extensions):
             total += 1
 
 # Function to process game files in the given folder
 def process_files(folder, extensions):
-    global total
-    global count
-    global done
+    global total, count, done
 
-    gameid_file_path = "./helper/TitlesDB_PS2_English.csv"
-
-    # Read TitlesDB_PS2_English.csv and create a dictionary of title IDs to game names
     game_names = {}
     if os.path.isfile(gameid_file_path):
         with open(gameid_file_path, 'r') as gameid_file:
@@ -54,7 +47,7 @@ def process_files(folder, extensions):
             original_image = image  # Store the original filename (e.g., `.zso` or `.iso`)
             converted_iso = False
 
-            
+
             # Check the filename condition for all files
             file_name_without_ext = os.path.splitext(image)[0]
             if len(file_name_without_ext) >= 9 and file_name_without_ext[4] == '_' and file_name_without_ext[8] == '.':
@@ -191,157 +184,53 @@ def process_files(folder, extensions):
 
     done = "Done!"
 
-# Function to normalize text by removing diacritical marks and converting to ASCII
-def normalize_text(text):
-    """
-    Normalize text by removing diacritical marks and converting to ASCII.
-    """
-    return ''.join(
-        c for c in unicodedata.normalize('NFD', text)
-        if unicodedata.category(c) != 'Mn'
-    )
-
-# Main function to sort the games list
-def sort_games_list():
-
-    # Read the ps2.list into a list of lines
-    with open(games_list_path, 'r') as file:
-        lines = file.readlines()
-
-    # Sort the lines by the first field dynamically
-    def sort_key(line):
-        # Split the line into fields
-        fields = line.strip().split('|')
-
-        # Extract the game title (first field) and game_id (second field, if present)
-        first_field = fields[0].strip()
-        game_id = fields[1].strip() if len(fields) > 1 else ""
-
-        # Special condition for 'Jak and Daxter: The Precursor Legacy'
-        if first_field.lower() == "jak and daxter: the precursor legacy":
-            return ("jak", game_id)
-        
-        # Special condition for 'Ratchet: Deadlocked'
-        if first_field.lower() == "ratchet: deadlocked":
-            return ("ratchet & clank", game_id)
-        
-        # Special condition for 'Ratchet: Deadlocked'
-        if first_field.lower() == "secret agent clank":
-            return ("ratchet & clank", game_id)
-        
-        # Special condition for 'Sly Cooper and the Thievius Raccoonus'
-        if first_field.lower().startswith("sly cooper and the thievius raccoonus"):
-            return ("sly", game_id)
-
-        # Special condition for 'Zone of the Enders: The 2nd Runner'
-        if first_field.lower().startswith("zone of the enders: the 2nd runner"):
-            return ("zone of the enders 2", game_id)
-        
-        # Special condition for 'Grand Theft Auto III'
-        if first_field.lower().startswith("grand theft auto iii"):
-            return ("grand theft auto", game_id)
-        
-        # Special condition for 'The Document of Metal Gear Solid 2'
-        if first_field.lower().startswith("the document of metal gear solid 2"):
-            return ("metal gear solid 2", game_id)
-        
-        # Special condition for 'Forbidden Siren'
-        if first_field.lower().startswith("forbidden siren 2"):
-            return ("siren 2", game_id)
-        
-        # Special condition for 'We Love Katamari'
-        if first_field.lower().startswith("we love katamari"):
-            return ("katamari damacy 2", game_id)
-        
-        # Check for colon and truncate at the first colon, if exists
-        if ':' in first_field:
-            first_field = first_field.split(':')[0].strip()
-
-        # Remove leading "The" or "the" for sorting purposes
-        if first_field.lower().startswith('the '):
-            first_field = first_field[4:].strip()
-
-        # Normalize the title
-        normalized_title = normalize_text(first_field)
-
-        # Remove special characters
-        normalized_title = ''.join(c for c in normalized_title if c.isalnum() or c.isspace())
-
-        # Check for special cases like Roman numeral endings
-        replacements = {
-            ' I': ' 1',
-            ' II': ' 2',
-            ' III': ' 3',
-            ' IV': ' 4',
-            ' V': ' 5',
-            ' VI': ' 6',
-            ' VII': ' 7',
-            ' VIII': ' 8',
-            ' IX': ' 9',
-            ' X': ' 10',
-            ' XI': ' 11',
-            ' XII': ' 12',
-            ' XIII': ' 13',
-            ' XIV': ' 14',
-            ' XV': ' 15',
-            ' XVI': ' 16',
-            ' XVII': ' 17',
-            ' XVIII': ' 18',
-            ' XIX': ' 19',
-            ' XX': ' 20'
-        }
-        for roman, digit in replacements.items():
-            if normalized_title.endswith(roman):
-                normalized_title = normalized_title.replace(roman, digit)
-                break
-
-        final_key = normalized_title.lower()
-        return (final_key, game_id)
-
-    # Sort the lines by the dynamic key using natsorted
-    sorted_lines = natsorted(lines, key=sort_key)
-
-    # Write the sorted lines back to the specified games list path
-    with open(games_list_path, 'w') as file:
-        file.writelines(sorted_lines)
-
 def main(arg1, arg2):
     if arg1 and arg2:
         global game_path
         global games_list_path
+        global gameid_file_path
         game_path = arg1
         games_list_path = arg2
+
+        # Set correct TitlesDB path based on output list name
+        if games_list_path.endswith("ps2.list"):
+            gameid_file_path = "./helper/TitlesDB_PS2_English.csv"
+            folders_to_scan = [('/DVD', ['.iso', '.zso']), ('/CD', ['.iso', '.zso'])]
+        elif games_list_path.endswith("ps1.list"):
+            gameid_file_path = "./helper/TitlesDB_PS1_English.csv"
+            folders_to_scan = [('/POPS', ['.vcd', '.VCD'])]
+        else:
+            print("Error: Output list must end with either 'ps2.list' or 'ps1.list'.")
+            sys.exit(1)
 
         # Remove any existing game list file
         if os.path.isfile(games_list_path):
             os.remove(games_list_path)
 
-    # Count and process files in the DVD and CD folders
-    for folder, extensions in [('/DVD', ['.iso', '.zso']), ('/CD', ['.iso', '.zso'])]:
-        if os.path.isdir(game_path + folder):
-            count_files(folder, extensions)
-        else:
-            print(f'{folder} not found at ' + game_path)
-            sys.exit(1)
+        # Count files
+        for folder, extensions in folders_to_scan:
+            if os.path.isdir(game_path + folder):
+                count_files(folder, extensions)
+            else:
+                print(f'{folder} not found at ' + game_path)
+                sys.exit(1)
 
-    # Check if no games were found
-    if total == 0:
-        print("No PS2 games found in the CD or DVD folder.")
-        sys.exit(0)
+        if total == 0:
+            if games_list_path.endswith("ps2.list"):
+                print("No PS2 games found in the CD or DVD folder.")
+            elif games_list_path.endswith("ps1.list"):
+                print("No PS1 games found in the POPS folder.")
+            sys.exit(0)
 
-    # Process the files now that we know there are games
-    for folder, extensions in [('/DVD', ['.iso', '.zso']), ('/CD', ['.iso', '.zso'])]:
-        if os.path.isdir(game_path + folder):
-            process_files(folder, extensions)
+        # Process files
+        for folder, extensions in folders_to_scan:
+            if os.path.isdir(game_path + folder):
+                process_files(folder, extensions)
 
-    # Sort the games list after processing
-    sort_games_list()
+        print(done)
 
-    print(done)
-    print('')
-
-if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print('Usage: python3 list_builder-ps2.py <path/to/games> <path/to/ps2.list>')
-        sys.exit(1)
-    main(sys.argv[1], sys.argv[2])
+if __name__ == "__main__":
+    if len(sys.argv) == 3:
+        main(sys.argv[1], sys.argv[2])
+    else:
+        print("Usage: build-list.py <game_path> <output_list_path>")

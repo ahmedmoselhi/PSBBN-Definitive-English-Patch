@@ -1,4 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Check if the shell is bash
+if [ -z "$BASH_VERSION" ]; then
+    echo "Error: This script must be run using Bash. Try running it with: bash $0" >&2
+    exit 1
+fi
+
 # Set terminal size: 100 columns and 40 rows
 echo -e "\e[8;40;100t"
 
