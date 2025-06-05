@@ -1,9 +1,9 @@
 title = Open PS2 Loader
-title_id = 
+title_id = LAUNCHER
 title_sub_id = 0
 release_date = 
 developer_id = 
-publisher_id = 
+publisher_id = github.com/ps2homebrew
 note = 
 content_web = 
 image_topviewflag = 0
