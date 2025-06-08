@@ -271,7 +271,7 @@ for mount_point in $mounted_volumes; do
     if sudo umount "$mount_point"; then
         echo "Successfully unmounted $mount_point." | tee -a "${LOG_FILE}"
     else
-        error_msg "Error" "Failed to unmount $mount_point. Please unmount manually." | tee -a "${LOG_FILE}"
+        error_msg "Error" "Failed to unmount $mount_point. Please unmount manually."
     fi
 done
 
@@ -311,7 +311,7 @@ if [ -z "$LATEST_VERSION" ]; then
         echo "Found local file: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
     else
         rm -f "$HTML_FILE"
-        error_msg "Error" "Failed to download PSBBN image file. Aborting." | tee -a "${LOG_FILE}"
+        error_msg "Error" "Failed to download PSBBN image file. Aborting."
     fi
 else
     # Set the default latest file based on remote version
@@ -359,7 +359,7 @@ else
     if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
         echo "Download completed: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
     else
-        error_msg "Error" "Download failed for ${LATEST_FILE}. Please check your internet connection and try again." | tee -a "${LOG_FILE}"
+        error_msg "Error" "Download failed for ${LATEST_FILE}. Please check your internet connection and try again."
     fi
 fi
 
@@ -380,10 +380,10 @@ if gunzip -c ${PSBBN_IMAGE} | sudo dd of=${DEVICE} bs=4M status=progress 2>&1 | 
         read -n 1 -s -r -p "Press any key to continue.."
         echo
     else
-        error_msg "Error" "Verification failed on ${DEVICE}." | tee -a "${LOG_FILE}"
+        error_msg "Error" "Verification failed on ${DEVICE}."
     fi
 else
-    error_msg "Error" "Failed to write the image to ${DEVICE}." | tee -a "${LOG_FILE}"
+    error_msg "Error" "Failed to write the image to ${DEVICE}."
 fi
 
 # Retreive avaliable space
@@ -545,7 +545,7 @@ TOC_OUTPUT=$(sudo "${TOOLKIT_PATH}/helper/HDL Dump.elf" toc "${DEVICE}")
 STATUS=$?
 
 if [ $STATUS -ne 0 ]; then
-    error_msg "Error" "APA partition is broken on ${DEVICE}. Install failed." | tee -a "${LOG_FILE}"
+    error_msg "Error" "APA partition is broken on ${DEVICE}. Install failed."
 fi
 
 if echo "${TOC_OUTPUT}" | grep -q '__.POPS' && echo "${TOC_OUTPUT}" | grep -q '__linux.8'; then
@@ -553,18 +553,10 @@ if echo "${TOC_OUTPUT}" | grep -q '__.POPS' && echo "${TOC_OUTPUT}" | grep -q '_
     echo "POPS and Music partitions were created successfully." | tee -a "${LOG_FILE}"
 else
     echo
-    error_msg "Error" "Some partitions are missing on ${DEVICE}. See log for details." | tee -a "${LOG_FILE}"
-fi
-
-# Check if 'OPL' partition exists with blkid
-if ! sudo blkid "${DEVICE}3" | grep -q OPL; then
-    error_msg "Error" "APA-Jail failed on ${DEVICE}." | tee -a "${LOG_FILE}"
-else
-    echo "APA-Jail completed successfully." | tee -a "${LOG_FILE}"
+    error_msg "Error" "Some partitions are missing on ${DEVICE}. See log for details."
 fi
 
 MOUNT_OPL
-
 
 # Create necessary folders if they don't exist
 for folder in APPS ART CFG CHT LNG THM VMC CD DVD bbnl; do
