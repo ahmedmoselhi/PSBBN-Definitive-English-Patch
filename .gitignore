@@ -10,8 +10,6 @@ games/APPS/*.psu
 assets/HDD-OSD/
 games/APPS/HDD-OSD.elf
 games/APPS/PSBBN.ELF
-icons/ico/psbbn.ico
-icons/ico/hdd-osd.ico
 *.log
 *.gz
 *.zip
