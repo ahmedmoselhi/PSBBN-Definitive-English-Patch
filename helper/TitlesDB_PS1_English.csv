@@ -1013,7 +1013,6 @@ SLUS_004.22|Breath of Fire III|
 SLPM_801.15|Breath of Fire III (Taikenban)|
 SLES_035.52|Breath of Fire IV|
 SLUS_013.24|Breath of Fire IV|
-SLPS_027.28|Breath of Fire IV (E3 Demo)|
 SLPM_871.59|Breath of Fire IV: Utsurowazaru Mono|
 SLPS_027.28|Breath of Fire IV: Utsurowazaru Mono|
 SLPM_870.54|Breed Master|
@@ -1086,7 +1085,6 @@ SLUS_011.59|Bust A Groove 2|
 PAPX_900.28|Bust A Move|
 SLPS_012.32|Bust A Move|
 SLPS_012.37|Bust A Move|
-SLPS_012.32|Bust A Move (Disc 1) (Genteiban)|
 SLPS_012.33|Bust A Move (Disc 2) (Premium CD-ROM) (Genteiban)|
 SLPM_862.19|Bust A Move 2: Dance Tengoku Mix|
 SLPM_804.10|Bust A Move 2: Dance Tengoku Mix (Taikenban)|
@@ -4495,7 +4493,6 @@ SLPM_868.94|Jet Copter X|
 SCUS_943.09|Jet Moto|
 SCPS_100.63|Jet Moto '98|
 SCUS_941.67|Jet Moto 2|
-SCUS_941.67|Jet Moto 2: Championship Edition|
 SCUS_945.55|Jet Moto 3|
 SCUS_943.84|Jet Moto 3 (Demo)|
 SCES_005.66|Jet Rider|
@@ -4641,7 +4638,6 @@ SLPM_871.74|Kaette Kita Cyborg Kuro-chan|
 SLPS_013.84|Kaette Kita Pachio-kun: Dream Collection|
 SLPS_019.72|Kagayaku Kisetsu e|
 SLPS_019.75|Kagayaku Kisetsu e|
-SLPS_019.72|Kagayaku Kisetsu e (Disc 1) (Shokai Genteiban)|
 SLPS_019.73|Kagayaku Kisetsu e (Disc 2) (Special Disc) (Shokai Genteiban)|
 SLPM_804.08|Kagayaku Kisetsu e (Taikenban)|
 SLES_019.67|Kagero: Deception II|
@@ -4686,7 +4682,6 @@ SLPS_005.63|Karyuujou (Disc 1) (Ryuu Hangan Hen)|
 SLPS_005.64|Karyuujou (Disc 2) (Kou Yuukan Hen)|
 SLPS_016.30|Kasei Monogatari|
 SLPS_016.29|Kasei Monogatari (Genteiban)|
-SLPS_016.30|Kasei Monogatari (Genteiban)|
 SCED_017.39|Katalog Spezial Demo|
 SLPS_020.78|Katou Hifumi Kudan: Shougi Club|
 SLPS_020.86|Katou Hifumi Kudan: Shougi Club|
@@ -5822,7 +5817,6 @@ SLPM_870.32|Momotarou Dentetsu V|
 SLPM_873.47|Momotarou Dentetsu V|
 SLPS_024.56|Momotarou Dentetsu V|
 SLPS_024.58|Momotarou Dentetsu V|
-SLPS_024.56|Momotarou Dentetsu V (Shokai Genteiban)|
 SLPM_868.88|Momotarou Matsuri: Ishikawa Rokuemon no Maki|
 LSP05010.101| Mona & Moki 1: Drive Me Wild!|
 LSP05010.102| Mona & Moki 1: Drive Me Wild!|
@@ -6095,7 +6089,6 @@ SCUS_945.00|NBA Shoot Out|
 SCUS_945.52|NBA Shoot Out '97|
 SCUS_945.61|NBA ShootOut 2000|
 SCUS_945.81|NBA ShootOut 2001|
-SCUS_945.81|NBA ShootOut 2001 (Demo)|
 SCUS_945.82|NBA ShootOut 2001 (Demo)|
 SCUS_946.41|NBA ShootOut 2002|
 SCUS_946.60|NBA ShootOut 2002 (Demo)|
@@ -6240,7 +6233,6 @@ SLUS_900.08|Namco Demo CD|Namco
 SLPS_007.65|Namco Museum Encore Namco|
 SLPS_010.50|Namco Museum Encore|Namco
 SLPS_911.63|Namco Museum Encore|Namco
-SLPS_007.65|Namco Museum Encore (Shokai Gentei) Namco|
 SCES_002.43|Namco Museum Vol. 1 Namco|
 SLPS_001.07|Namco Museum Vol. 1|Namco
 SLPS_911.58|Namco Museum Vol. 1|Namco
@@ -6274,7 +6266,6 @@ SLPS_030.49|Naniwa Kinyuudou: Aoki Yuji no Seken Munazanyou|
 SLPS_012.06|Naniwa Wangan Battle: Tarzan Yamada & AutoSelect Sawa Kyoudai|
 SLPS_025.35|Naniwa Wangan Battle: Tarzan Yamada & AutoSelect Sawa Kyoudai|
 SLPM_803.01|Naniwa Wangan Battle: Tarzan Yamada & AutoSelect Sawa Kyoudai (Taikenban)|
-SLPS_012.06|Naniwa Wangan Battle: Tarzan Yamada & AutoSelect Sawa Kyoudai (Taikenban)|
 SLPS_007.68|Naniwa no Akindo: Futte Nanbo no Saikoro Jinsei|
 SLES_003.29|NanoTek Warrior|
 SLPS_008.35|NanoTek Warrior|
@@ -6537,7 +6528,6 @@ SLES_008.41|Oddworld: Abe's Oddysee|
 SLUS_001.90|Oddworld: Abe's Oddysee|
 SLED_007.25|Oddworld: Abe's Oddysee (Demo)|
 SLUS_900.04|Oddworld: Abe's Oddysee (Demo)|
-SLUS_001.90|Oddworld: Abe's Oddysee (Trade Demo)|
 SLES_015.02|Oddworld: L'Exode d'Abe (Disc 1)|
 SLES_115.02|Oddworld: L'Exode d'Abe (Disc 2)|
 SLES_008.38|Oddworld: L'Odyssée d'Abe|
@@ -7915,17 +7905,13 @@ SLPS_032.07|SD Gundam: GGeneration-0 (Disc 2)|
 SLPS_029.00|SD Gundam: GGeneration-F (Disc 1)|
 SLPS_029.12|SD Gundam: GGeneration-F (Disc 1)|
 SLPM_840.04|SD Gundam: GGeneration-F (Disc 1) (Tokubetsu-ban)|
-SLPS_029.00|SD Gundam: GGeneration-F (Disc 1) (Tokubetsu-ban)|
 SLPS_029.01|SD Gundam: GGeneration-F (Disc 2)|
 SLPS_029.13|SD Gundam: GGeneration-F (Disc 2)|
 SLPM_840.05|SD Gundam: GGeneration-F (Disc 2) (Tokubetsu-ban)|
-SLPS_029.01|SD Gundam: GGeneration-F (Disc 2) (Tokubetsu-ban)|
 SLPS_029.02|SD Gundam: GGeneration-F (Disc 3)|
 SLPS_029.14|SD Gundam: GGeneration-F (Disc 3)|
 SLPM_840.06|SD Gundam: GGeneration-F (Disc 3) (Tokubetsu-ban)|
-SLPS_029.02|SD Gundam: GGeneration-F (Disc 3) (Tokubetsu-ban)|
 SLPS_029.15|SD Gundam: GGeneration-F (Disc 4) (Premium Disc)|
-SLPS_029.03|SD Gundam: GGeneration-F (Disc 4) (Premium Disc) (Limited Edition)|
 SLPM_840.07|SD Gundam: GGeneration-F (Disc 4) (Premium Disc) (Tokubetsu-ban)|
 SLPS_029.03|SD Gundam: GGeneration-F (Disc 4) (Premium Disc) (Tokubetsu-ban)|
 SLPS_031.95|SD Gundam: GGeneration-F.I.F|
@@ -8000,7 +7986,6 @@ SLUS_005.05|San Francisco Rush: Extreme Racing|
 SLPM_868.60|Sangoku Musou|
 SLPS_007.31|Sangoku Musou|
 SLPM_800.85|Sangoku Musou (Taikenban)|
-SLPS_007.31|Sangoku Musou (Taikenban)|
 SLPM_867.44|Sangokushi Eiketsuden|
 SLPS_003.09|Sangokushi Eiketsuden|
 SLPM_866.07|Sangokushi II|
@@ -8575,7 +8560,6 @@ SLPS_009.82|Soukou Kihei Votoms Gaiden: Ao no Kishi Berserga Monogatari|
 SLPS_009.81|Soukou Kihei Votoms Gaiden: Ao no Kishi Berserga Monogatari (Limited Edition)|
 SLPS_023.15|Soukou Kihei Votoms: Koutetsu no Gunzei|
 SLPS_023.13|Soukou Kihei Votoms: Koutetsu no Gunzei (Shokai Seisan Genteiban)|
-SLPS_023.15|Soukou Kihei Votoms: Koutetsu no Gunzei (Shokai Seisan Genteiban)|
 SLPS_019.61|Soukou Kihei Votoms: Lightning Slash|
 SLPS_019.60|Soukou Kihei Votoms: Lightning Slash (Limited Edition)|
 SLPM_803.60|Soukou Kihei Votoms: Lightning Slash (Taikenban)|
@@ -9631,7 +9615,6 @@ SLPS_015.40|The Legend of Heroes IV: Akai Shizuku|
 SLES_009.03|The Lost World: Jurassic Park|
 SLPS_010.99|The Lost World: Jurassic Park|
 SLUS_005.15|The Lost World: Jurassic Park|
-SLUS_005.15|The Lost World: Jurassic Park: Special Edition|
 SLPM_865.85|The Maestromusic|
 SLPM_865.86|The Maestromusic|
 SLPM_866.79|The Maestromusic: Encore Disc|

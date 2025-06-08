@@ -1013,7 +1013,6 @@ SLUS_004.22|breath-of-fire-iii
 SLPM_801.15|breath-of-fire-iii
 SLES_035.52|breath-of-fire-iv
 SLUS_013.24|breath-of-fire-iv
-SLPS_027.28|breath-of-fire-iv-e3-demo
 SLPM_871.59|breath-of-fire-iv-utsurowazaru-mono
 SLPS_027.28|breath-of-fire-iv-utsurowazaru-mono
 SLPM_870.54|breed-master
@@ -1086,7 +1085,6 @@ SLUS_011.59|bust-a-groove-2
 PAPX_900.28|bust-a-move
 SLPS_012.32|bust-a-move
 SLPS_012.37|bust-a-move
-SLPS_012.32|bust-a-move
 SLPS_012.33|bust-a-move
 SLPM_862.19|bust-a-move-2-dance-tengoku-mix
 SLPM_804.10|bust-a-move-2-dance-tengoku-mix
@@ -4495,7 +4493,6 @@ SLPM_868.94|jet-copter-x
 SCUS_943.09|jet-moto
 SCPS_100.63|jet-moto-98
 SCUS_941.67|jet-moto-2
-SCUS_941.67|jet-moto-2-championship-edition
 SCUS_945.55|jet-moto-3
 SCUS_943.84|jet-moto-3
 SCES_005.66|jet-rider
@@ -4641,7 +4638,6 @@ SLPM_871.74|kaette-kita-cyborg-kuro-chan
 SLPS_013.84|kaette-kita-pachio-kun-dream-collection
 SLPS_019.72|kagayaku-kisetsu-e
 SLPS_019.75|kagayaku-kisetsu-e
-SLPS_019.72|kagayaku-kisetsu-e
 SLPS_019.73|kagayaku-kisetsu-e
 SLPM_804.08|kagayaku-kisetsu-e
 SLES_019.67|kagero-deception-ii
@@ -4686,7 +4682,6 @@ SLPS_005.63|karyuujou-ryuu-hangan-hen
 SLPS_005.64|karyuujou-kou-yuukan-hen
 SLPS_016.30|kasei-monogatari
 SLPS_016.29|kasei-monogatari
-SLPS_016.30|kasei-monogatari
 SCED_017.39|katalog-spezial-demo
 SLPS_020.78|katou-hifumi-kudan-shougi-club
 SLPS_020.86|katou-hifumi-kudan-shougi-club
@@ -5822,7 +5817,6 @@ SLPM_870.32|momotarou-dentetsu-v
 SLPM_873.47|momotarou-dentetsu-v
 SLPS_024.56|momotarou-dentetsu-v
 SLPS_024.58|momotarou-dentetsu-v
-SLPS_024.56|momotarou-dentetsu-v
 SLPM_868.88|momotarou-matsuri-ishikawa-rokuemon-no-maki
 LSP05010.101|mona-moki-1-drive-me-wild
 LSP05010.102|mona-moki-1-drive-me-wild
@@ -6095,7 +6089,6 @@ SCUS_945.00|nba-shoot-out
 SCUS_945.52|nba-shoot-out-97
 SCUS_945.61|nba-shootout-2000
 SCUS_945.81|nba-shootout-2001
-SCUS_945.81|nba-shootout-2001
 SCUS_945.82|nba-shootout-2001
 SCUS_946.41|nba-shootout-2002
 SCUS_946.60|nba-shootout-2002
@@ -6240,7 +6233,6 @@ SLUS_900.08|namco-demo-cd
 SLPS_007.65|namco-museum-encore
 SLPS_010.50|namco-museum-encore
 SLPS_911.63|namco-museum-encore
-SLPS_007.65|namco-museum-encore
 SCES_002.43|namco-museum-vol-1
 SLPS_001.07|namco-museum-vol-1
 SLPS_911.58|namco-museum-vol-1
@@ -6274,7 +6266,6 @@ SLPS_030.49|naniwa-kinyuudou-aoki-yuji-no-seken-munazanyou
 SLPS_012.06|naniwa-wangan-battle-tarzan-yamada-autoselect-sawa-kyoudai
 SLPS_025.35|naniwa-wangan-battle-tarzan-yamada-autoselect-sawa-kyoudai
 SLPM_803.01|naniwa-wangan-battle-tarzan-yamada-autoselect-sawa-kyoudai
-SLPS_012.06|naniwa-wangan-battle-tarzan-yamada-autoselect-sawa-kyoudai
 SLPS_007.68|naniwa-no-akindo-futte-nanbo-no-saikoro-jinsei
 SLES_003.29|nanotek-warrior
 SLPS_008.35|nanotek-warrior
@@ -6537,7 +6528,6 @@ SLES_008.41|oddworld-abes-oddysee
 SLUS_001.90|oddworld-abes-oddysee
 SLED_007.25|oddworld-abes-oddysee
 SLUS_900.04|oddworld-abes-oddysee
-SLUS_001.90|oddworld-abes-oddysee
 SLES_015.02|oddworld-lexode-dabe
 SLES_115.02|oddworld-lexode-dabe
 SLES_008.38|oddworld-lodyssee-dabe
@@ -7914,20 +7904,16 @@ SLPS_022.01|sd-gundam-g-generation-0-g-zero
 SLPS_032.07|sd-gundam-g-generation-0-g-zero
 SLPS_029.00|sd-gundam-ggeneration-f
 SLPS_029.12|sd-gundam-ggeneration-f
-SLPM_840.04|sd-gundam-ggeneration-f-tokubetsu-ban
-SLPS_029.00|sd-gundam-ggeneration-f-tokubetsu-ban
+SLPM_840.04|sd-gundam-ggeneration-f
 SLPS_029.01|sd-gundam-ggeneration-f
 SLPS_029.13|sd-gundam-ggeneration-f
-SLPM_840.05|sd-gundam-ggeneration-f-tokubetsu-ban
-SLPS_029.01|sd-gundam-ggeneration-f-tokubetsu-ban
+SLPM_840.05|sd-gundam-ggeneration-f
 SLPS_029.02|sd-gundam-ggeneration-f
 SLPS_029.14|sd-gundam-ggeneration-f
-SLPM_840.06|sd-gundam-ggeneration-f-tokubetsu-ban
-SLPS_029.02|sd-gundam-ggeneration-f-tokubetsu-ban
+SLPM_840.06|sd-gundam-ggeneration-f
 SLPS_029.15|sd-gundam-ggeneration-f-premium-disc
+SLPM_840.07|sd-gundam-ggeneration-f-premium-disc
 SLPS_029.03|sd-gundam-ggeneration-f-premium-disc
-SLPM_840.07|sd-gundam-ggeneration-f-premium-disc-tokubetsu-ban
-SLPS_029.03|sd-gundam-ggeneration-f-premium-disc-tokubetsu-ban
 SLPS_031.95|sd-gundam-ggeneration-fif
 SLPS_003.85|sd-gundam-over-galaxian
 SLPM_860.91|snk-fan-collection-garou-densetsu
@@ -8000,7 +7986,6 @@ SLUS_005.05|san-francisco-rush-extreme-racing
 SLPM_868.60|sangoku-musou
 SLPS_007.31|sangoku-musou
 SLPM_800.85|sangoku-musou
-SLPS_007.31|sangoku-musou
 SLPM_867.44|sangokushi-eiketsuden
 SLPS_003.09|sangokushi-eiketsuden
 SLPM_866.07|sangokushi-ii
@@ -8575,7 +8560,6 @@ SLPS_009.82|soukou-kihei-votoms-gaiden-ao-no-kishi-berserga-monogatari
 SLPS_009.81|soukou-kihei-votoms-gaiden-ao-no-kishi-berserga-monogatari
 SLPS_023.15|soukou-kihei-votoms-koutetsu-no-gunzei
 SLPS_023.13|soukou-kihei-votoms-koutetsu-no-gunzei
-SLPS_023.15|soukou-kihei-votoms-koutetsu-no-gunzei
 SLPS_019.61|soukou-kihei-votoms-lightning-slash
 SLPS_019.60|soukou-kihei-votoms-lightning-slash
 SLPM_803.60|soukou-kihei-votoms-lightning-slash
@@ -9630,7 +9614,6 @@ SLPS_012.01|the-legend-of-heroes-iii-shiroki-majo-mou-hitotsu-no-eiyuu-tachi-no-
 SLPS_015.40|the-legend-of-heroes-iv-akai-shizuku
 SLES_009.03|the-lost-world-jurassic-park
 SLPS_010.99|the-lost-world-jurassic-park
-SLUS_005.15|the-lost-world-jurassic-park
 SLUS_005.15|the-lost-world-jurassic-park
 SLPM_865.85|the-maestromusic
 SLPM_865.86|the-maestromusic
@@ -11530,7 +11513,7 @@ SLPS_732.47|armored-core-last-raven
 SLUS_213.38|armored-core-last-raven
 SLPM_611.19|armored-core-last-raven
 SLPM_611.18|armored-core-last-raven-gentei
-SLPM_685.20|armored-core-last-raven-tokubetsu-ban
+SLPM_685.20|armored-core-last-raven
 SLES_820.36|armored-core-nexus
 SLPS_253.38|armored-core-nexus
 SLUS_209.86|armored-core-nexus
@@ -11813,7 +11796,7 @@ SLES_541.50|bionicle-heroes
 SLPM_666.45|bionicle-heroes
 SLUS_214.28|bionicle-heroes
 SLPM_653.48|bistro-cupid-2
-SLPM_653.47|bistro-cupid-2-tokubetsu-ban
+SLPM_653.47|bistro-cupid-2
 SLES_538.86|black
 SLES_540.30|black
 SLKA_253.72|black
@@ -15891,7 +15874,7 @@ SLPM_620.12|keyboardmania
 SLPM_650.94|keyboardmania-ii-2nd-mix-3rd-mix
 SLES_536.83|kiddies-party-pack
 SLPS_250.20|kidou-senshi-gundam
-SLPM_685.01|kidou-senshi-gundam-tokubetsu-ban
+SLPM_685.01|kidou-senshi-gundam
 SLKA_254.41|kidou-senshi-gundam-00-gundam-meisters
 SLPS_259.00|kidou-senshi-gundam-00-gundam-meisters
 SLPS_203.00|kidou-senshi-gundam-seed
@@ -17454,7 +17437,6 @@ SLUS_202.73|namco-museum-2001
 SLES_539.57|namco-museum-50th-anniversary
 SLPS_255.90|namco-museum-arcade-hits
 SLUS_291.34|namco-transmission-vol-2
-SLUS_206.43|namco-transmission-v1-03
 SLUS_290.71|namco-transmission-v1-03
 SLUS_291.33|namco-transmission-v2
 SLUS_291.74|namco-transmission-v3-1
@@ -19635,8 +19617,8 @@ SLPS_203.26|shougi-world-champion-gekisashi-2
 SLPM_666.33|shoujo-mahou-gaku-littlewitch-romanesque-aria-to-kaya-to-kuro-no-tou
 SLPM_653.64|shoujo-yoshitsune-den
 SLPM_660.41|shoujo-yoshitsune-den
-SLPM_653.63|shoujo-yoshitsune-den-tokubetsu-ban
-SLPM_659.88|shoujo-yoshitsune-den-ni-toki-o-koeru-chigiri-tokubetsu-ban
+SLPM_653.63|shoujo-yoshitsune-den
+SLPM_659.88|shoujo-yoshitsune-den-ni-toki-o-koeru-chigiri
 SLPM_626.19|shoujo-yoshitsune-jong-benkei-no-naki-dokoro
 SLPM_668.72|shoukan-shoujo-elemental-girl-calling
 SLPM_667.30|shounen-onmyouji-tsubasa-yo-ima-sora-e-kaere
@@ -19793,7 +19775,6 @@ SLPS_204.97|the-survival-game-2
 SLPM_622.23|the-off-road-buggy
 SLPS_205.00|the-saigo-no-nihonhei-utsukushiki-kokudo-dakkan-sakusen
 SLPS_205.03|the-boku-no-machi-zukuri-2-matching-maker-2-1
-SLPS_256.96|onna-no-ko-senyou-the-ningyo-hime-monogatari-mermaid-prism
 SLPS_258.33|onna-no-ko-senyou-the-ningyo-hime-monogatari-mermaid-prism
 SLPS_257.23|the-office-love-jikenbo-reijou-tantei
 SLPS_258.74|the-office-love-jikenbo-reijou-tantei
@@ -22517,7 +22498,7 @@ SLES_536.96|zathura-a-space-adventure
 SLUS_213.36|zathura-a-space-adventure
 SLPS_250.48|zeonic-front-kidou-senshi-gundam-0079
 SLPM_601.33|zeonic-front-kidou-senshi-gundam-0079
-SLPM_685.02|zeonic-front-kidou-senshi-gundam-0079-tokubetsu-ban
+SLPM_685.02|zeonic-front-kidou-senshi-gundam-0079
 SCPS_560.08|zero
 SLPS_250.74|zero
 SLPS_732.55|zero
