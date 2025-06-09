@@ -146,7 +146,7 @@ error_msg() {
 MOUNT_OPL() {
     echo | tee -a "${LOG_FILE}"
     echo "Mounting OPL partition..." | tee -a "${LOG_FILE}"
-    mkdir -p "${OPL}" 2>>"${LOG_FILE}" || msg "Error" "Failed to create ${OPL}."
+    mkdir -p "${OPL}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${OPL}."
 
     sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
 
@@ -157,14 +157,14 @@ MOUNT_OPL() {
     fi
 
     if [ $? -ne 0 ]; then
-        msg "Error" "Failed to mount ${DEVICE}3"
+        error_msg "Error" "Failed to mount ${DEVICE}3"
     fi
 
     # Create necessary folders if they don't exist
     for folder in APPS ART CFG CHT LNG THM VMC CD DVD bbnl; do
         dir="${OPL}/${folder}"
         [[ -d "$dir" ]] || mkdir -p "$dir" || { 
-            msg "Error" "Failed to create $dir."
+            error_msg "Error" "Failed to create $dir."
         }
     done
 }
