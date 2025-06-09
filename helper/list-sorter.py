@@ -179,7 +179,7 @@ def sort_games_list(games_list_path):
         normalized = ''.join(c for c in normalized if c.isalnum() or c.isspace())
 
         result = normalized.lower()
-        print(f"{repr(first_field)} → {repr(result)}, game_id={repr(game_id)}")
+        # print(f"{repr(first_field)} → {repr(result)}, game_id={repr(game_id)}")
         return (result, game_id.lower())
 
 
