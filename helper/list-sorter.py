@@ -150,11 +150,26 @@ def sort_games_list(games_list_path):
 
         # Replace Roman numerals with digits (whole words only)
         roman_map = {
-            r'\bI\b': '1', r'\bII\b': '2', r'\bIII\b': '3', r'\bIV\b': '4',
-            r'\bV\b': '5', r'\bVI\b': '6', r'\bVII\b': '7', r'\bVIII\b': '8',
-            r'\bIX\b': '9', r'\bX\b': '10', r'\bXI\b': '11', r'\bXII\b': '12',
-            r'\bXIII\b': '13', r'\bXIV\b': '14', r'\bXV\b': '15', r'\bXVI\b': '16',
-            r'\bXVII\b': '17', r'\bXVIII\b': '18', r'\bXIX\b': '19', r'\bXX\b': '20'
+            r'(?<![\w-])I(?![\w-])': '1',
+            r'(?<![\w-])II(?![\w-])': '2',
+            r'(?<![\w-])III(?![\w-])': '3',
+            r'(?<![\w-])IV(?![\w-])': '4',
+            r'(?<![\w-])V(?![\w-])': '5',
+            r'(?<![\w-])VI(?![\w-])': '6',
+            r'(?<![\w-])VII(?![\w-])': '7',
+            r'(?<![\w-])VIII(?![\w-])': '8',
+            r'(?<![\w-])IX(?![\w-])': '9',
+            r'(?<![\w-])X(?![\w-])': '10',
+            r'(?<![\w-])XI(?![\w-])': '11',
+            r'(?<![\w-])XII(?![\w-])': '12',
+            r'(?<![\w-])XIII(?![\w-])': '13',
+            r'(?<![\w-])XIV(?![\w-])': '14',
+            r'(?<![\w-])XV(?![\w-])': '15',
+            r'(?<![\w-])XVI(?![\w-])': '16',
+            r'(?<![\w-])XVII(?![\w-])': '17',
+            r'(?<![\w-])XVIII(?![\w-])': '18',
+            r'(?<![\w-])XIX(?![\w-])': '19',
+            r'(?<![\w-])XX(?![\w-])': '20',
         }
 
         for roman_pattern, digit in roman_map.items():
@@ -164,7 +179,7 @@ def sort_games_list(games_list_path):
         normalized = ''.join(c for c in normalized if c.isalnum() or c.isspace())
 
         result = normalized.lower()
-        # print(f"{repr(first_field)} → {repr(result)}, game_id={repr(game_id)}")
+        print(f"{repr(first_field)} → {repr(result)}, game_id={repr(game_id)}")
         return (result, game_id.lower())
 
 
