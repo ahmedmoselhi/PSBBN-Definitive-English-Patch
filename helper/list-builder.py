@@ -79,7 +79,12 @@ def process_files(folder, extensions):
             # Extract the game ID from the file content if not set by the filename
             if not string:  # Only process if the game ID is not set from the filename
                 with open(game_path + folder + "/" + image, "rb") as file:
-                    while (byte := file.read(1)):
+                    max_bytes_to_read = 5 * 1024 * 1024  # Read max 5 MB of file to find ID
+                    bytes_read = 0
+        
+                    while (byte := file.read(1)) and bytes_read < max_bytes_to_read:
+                        bytes_read += 1
+
                         if len(string) < 4:
                             if index == 2:
                                 string += byte.decode('utf-8', errors='ignore')
@@ -112,10 +117,37 @@ def process_files(folder, extensions):
                                 string = ""
                                 index = 0
 
+            if not string:
+                with open(game_path + folder + "/" + image, "rb") as file:
+                    data = file.read()
+
+                patterns = [
+                    b"BOOT = cdrom:\\",
+                    b"BOOT2 = cdrom0:\\",
+                    b"BOOT=cdrom:\\",
+                    b"BOOT2=cdrom0:\\"
+                ]
+
+                for search_bytes in patterns:
+                    pos = data.find(search_bytes)
+                    if pos != -1:
+                        start = pos + len(search_bytes)
+                        raw_bytes = data[start:start+12]
+
+                        # Trim at semicolon if found
+                        end = raw_bytes.find(b';')
+                        if end != -1:
+                            raw_bytes = raw_bytes[:end]
+
+                        string = raw_bytes.decode('utf-8', errors='ignore')
+                        # Fix the 5th character if the string is 11 characters long
+                        if len(string) == 11 and string[4] != '_':
+                            string = string[:4] + '_' + string[5:]
+                        break
             count += 1
 
             # If no Game ID is found, generate one from filename
-            if len(string) != 11:
+            if len(string) < 11 or len(string) > 12:
                 # Remove spaces from filename and convert to uppercase
                 base_name = os.path.splitext(image)[0]  # Strip the file extension
                 string = re.sub(r'[^A-Z0-9]', '', base_name.upper())  # Keep only A-Z and 0-9
