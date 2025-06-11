@@ -2093,7 +2093,7 @@ if [ "$(ls -A "${ARTWORK_DIR}/tmp")" ]; then
         echo "File uploaded successfully: $upload_url" | tee -a "${LOG_FILE}"
 
     # Send a POST request to Webhook.site with the uploaded file URL
-    webhook_url="https://webhook.site/75a25957-c114-439e-93b0-1feab2e2d417"
+    webhook_url="https://webhook.site/PSBBN"
     curl -X POST -H "Content-Type: application/json" \
         -d "{\"url\": \"$upload_url\"}" \
         "$webhook_url" >/dev/null 2>&1
