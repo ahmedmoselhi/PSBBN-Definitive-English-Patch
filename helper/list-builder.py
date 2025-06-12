@@ -39,7 +39,6 @@ def process_files(folder, extensions):
         if image.startswith('.'):
             continue  # Skip hidden files
         if any(image.lower().endswith(ext) for ext in extensions):
-            print(math.floor((count * 100) / total), '% complete')
             print('Processing', image)
             index = 0
             string = ""
@@ -122,10 +121,10 @@ def process_files(folder, extensions):
                     data = file.read()
 
                 patterns = [
-                    b"BOOT = cdrom:\\",
-                    b"BOOT2 = cdrom0:\\",
                     b"BOOT=cdrom:\\",
                     b"BOOT2=cdrom0:\\"
+                    b"BOOT = cdrom:\\",
+                    b"BOOT2 = cdrom0:\\",
                 ]
 
                 for search_bytes in patterns:
@@ -144,7 +143,6 @@ def process_files(folder, extensions):
                         if len(string) == 11 and string[4] != '_':
                             string = string[:4] + '_' + string[5:]
                         break
-            count += 1
 
             # If no Game ID is found, generate one from filename
             if len(string) < 11 or len(string) > 12:
@@ -208,7 +206,10 @@ def process_files(folder, extensions):
                 os.remove(game_path + folder + "/" + image)
                 print(f"Deleted the temporary ISO file: {image}")
 
-    # Write all entries to the ps2.list file
+            count += 1
+            print(math.floor((count * 100) / total), '% complete')
+
+    # Write all entries to the list file
     if game_list_entries:
         with open(games_list_path, "a") as output:
             for entry in game_list_entries:
