@@ -2167,13 +2167,14 @@ fi
 
 cp "${MISSING_ART}" "${ARTWORK_DIR}/tmp" >> "${LOG_FILE}" 2>&1
 cp "${MISSING_APP_ART}" "${ARTWORK_DIR}/tmp" >> "${LOG_FILE}" 2>&1
-cp "${MISSING_ICON}" "${ARTWORK_DIR}/tmp" >> "${LOG_FILE}" 2>&1
+cp "${MISSING_ICON}" "${ICONS_DIR}/ico/tmp" >> "${LOG_FILE}" 2>&1
 
 if [ "$(ls -A "${ARTWORK_DIR}/tmp")" ]; then
     echo | tee -a "${LOG_FILE}"
     echo "Contributing to the PSBBN art & HDD-OSD databases..." | tee -a "${LOG_FILE}"
     cd "${ICONS_DIR}/ico/tmp/"
-    zip -r "${ARTWORK_DIR}/tmp/ico.zip" *.ico
+    rm *.png
+    zip -r "${ARTWORK_DIR}/tmp/ico.zip" *
     cd "${ARTWORK_DIR}/tmp/"
     zip -r "${ARTWORK_DIR}/tmp/art.zip" *
     # Upload the file using transfer.sh
