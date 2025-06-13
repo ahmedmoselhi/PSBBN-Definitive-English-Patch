@@ -314,15 +314,11 @@ Recommended usage:
 
 ![APA-Jail Type-A2](https://github.com/user-attachments/assets/8c83dab7-f49f-4a77-b641-9f63d92c85e7)
 
-APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. This setup allows PSBBN to access the first 128 GB of the HDD/SSD directly. All remaining space on the drive (up to 2 TB) is formatted as exFAT.
+APA-Jail, created and developed by [Berion](https://www.psx-place.com/resources/authors/berion.1431/), enables the PS2's APA partitions to coexist with an exFAT partition. The first 128 GB of the HDD/SSD are reserved for APA partitions, while the remaining space (up to 2 TB) is formatted as exFAT. This setup allows PSBBN to access the first 128 GB directly.
 
-An application called [BBN Launcher](https://github.com/pcm720/bbnl) resides on the APA partitions, a [pre-release build of Open PS2 Loader](#open-ps2-loader-opl) and [Neutrino](#neutrino-and-nhddl) reside on the exFAT partition, along with the PS2 games in the `ISO` or `ZSO` format.
+An application called [BBN Launcher](https://github.com/pcm720/bbnl) resides on the APA partitions and directs [Open PS2 Loader](#open-ps2-loader-opl) or [Neutrino](#neutrino-and-nhddl) to launch specific PS2 games and apps from the exFAT partition.
 
-The exFAT partition can be accessed on a PC and on the PS2 by [BBN Launcher](https://github.com/pcm720/bbnl), a [pre-release build of Open PS2 Loader](#open-ps2-loader-opl) and [Neutrino](#neutrino-and-nhddl).
-
-[BBN Launcher](https://github.com/pcm720/bbnl) directs [Open PS2 Loader](#open-ps2-loader-opl) or [Neutrino](#neutrino-and-nhddl) to launch specific PS2 games.
-
-<font size="4"><b>Warning: Creating new partitions manually on your PS2 drive and exceeding the 128 GB limit will cause drive corruption.</b></font>
+<font size="4"><b>Warning: Manually creating new APA partitions on your PS2 drive and exceeding the 128 GB limit will corrupt the drive.</b></font>
 
 # Legacy versions of the PSBBN Definitive English Patch
 
