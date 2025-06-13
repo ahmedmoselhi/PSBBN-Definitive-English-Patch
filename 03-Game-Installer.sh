@@ -22,6 +22,7 @@ NEUTRINO_DIR="${ASSETS_DIR}/neutrino"
 LOG_FILE="${TOOLKIT_PATH}/game-installer.log"
 MISSING_ART=${TOOLKIT_PATH}/missing-art.log
 MISSING_APP_ART=${TOOLKIT_PATH}/missing-app-art.log
+MISSING_ICON=${TOOLKIT_PATH}/missing-icon.log
 GAMES_PATH="${TOOLKIT_PATH}/games"
 CONFIG_FILE="${TOOLKIT_PATH}/gamepath.cfg"
 
@@ -114,7 +115,7 @@ clean_up() {
     done
 
     # Remove listed files
-    sudo rm -f "${PS1_LIST}" "${PS2_LIST}" "${ALL_GAMES}" "${ARTWORK_DIR}/tmp"/* "${TOOLKIT_PATH}/ps1.list.tmp" 2>>"$LOG_FILE" \
+    sudo rm -f "${PS1_LIST}" "${PS2_LIST}" "${ALL_GAMES}" "${ARTWORK_DIR}/tmp"/* "${ICONS_DIR}/ico/tmp"/* "${TOOLKIT_PATH}/ps1.list.tmp" 2>>"$LOG_FILE" \
         || { echo "Error: Cleanup failed. See ${LOG_FILE} for details."; exit 1; }
 }
 
@@ -933,7 +934,7 @@ date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 
 clean_up
-sudo rm -f "$MISSING_ART" "$MISSING_APP_ART" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to remove missing artwork files. See ${LOG_FILE} for details."
+sudo rm -f "${MISSING_ART}" "${MISSING_APP_ART}" ${MISSING_ICON} 2>>"${LOG_FILE}" || error_msg "Error" "Failed to remove missing artwork files. See ${LOG_FILE} for details."
 
 # Check if the current directory is a Git repository
 if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
@@ -1375,10 +1376,11 @@ echo | tee -a "${LOG_FILE}"
 echo -n "Preparing to create assets..."
 echo | tee -a "${LOG_FILE}"
 
-mkdir "${ICONS_DIR}/bbnl" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ICONS_DIR}/bbnl."
-mkdir "${ICONS_DIR}/SAS" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ICONS_DIR}/SAS."
-mkdir "${ICONS_DIR}/APPS" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ICONS_DIR}/APPS."
+mkdir -p "${ICONS_DIR}/bbnl" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ICONS_DIR}/bbnl."
+mkdir -p "${ICONS_DIR}/SAS" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ICONS_DIR}/SAS."
+mkdir -p "${ICONS_DIR}/APPS" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ICONS_DIR}/APPS."
 mkdir -p "${ARTWORK_DIR}/tmp" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ARTWORK_DIR}/tmp."
+mkdir -p "${TOOLKIT_PATH}/icons/ico/tmp" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${TOOLKIT_PATH}/icons/ico/tmp."
 
 # Set maximum number of items for the Game Channel (799 + 1 for chosen launcher)
 pp_cap="799"
@@ -1713,6 +1715,105 @@ if [ -f "$ALL_GAMES" ]; then
     cp ${ARTWORK_DIR}/tmp/* ${ARTWORK_DIR} >> "${LOG_FILE}" 2>&1
 
     echo | tee -a "${LOG_FILE}"
+    echo "Dowbloading HDD-OSD icons for games:"  | tee -a "${LOG_FILE}"
+
+    exec 3< "$ALL_GAMES"
+    while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+
+        ico_file="${ICONS_DIR}/ico/$game_id.ico"
+        
+        if [[ ! -s "$ico_file" ]]; then
+            # Attempt to download icon using wget
+            echo -n "Icon not found locally for $game_id. Attempting to download from the HDD-OSD icon database..." | tee -a "${LOG_FILE}"
+            echo | tee -a "${LOG_FILE}"
+            wget --quiet --timeout=10 --tries=3 --output-document="$ico_file" \
+            "https://raw.githubusercontent.com/CosmicScale/HDD-OSD-Icon-Database/main/ico/${game_id}.ico"
+            if [[ -s "$ico_file" ]]; then
+                echo "Successfully downloaded icon for ${game_id}." | tee -a "${LOG_FILE}"
+                echo | tee -a "${LOG_FILE}"
+            else
+                # If wget fails, run the art downloader
+                [[ -f "$ico_file" ]] && rm -f "$ico_file"
+
+                png_file_cov="${TOOLKIT_PATH}/icons/ico/tmp/${game_id}_COV.png"
+                png_file_cov2="${TOOLKIT_PATH}/icons/ico/tmp/${game_id}_COV2.png"
+                png_file_lab="${TOOLKIT_PATH}/icons/ico/tmp/${game_id}_LAB.png"
+
+                echo -n "Icon not found on database. Downloading icon assets for $game_id..." | tee -a "${LOG_FILE}"
+
+                if [[ -s "${GAMES_PATH}/ART/${game_id}_COV.png" ]]; then
+                    cp "${GAMES_PATH}/ART/${game_id}_COV.png" "${png_file_cov}"
+                else
+                    wget --quiet --timeout=10 --tries=3 --output-document="${png_file_cov}" \
+                    "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS1/${game_id}/${game_id}_COV.png"
+                fi
+
+                if [[ -s "$png_file_cov" && "$disc_type" != "POPS" ]]; then
+                    wget --quiet --timeout=10 --tries=3 --output-document="$png_file_cov2" \
+                    "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS2/${game_id}/${game_id}_COV2.png"
+                    wget --quiet --timeout=10 --tries=3 --output-document="$png_file_lab" \
+                    "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS2/${game_id}/${game_id}_LAB.png"
+                elif [[ -s "$png_file_cov" && "$disc_type" == "POPS" ]]; then
+                    wget --quiet --timeout=10 --tries=3 --output-document="$png_file_cov2" \
+                    "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS1/${game_id}/${game_id}_COV2.png"
+                    wget --quiet --timeout=10 --tries=3 --output-document="$png_file_lab" \
+                    "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS1/${game_id}/${game_id}_LAB.png"
+                fi
+
+                echo | tee -a "${LOG_FILE}"
+
+                if [[ ! -s "$png_file_lab" ]]; then
+                    if [[ "${game_id:2:1}" == "E" ]]; then
+                        if [[ "$disc_type" != "POPS" ]]; then
+                            cp "${ASSETS_DIR}/Icon-templates/PS2_LAB_PAL.png" "${png_file_lab}"
+                        else
+                            cp "${ASSETS_DIR}/Icon-templates/PS1_LAB_PAL.png" "${png_file_lab}"
+                        fi
+                    elif [[ "${game_id:2:1}" == "U" || "${game_id:0:1}" == "L" ]]; then
+                        if [[ "$disc_type" != "POPS" ]]; then
+                            cp "${ASSETS_DIR}/Icon-templates/PS2_LAB_USA.png" "${png_file_lab}"
+                    else
+                            cp "${ASSETS_DIR}/Icon-templates/PS1_LAB_USA.png" "${png_file_lab}"
+                        fi
+                    else
+                        if [[ "$disc_type" != "POPS" ]]; then
+                            cp "${ASSETS_DIR}/Icon-templates/PS2_LAB_JPN.png" "${png_file_lab}"
+                        else
+                            cp "${ASSETS_DIR}/Icon-templates/PS1_LAB_JPN.png" "${png_file_lab}"
+                        fi
+                    fi
+                fi
+
+                if [[ -s "$png_file_cov" && -s "$png_file_cov2" && -s "$png_file_lab" ]]; then
+                    echo -n "Creating HDD-OSD icon for $game_id..." | tee -a "${LOG_FILE}"
+                    if [[ "$disc_type" != "POPS" ]]; then
+                        if [[ "${game_id:2:1}" == "E" ]]; then
+                            "${HELPER_DIR}/ps2iconmaker.sh" $game_id -t 2
+                        else
+                            "${HELPER_DIR}/ps2iconmaker.sh" $game_id -t 1
+                        fi
+                    else
+                        if [[ "${game_id:2:1}" == "U" || "${game_id:0:1}" == "L" ]]; then
+                            "${HELPER_DIR}/ps2iconmaker.sh" $game_id -t 3
+                        elif [[ "${game_id:2:1}" == "E" ]]; then
+                            "${HELPER_DIR}/ps2iconmaker.sh" $game_id -t 6
+                        else
+                            "${HELPER_DIR}/ps2iconmaker.sh" $game_id -t 5
+                        fi
+                    fi
+                    echo | tee -a "${LOG_FILE}"
+                else
+                    echo "Insufficient assets to create icon for $game_id." | tee -a "${LOG_FILE}"
+                    echo | tee -a "${LOG_FILE}"
+                fi
+            fi
+        fi
+    done
+    exec 3<&-
+
+    cp "${ICONS_DIR}/ico/tmp/"*.ico "${ICONS_DIR}/ico/"
+
+    echo | tee -a "${LOG_FILE}"
     echo "Creating Assets for Games:"  | tee -a "${LOG_FILE}"
 
     # Read the file line by line
@@ -1746,18 +1847,17 @@ if [ -f "$ALL_GAMES" ]; then
 
         # Copy the matching .png file and rename it to jkt_001.png
         png_file="${TOOLKIT_PATH}/icons/art/${game_id}.png"
-        if [[ -f "$png_file" ]]; then
+        if [[ -s "$png_file" ]]; then
             cp "$png_file" "${game_dir}/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/jkt_001.png. See ${LOG_FILE} for details."
             echo "Created: $game_dir/jkt_001.png"  | tee -a "${LOG_FILE}"
         else
+            echo "$game_id $title" >> "${MISSING_ART}"
             if [[ "$disc_type" == "POPS" ]]; then
                 cp "${TOOLKIT_PATH}/icons/art/ps1.png" "${game_dir}/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/jkt_001.png. See ${LOG_FILE} for details."
                 echo "Created: $game_dir/jkt_001.png using default PS1 image." | tee -a "${LOG_FILE}"
-                echo "$game_id $title" >> "${MISSING_ART}"
             else
                 cp "${TOOLKIT_PATH}/icons/art/ps2.png" "${game_dir}/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/jkt_001.png. See ${LOG_FILE} for details."
                 echo "Created: $game_dir/jkt_001.png using default PS2 image." | tee -a "${LOG_FILE}"
-                echo "$game_id $title" >> "${MISSING_ART}"
             fi
         fi
 
@@ -1767,34 +1867,21 @@ if [ -f "$ALL_GAMES" ]; then
             cp "${ICONS_DIR}/ico/$game_id.ico" "${game_dir}/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/list.ico. See ${LOG_FILE} for details."
             echo "Created: $game_dir/list.ico"
         else
-            # Attempt to download icon using wget
-            echo -n "Icon not found locally for $game_id. Attempting to download from the HDD-OSD icon database..." | tee -a "${LOG_FILE}"
-            echo | tee -a "${LOG_FILE}"
-            wget --quiet --timeout=10 --tries=3 --output-document="$ico_file" \
-            "https://raw.githubusercontent.com/CosmicScale/HDD-OSD-Icon-Database/main/ico/${game_id}.ico"
-            if [[ -s "$ico_file" ]]; then
-                echo "Successfully downloaded icon for ${game_id}" | tee -a "${LOG_FILE}"
-                cp "${ICONS_DIR}/ico/$game_id.ico" "${game_dir}/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/list.ico. See ${LOG_FILE} for details."
-                echo "Created: $game_dir/list.ico"
-            else
-                # If wget fails, run the art downloader
-                [[ -f "$ico_file" ]] && rm -f "$ico_file"
-
-                case "$disc_type" in
-                DVD)
-                    cp "${ICONS_DIR}/ico/dvd.ico" "${game_dir}/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/list.ico. See ${LOG_FILE} for details."
-                    echo "Created: $game_dir/list.ico using default DVD icon." | tee -a "${LOG_FILE}"
-                ;;
-                CD)
-                    cp "${ICONS_DIR}/ico/cd.ico" "${game_dir}/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/list.ico. See ${LOG_FILE} for details."
-                    echo "Created: $game_dir/list.ico using default CD icon." | tee -a "${LOG_FILE}"
-                ;;
-                POPS)
-                    cp "${ICONS_DIR}/ico/ps1.ico" "${game_dir}/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/list.ico. See ${LOG_FILE} for details."
-                    echo "Created: $game_dir/list.ico using default PS1 icon." | tee -a "${LOG_FILE}"
-                ;;
-                esac
-            fi
+            echo "$game_id $title" >> "${MISSING_ICON}"
+            case "$disc_type" in
+            DVD)
+                cp "${ICONS_DIR}/ico/dvd.ico" "${game_dir}/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/list.ico. See ${LOG_FILE} for details."
+                echo "Created: $game_dir/list.ico using default DVD icon." | tee -a "${LOG_FILE}"
+            ;;
+            CD)
+                cp "${ICONS_DIR}/ico/cd.ico" "${game_dir}/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/list.ico. See ${LOG_FILE} for details."
+                echo "Created: $game_dir/list.ico using default CD icon." | tee -a "${LOG_FILE}"
+            ;;
+            POPS)
+                cp "${ICONS_DIR}/ico/ps1.ico" "${game_dir}/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/list.ico. See ${LOG_FILE} for details."
+                echo "Created: $game_dir/list.ico using default PS1 icon." | tee -a "${LOG_FILE}"
+            ;;
+            esac
         fi
 
         PP_NAME
@@ -2078,14 +2165,17 @@ fi
 
 ################################### Submit missing artwork to the PSBBN Art Database ###################################
 
-cp $MISSING_ART $ARTWORK_DIR/tmp >> "${LOG_FILE}" 2>&1
-cp $MISSING_APP_ART $ARTWORK_DIR/tmp >> "${LOG_FILE}" 2>&1
+cp "${MISSING_ART}" "${ARTWORK_DIR}/tmp" >> "${LOG_FILE}" 2>&1
+cp "${MISSING_APP_ART}" "${ARTWORK_DIR}/tmp" >> "${LOG_FILE}" 2>&1
+cp "${MISSING_ICON}" "${ARTWORK_DIR}/tmp" >> "${LOG_FILE}" 2>&1
 
 if [ "$(ls -A "${ARTWORK_DIR}/tmp")" ]; then
     echo | tee -a "${LOG_FILE}"
-    echo "Contributing to the PSBBN art database..." | tee -a "${LOG_FILE}"
-    cd $ARTWORK_DIR/tmp/
-    zip -r $ARTWORK_DIR/tmp/art.zip *
+    echo "Contributing to the PSBBN art & HDD-OSD databases..." | tee -a "${LOG_FILE}"
+    cd "${ICONS_DIR}/ico/tmp/"
+    zip -r "${ARTWORK_DIR}/tmp/ico.zip" *.ico
+    cd "${ARTWORK_DIR}/tmp/"
+    zip -r "${ARTWORK_DIR}/tmp/art.zip" *
     # Upload the file using transfer.sh
     upload_url=$(curl -F "reqtype=fileupload" -F "time=72h" -F "fileToUpload=@art.zip" https://litterbox.catbox.moe/resources/internals/api.php)
 

@@ -184,6 +184,17 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 - Added a check in each script to ensure it is run using Bash  
 - Updated README.md
 
+##  June 10, 2025
+
+### `list-builder.py`:
+
+- Improved Game ID extraction for edge cases. Handles non-standard IDs like LSP99016.101 and PS1 games with non-standard `system.cnf` files.
+
+##  June 13, 2025
+
+### `03-Game-Installer.sh` & `ps2iconmaker.sh`: 
+
+- The game installer now automatically generates HDD-OSD icons. If cover images for a game are available in the OPL Manager Art Database, an icon will be created with them. All newly generated icons are automatically contributed to the [HDD-OSD Icon Database](https://github.com/cosmicscale/hdd-osd-icon-database).
 
 # Installation scripts
 
@@ -228,7 +239,8 @@ sudo apt install git
 - Downloads artwork for the PSBBN Game Collection from the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database) or IGN if not found in the database
 - Automatically contributes game artwork downloaded from IGN and reports missing artwork to the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database)
 - Downloads cover art for PS2 games from the [OPL Manager art database](https://oplmanager.com/site/?backups) for display in [OPL](#open-ps2-loader-opl)/[NHDDL](#neutrino-and-nhddl)
-- Downloads icons for use with HDD-OSD/Browser 2.0 from the [HDD-OSD Icon Database](https://github.com/cosmicscale/hdd-osd-icon-database)
+- Downloads icons for use with HDD-OSD/Browser 2.0 from the [HDD-OSD Icon Database](https://github.com/cosmicscale/hdd-osd-icon-database). If an icon does not exist but cover images are available in the [OPL Manager art database](https://oplmanager.com/site/?backups), an icon will be created automatically.
+- Automatically contributes HDD-OSD icons and reports missing icons to the [HDD-OSD Icon Database](https://github.com/cosmicscale/hdd-osd-icon-database)
 - Creates [BBN Launcher](https://github.com/pcm720/bbnl) partitions, making games and apps launchable from the PSBBN Game Collection and HDD-OSD
 
 ### Synchronize All Games and Apps
@@ -497,6 +509,7 @@ If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL
 - PSBBN Definitive English Patch project by [CosmicScale](https://github.com/CosmicScale)
 - PSBBN English translation by [CosmicScale](https://github.com/CosmicScale)
 - `01-Setup.sh`, `02-PSBBN-Installer.sh`, `03-Game-Installer.sh`, `04-Extras.sh`, `art_downloader.js`, `list-sorter.py` written by [CosmicScale](https://github.com/CosmicScale)
+- `ps2iconmaker.sh` written by [Sakitoshi](https://github.com/Sakitoshi) and [CosmicScale](https://github.com/CosmicScale)
 - Contains code from `list_builder.py` from [XEB+ neutrino Launcher Plugin](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin) by [sync-on-luma](https://github.com/sync-on-luma), modified by [CosmicScale](https://github.com/CosmicScale)
 - Contains data from `TitlesDB_PS1_English.txt` and `TitlesDB_PS2_English.txt` from the [PFS-BatchKit-Manager](https://github.com/GDX-X/PFS-BatchKit-Manager) by [GDX-X](https://github.com/GDX-X), modified by [CosmicScale](https://github.com/CosmicScale)
 - [PFS Shell](https://github.com/AKuHAK/pfsshell/tree/8Mb) and [HDL Dump](https://github.com/AKuHAK/hdl-dump/tree/8M) with 8MB PFS partition modifications by [AKuHAK](https://github.com/AKuHAK)
