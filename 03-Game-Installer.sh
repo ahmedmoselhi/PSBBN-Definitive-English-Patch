@@ -2168,15 +2168,15 @@ fi
 cp "${MISSING_ART}" "${ARTWORK_DIR}/tmp" >> "${LOG_FILE}" 2>&1
 cp "${MISSING_APP_ART}" "${ARTWORK_DIR}/tmp" >> "${LOG_FILE}" 2>&1
 cp "${MISSING_ICON}" "${ICONS_DIR}/ico/tmp" >> "${LOG_FILE}" 2>&1
+cd "${ICONS_DIR}/ico/tmp/"
+rm *.png >/dev/null 2>&1
+zip -r "${ARTWORK_DIR}/tmp/ico.zip" * >/dev/null 2>&1
+cd "${ARTWORK_DIR}/tmp/" 
+zip -r "${ARTWORK_DIR}/tmp/art.zip" * >/dev/null 2>&1
 
 if [ "$(ls -A "${ARTWORK_DIR}/tmp")" ]; then
     echo | tee -a "${LOG_FILE}"
     echo "Contributing to the PSBBN art & HDD-OSD databases..." | tee -a "${LOG_FILE}"
-    cd "${ICONS_DIR}/ico/tmp/"
-    rm *.png
-    zip -r "${ARTWORK_DIR}/tmp/ico.zip" *
-    cd "${ARTWORK_DIR}/tmp/"
-    zip -r "${ARTWORK_DIR}/tmp/art.zip" *
     # Upload the file using transfer.sh
     upload_url=$(curl -F "reqtype=fileupload" -F "time=72h" -F "fileToUpload=@art.zip" https://litterbox.catbox.moe/resources/internals/api.php)
 
@@ -2193,7 +2193,7 @@ if [ "$(ls -A "${ARTWORK_DIR}/tmp")" ]; then
     fi
 else
     echo | tee -a "${LOG_FILE}"
-    echo "No art work to contribute." | tee -a "${LOG_FILE}"
+    echo "No art work or icons to contribute." | tee -a "${LOG_FILE}"
 fi
 
 echo | tee -a "${LOG_FILE}"
