@@ -1366,13 +1366,12 @@ if [[ -s "${ALL_GAMES}" ]]; then
     echo "Games list successfully created."| tee -a "${LOG_FILE}"
     echo >> "${LOG_FILE}"
     echo "master.list:" >> "${LOG_FILE}"
-    echo "${ALL_GAMES}" >> "${LOG_FILE}"
-    echo >> "${LOG_FILE}"
+    cat "${ALL_GAMES}" >> "${LOG_FILE}"
 fi
 
 ################################### Creating Assets ###################################
 
-echo | tee -a "${LOG_FILE}"
+echo
 echo -n "Preparing to create assets..."
 echo | tee -a "${LOG_FILE}"
 
