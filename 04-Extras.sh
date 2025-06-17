@@ -106,7 +106,7 @@ fi
 # Function to detect PS2 HDD
 
 function detect_drive() {
-    DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
+    DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/.[0-9]*$//')
 
     if [[ -z "$DEVICE" ]]; then
         echo | tee -a "${LOG_FILE}"
