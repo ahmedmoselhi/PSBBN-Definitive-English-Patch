@@ -1810,7 +1810,7 @@ if [ -f "$ALL_GAMES" ]; then
     done
     exec 3<&-
 
-    cp "${ICONS_DIR}/ico/tmp/"*.ico "${ICONS_DIR}/ico/"
+    cp "${ICONS_DIR}/ico/tmp/"*.ico "${ICONS_DIR}/ico/" >/dev/null 2>&1
 
     echo | tee -a "${LOG_FILE}"
     echo "Creating Assets for Games:"  | tee -a "${LOG_FILE}"
