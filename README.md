@@ -43,7 +43,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 - PS2 Linux is pre-installed. See [General Notes](#general-notes) for details
 - Bandai and SCEI online channels have been added to the Game Channel
 - Full [Game ID](#game-id) support for the Pixel FX Retro GEM and MemCard Pro/SD2PSX
-- [PSBBN installer script](#psbbn-installer-script) make setup easy
+- [PSBBN installer script](#psbbn-installer-script) makes setup easy
 - [Game Installer script](#game-installer-script) fully automates the installation of PS1/PS2 games as well as ELF and [SAS-compliant](#save-application-system-sas) homebrew apps
 - A choice of [OPL](#open-ps2-loader-opl) or [Neutrino](#neutrino-and-nhddl) for you game launcher
 - Install [optional extras](#extras-script) such as HDD-OSD and [PS2BBL](#playstation-2-basic-boot-loader-ps2bbl)
@@ -110,7 +110,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 - Updated [NHDDL](#neutrino-and-nhddl) to version MMCE + HDL Beta 4.17
 - Added cover art from the [OPL Manager Art DB backups](https://oplmanager.com/site/index.php?backups). Artwork for PS2 games is now displayed in OPL/NHDDL
 - Added homebrew support to the `03-Game-Installer.sh` script. `ELF` files placed in the local `games/APPS` folder on your PC will be installed and appear in the Game Collection in PSBBN and the Apps tab in OPL
-- Apps now support [Game ID](#game-id) for both the the Pixel FX Retro GEM and MemCard Pro/SD2PSX
+- Apps now support [Game ID](#game-id) for both the Pixel FX Retro GEM and MemCard Pro/SD2PSX
 
 ## SAS, HDD-OSD, PS2BBL & More! (May 01, 2025) - [Click to Watch](https://www.youtube.com/watch?v=vpbHlS8nY58)
 - Added support for the [Save Application System (SAS)](#save-application-system-sas). `PSU` files can now also be placed in the local `games/APPS` folder on your PC and will be installed by the `03-Game-Installer.sh` script
