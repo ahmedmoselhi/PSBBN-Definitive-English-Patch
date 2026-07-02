@@ -61,6 +61,8 @@ Both installation options offer:
 **July 02, 2026 - Enhanced Localization, Game Selector, PS1 on exFAT, POPSLoader, wLaunchELF-R3Z, and R3CONFIGURATOR**
 <p></p>
 
+[![Enhanced Localization, Game Selector, PS1 on exFAT, POPSLoader & more!](https://github.com/user-attachments/assets/c1828dbf-e1ba-4c67-8ae0-ccff79f4a524)](https://youtu.be/Bqf8XCfa0QM)  
+
 **New Features:**
 - A changelog is now displayed before the [Main Menu](#main-menu) whenever a new update is released.
 - The **PSBBN Definitive Project** scripts have been fully localised into English, Japanese, French, Spanish, German, Italian, and Brazilian Portuguese. Your operating system's language is detected automatically, and the project runs in that language, defaulting to English if it is not available. **Windows** users will need to update to the latest version of the **[PSBBN Launcher for Windows](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch/releases/download/latest/PSBBN-Launcher-For-Windows.ps1)** for this feature to work.
