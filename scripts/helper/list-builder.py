@@ -24,14 +24,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import sys
 import os.path
-import math
 import re
 import lz4.block
 import unicodedata
 from struct import unpack
 from collections import defaultdict
+from tqdm import tqdm
 
-done = "Error: No games found."
 total = 0
 count = 0
 
@@ -40,6 +39,14 @@ SECTOR_SIZE = 2048
 
 pattern_1 = [b'\x01', b'\x0D']
 pattern_2 = [b'\x3B', b'\x31']
+
+def hide_cursor():
+    sys.stdout.write("\033[?25l")
+    sys.stdout.flush()
+
+def show_cursor():
+    sys.stdout.write("\033[?25h")
+    sys.stdout.flush()
 
 # Function to count game files in the given folder
 def count_files(folder, extensions):
@@ -191,8 +198,8 @@ def make_partition_label(game_id, title, suffix):
     return partition_label
 
 # Function to process game files in the given folder
-def process_files(folder, extensions):
-    global total, count, done
+def process_files(all_targets):
+    global total, count
 
     game_names = {}
     if os.path.isfile(gameid_file_path):
@@ -207,22 +214,30 @@ def process_files(folder, extensions):
     game_id_counts = defaultdict(int)
     temp_entries = []
 
-    for image in os.listdir(game_path + folder):
-        if image.startswith('.'):
-            continue  # skip hidden files
-        if not any(image.lower().endswith(ext) for ext in extensions):
-            continue  # skip files that are not in the extension list
-        print('Processing', image)
+    images = all_targets
+
+    pbar = tqdm(
+        images,
+        unit="game",
+        position=0,
+        bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}"
+    )
+
+    file_bar = tqdm(total=0, position=1, bar_format="{desc}")
+
+    for folder, image in pbar:
+
+        file_bar.set_description_str(f"Processing: {image}")
+
         game_id = ""
         game_image = image
 
-        file_path = os.path.join(game_path + folder, image)
+        file_path = os.path.join(game_path, folder, image)
 
         # Extract Game ID from filename if it meets the condition
         file_name_without_ext = os.path.splitext(image)[0]
         if len(file_name_without_ext) >= 11 and file_name_without_ext[4] == '_' and file_name_without_ext[8] == '.':
             game_id = file_name_without_ext[:11].upper()
-            print(f"Filename meets condition. Game ID set directly from filename: {game_id}")
 
         # ISO
         if image.lower().endswith('.iso') and not game_id:
@@ -235,9 +250,7 @@ def process_files(folder, extensions):
         if image.lower().endswith('.zso') and not game_id:
             with open(file_path, "rb") as fin:
                 magic, header_size, total_bytes, block_size, ver, align = read_zso_header(fin)
-                if magic != ZISO_MAGIC:
-                    print(f"Skipping invalid ZSO: {image}")
-                else:
+                if magic == ZISO_MAGIC:
                     total_blocks = total_bytes // block_size
                     index_buf = [unpack('I', fin.read(4))[0] for _ in range(total_blocks + 1)]
 
@@ -248,7 +261,7 @@ def process_files(folder, extensions):
 
         # VCD
         if image.lower().endswith('.vcd') and not game_id:
-            with open(game_path + folder + "/" + image, "rb") as file:
+            with open(os.path.join(game_path, folder, image), "rb") as file:
                 for raw_line in file:
                     line = raw_line.strip()
                     line_lower = line.lower()
@@ -336,8 +349,6 @@ def process_files(folder, extensions):
             # Ensure the game_id is exactly 11 characters long
             game_id = game_id[:11]
 
-            print(f'No Game ID found. Generating Game ID based on filename: {game_id}')
-
         game_id = game_id.upper()
 
         # Determine game name and publisher
@@ -352,11 +363,9 @@ def process_files(folder, extensions):
             game_name = clean_name_from_filename(image, game_id)
             publisher = ""
             jpn_title = ""
-            
-        print(f"Game ID '{game_id}' -> Game='{game_name}', Publisher='{publisher}'")
 
         # 1st pass (store + count only)
-        game_type = re.sub(r'^/(?:__\.)?', '', folder)
+        game_type = folder.lstrip("/")
 
         game_id_counts[game_id] += 1
 
@@ -370,7 +379,8 @@ def process_files(folder, extensions):
         })
 
         count += 1
-        print(math.floor((count * 100) / total), '% complete')
+    
+    pbar.update(1)
 
     # 2nd pass (build final entries)
     game_id_index = defaultdict(int)
@@ -402,8 +412,6 @@ def process_files(folder, extensions):
             for entry in game_list_entries:
                 output.write(f"{entry}\n")
 
-    done = "Done!"
-
 def main(arg1, arg2):
     if arg1 and arg2:
         global game_path
@@ -414,13 +422,16 @@ def main(arg1, arg2):
 
         # Set correct TitlesDB path based on output list name
         if games_list_path.endswith("ps2.list"):
-            gameid_file_path = "./scripts/helper/TitlesDB_PS2.csv"
+            gameid_file_path = "./scripts/assets/database/TitlesDB_PS2.csv"
             folders_to_scan = [('/DVD', ['.iso', '.zso']), ('/CD', ['.iso', '.zso'])]
-        elif games_list_path.endswith("ps1.list"):
-            gameid_file_path = "./scripts/helper/TitlesDB_PS1.csv"
+        elif games_list_path.endswith("pfs-pops.list"):
+            gameid_file_path = "./scripts/assets/database/TitlesDB_PS1.csv"
             folders_to_scan = [('/__.POPS', ['.vcd', '.VCD'])]
+        elif games_list_path.endswith("ata-pops.list"):
+            gameid_file_path = "./scripts/assets/database/TitlesDB_PS1.csv"
+            folders_to_scan = [('/POPS', ['.vcd', '.VCD'])]
         else:
-            print("Error: Output list must end with either 'ps2.list' or 'ps1.list'.")
+            print("Error: Output list must end with either 'ps2.list', 'ata-pops.list', or `pfs-pops.list`.")
             sys.exit(1)
 
         # Remove any existing game list file
@@ -428,29 +439,27 @@ def main(arg1, arg2):
             os.remove(games_list_path)
 
         # Count files
+        all_targets = []
+
         for folder, extensions in folders_to_scan:
-            if os.path.isdir(game_path + folder):
-                count_files(folder, extensions)
-            else:
-                print(f'{folder} not found at ' + game_path)
+            full_path = os.path.join(game_path, folder.strip("/"))
+
+            if not os.path.isdir(full_path):
+                print(f'{folder} not found at {game_path}')
                 sys.exit(1)
 
-        if total == 0:
-            if games_list_path.endswith("ps2.list"):
-                print("No PS2 games found in the CD or DVD folder.")
-            elif games_list_path.endswith("ps1.list"):
-                print("No PS1 games found in the POPS folder.")
-            sys.exit(0)
+            for image in os.listdir(full_path):
+                if image.startswith('.'):
+                    continue
+                if any(image.lower().endswith(ext) for ext in extensions):
+                    all_targets.append((folder.strip("/"), image))
 
-        # Process files
-        for folder, extensions in folders_to_scan:
-            if os.path.isdir(game_path + folder):
-                process_files(folder, extensions)
-
-        print(done)
+        process_files(all_targets)
 
 if __name__ == "__main__":
     if len(sys.argv) == 3:
+        hide_cursor()
         main(sys.argv[1], sys.argv[2])
+        show_cursor()
     else:
         print("Usage: build-list.py <game_path> <output_list_path>")

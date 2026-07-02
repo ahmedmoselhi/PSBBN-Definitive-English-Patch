@@ -11,9 +11,9 @@ body:
 
         ---
 
-        ⚠️ **Known issue**: Installing on **Fedora** is currently problematic. It is recommended to use a **Debian-based** distribution or the **PSBBN Launcher for Windows**.
+        ⚠️ **Known issue**: Installing on **Fedora** is currently problematic. It is recommended to use a **Debian-based** distribution or the **[PSBBN Launcher for Windows](#installing-on-windows)**.
 
-        1. Make sure you are running the latest version of your operating system and all updates are installed
+        1. Make sure you are running the latest version of your operating system and all available updates are installed
         2. Use a recommended OS. The **PSBBN Definitive Project** has been fully tested on:
         - Debian
         - Linux Mint
@@ -23,7 +23,7 @@ body:
 
         ## Problems Running the Script
 
-        **If you are using Windows and experience issues:**
+        **If you are using [Windows](#installing-on-windows) and experience issues:**
         1. Open PowerShell as an administrator and run the following command:
         ```
         wsl --unregister PSBBN
@@ -32,7 +32,7 @@ body:
         3. Ensure you have an active internet connection. If you are using a VPN, try disabling it
         4. Run the `PSBBN-Launcher-For-Windows.ps1` script again
 
-        **If you are using Linux and experience issues:**
+        **If you are using [Linux](#installing-on-linux) and experience issues:**
         1. Delete the `PSBBN-Definitive-Project` folder
         2. Re-Clone the repository with the following command:
         ```
@@ -41,24 +41,34 @@ body:
 
         **Still having issues?**
         1. Try connecting the PS2 drive directly to your PC using an internal SATA connection or a USB port directly on the motherboard. Avoid using add-on cards
-        2. If you are using a SATA to USB adapter, try using a different make or model
+        2. If you are using a SATA-to-USB adapter, try using a different make or model
         3. If you still have issues, try a different drive
 
         ## Problems Launching PSBBN and HOSDMenu
-        When you connect the drive to your PS2 console and power it on, **PSBBN** or **HOSDMenu** should automatically launch.
+        When you connect the drive to your PS2 console and power it on, **[PSBBN or HOSDMenu](#boot-options)** should automatically launch.
 
-        If your console boots to the regular OSD or freezes, it means that your drive has not been recognised or you are experiencing a hardware issue. You should check the following:
+        If your console boots to the regular OSD, freezes, or displays an error, you should try the following:
         1. Remove all PS2 Memory Cards from your console
-        2. If you installed **PSBBN**, make sure you are using an **official Sony Network Adapter**; PSBBN does not support 3rd-party HDD adapters
+        2. If you installed [PSBBN](#psbbn), make sure you are using an **official Sony Network Adapter**; PSBBN does not support third-party HDD adapters
         3. Check that the connectors on the console and network or HDD adapter are clean and free of dust/debris
         4. Ensure the network or HDD adapter and drive are securely connected to the console
         5. If using a SATA mod, make sure it has been installed correctly
-        6. Try installing to a different drive
-        7. If your console has an IDE converter or SATA mod installed, try using a different converter/mod.
-        8. Try using a different official Sony Network Adapter or 3rd-party HDD adapter
-        9. Try a different PS2 console
+        6. Use a different drive and reinstall [PSBBN](#install-psbbn-and-hosdmenu) or [HOSDMenu](#install-hosdmenu-only)
+        7. If your console has an IDE converter or SATA mod installed, try using a different converter or mod.
+        8. Use a different official Sony Network Adapter or third-party HDD adapter
+        9. Use a different PS2 console
 
         ## Problems Launching Games
+        If you experience problems launching PS1 games, make sure you have correctly installed the **ATA BDM Assault drivers** on a PS2 Memory Card and that the card is inserted into your console. Installation instructions and a download link can be found [here](#installing-ata-bdm-assault).
+
+        If games fail to launch from the [Game Collection](#game-collection) or [Browser](#hosdmenu), try the following:
+        1. If you have a [mod chip](#known-issues), disable it
+        2. Remove all PS2 Memory Cards from your console
+        3. Check that the connectors on the console and Network or HDD Adapter are clean and free of dust or debris
+        4. Ensure the Network or HDD adapter and drive are securely connected to the console
+        5. If using a SATA mod, make sure it has been installed correctly
+
+        If games still fail to launch, try loading PS2 games using [OPL](#open-ps2-loader-opl) or [NHDDL](#nhddl), and PS1 games using [POPSLoader](#popsloader).
 
         If OPL freezes at startup, delete any existing OPL configuration files from your PS2 Memory Cards or connected USB devices. You can also hold `START` while OPL launches to bypass reading the configuration file.
 
@@ -68,20 +78,12 @@ body:
         3. Settings > BDM Devices > HDD (GPT/MBR): On
         4. Settings > Save Changes
 
-        If games do not appear in the games list in NHDDL or OPL (after modifying the OPL settings as described above):
-        1. Try connecting the PS2 drive directly to your PC using an internal SATA connection or a different SATA to USB adapter. Then reinstall PSBBN or HOSDMenu
-        2. Try using a different drive and then reinstall PSBBN or HOSDMenu
-
-        If games fail to launch from the PSBBN Game Collection or HOSDMenu, try the following:
-        1. If you have a mod chip, disable it
-        2. Remove all PS2 Memory Cards from your console
-        3. Check that the connectors on the console and network or HDD adapter are clean and free of dust/debris
-        4. Ensure the network or HDD adapter and drive are securely connected to the console
-        5. If using a SATA mod, make sure it has been installed correctly
-        6. Re-run the Game Installer and select the alternative game launcher (OPL or NHDDL)
-        7. If your console has an IDE converter or SATA mod installed, try using a different converter/mod.
-        8. Try using a different official Sony Network Adapter or 3rd-party HDD adapter
-        9. Try a different PS2 console
+        If PS2 games do not appear in the games list in [NHDDL](#nhddl) or [OPL](#open-ps2-loader-opl) (after modifying the OPL settings as described above), or PS1 games do not appear in [POPSLoader](#popsloader), try the following:
+        1. Connect the PS2 drive directly to your PC using an internal SATA connection or a different SATA-to-USB adapter, then reinstall [PSBBN](#install-psbbn-and-hosdmenu) or [HOSDMenu](#install-hosdmenu-only)
+        2. Use a different drive and reinstall [PSBBN](#install-psbbn-and-hosdmenu) or [HOSDMenu](#install-hosdmenu-only)
+        3. If your console has an IDE converter or SATA mod installed, try using a different converter or mod
+        4. Use a different official Sony Network Adapter or third-party HDD adapter
+        5. Use a different PS2 console
 
         ---
 
@@ -94,12 +96,12 @@ body:
         - `extras.log`
         - `media.log`
 
-        Linux users can find these log files in `PSBBN-Definitive-Project/logs`. Windows users can find these log files in the same folder where their games and media are stored.
+        Linux users can find these log files in `PSBBN-Definitive-Project/logs`. Windows users can find these log files in the folder where their games and media are stored.
 
   - type: textarea
     id: issue
     attributes:
       label: Describe the issue
-      description: Include relevant logs (setup.log, PSBBN-installer.log, hosdmenu.log, game-installer.log, extras.log) OS, hardware details, and what you already tried.
+      description: Include relevant logs, OS, hardware details, and what you already tried.
     validations:
       required: true

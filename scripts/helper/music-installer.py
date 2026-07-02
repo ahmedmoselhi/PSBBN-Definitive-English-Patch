@@ -30,7 +30,6 @@ import datetime
 import subprocess
 import logging
 import shutil
-import unicodedata
 from io import StringIO
 from collections import defaultdict
 from mutagen import File
@@ -38,7 +37,7 @@ from mutagen.easyid3 import EasyID3
 from mutagen.mp4 import MP4
 from mutagen.flac import FLAC
 from tqdm import tqdm
-from collections import defaultdict
+from unidecode import unidecode
 
 MUSIC_DIR = "media/music"
 SQL_PATH = "scripts/tmp/music_dump.sql"
@@ -138,18 +137,14 @@ def extract_music_data():
 
 # Convert music files and extract meta data:
 def sanitize_folder_name(name, disc=None, total_discs=None):
-    # Lowercase, remove spaces, strip unsupported characters
-    base = re.sub(r'[^a-z0-9]', '', name.lower().replace(' ', ''))
+    ascii_only = unidecode(name)
+    base = re.sub(r'[^a-z0-9]', '', ascii_only.lower())
 
     # Multi-disc handling: shorten to 7 chars, append disc number
     if disc and (disc > 1 or (disc == 1 and total_discs and int(total_discs) > 1)):
         return base[:7] + str(disc)
     else:
         return base[:8]
-    
-def normalize_name(name):
-    # Replace characters outside Latin-1 with their base equivalents if possible
-    return unicodedata.normalize('NFKD', name).encode('latin-1', 'ignore').decode('latin-1')
     
 def parse_disc_number(raw):
     if not raw:
@@ -334,11 +329,6 @@ def music_installer(existing_footers):
             logging.info(f"Skipped: {filepath} ({reason})")
             skipped_files.append((filepath, reason))
             continue
-
-        # Normalize album, artist, and title
-        meta['album'] = normalize_name(meta['album'])
-        meta['artist'] = normalize_name(meta['artist'])
-        meta['title'] = normalize_name(meta['title'])
 
         # Append disc to album title for DB
         if disc and (disc > 1 or (disc == 1 and total_discs and int(total_discs) > 1)):

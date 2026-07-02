@@ -20,6 +20,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+[[ -t 0 && -t 1 ]] || exit 1
+term_width=110
+
 if [[ "$LAUNCHED_BY_MAIN" != "1" ]]; then
     echo "This script should not be run directly. Please run: PSBBN-Definitive-Patch.sh"
     exit 1
@@ -31,6 +34,7 @@ TOOLKIT_PATH="$(pwd)"
 SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
 ASSETS_DIR="${SCRIPTS_DIR}/assets"
 HELPER_DIR="${SCRIPTS_DIR}/helper"
+LANG_DIR="${ASSETS_DIR}/lang"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
 OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/hosdmenu.log"
@@ -52,6 +56,9 @@ elif [[ "$arch" = "aarch64" ]]; then
     APA_FIXER="${HELPER_DIR}/aarch64/PS2 APA Header Checksum Fixer.elf"
 fi
 
+LANG_FILE="$1"
+shift  # remove language
+
 for arg in "$@"; do
     [[ -z "$arg" ]] && continue
 
@@ -62,22 +69,73 @@ for arg in "$@"; do
     fi
 done
 
+declare -A UI_TEXT
+
+if [[ -f "${LANG_DIR}/$LANG_FILE.txt" ]]; then
+    while IFS='=' read -r key value; do
+        [[ -z "$key" ]] && continue
+        UI_TEXT["$key"]="$value"
+    done < "${LANG_DIR}/$LANG_FILE.txt"
+else
+    echo "[X] Error: Language file not found."
+    sleep 3
+    exit 1
+fi
+
+text_width() {
+    python3 -c '
+from wcwidth import wcswidth
+import sys
+print(wcswidth(sys.argv[1]))
+' "$1"
+}
+
+center_title() {
+    local text=" $1 "
+
+    local text_len
+    text_len=$(text_width "$text")
+
+    local total_padding=$(( term_width - text_len ))
+
+    # Prevent negative padding
+    (( total_padding < 0 )) && total_padding=0
+
+    local left_padding=$(( total_padding / 2 ))
+    local right_padding=$(( total_padding - left_padding ))
+
+    printf '%*s' "$left_padding" '' | tr ' ' '='
+    printf '%s' "$text"
+    printf '%*s\n' "$right_padding" '' | tr ' ' '='
+}
+
 APA_PARTITIONS=("__system" "__common" "__sysconf" )
 
+if [ -f "$LOG_FILE" ]; then
+    size=$(stat -c%s "$LOG_FILE" 2>/dev/null || stat -f%z "$LOG_FILE")
+
+    if [ "$size" -gt 4194304 ]; then
+        : > "$LOG_FILE"
+    fi
+fi
+
 error_msg() {
-    error_1="[X] Error: $1"
+    error_1="[X] $1"
     error_2="$2"
     error_3="$3"
     error_4="$4"
 
-    echo | tee -a "${LOG_FILE}"
-    echo | tee -a "${LOG_FILE}"
-    echo "$error_1" | tee -a "${LOG_FILE}"
-    [ -n "$error_2" ] && echo "$error_2" | tee -a "${LOG_FILE}"
-    [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
-    [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
     echo
-    read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
+    echo
+    echo "$error_1"
+    [ -n "$error_2" ] && echo "$error_2"
+    [ -n "$error_3" ] && echo "$error_3"
+    [ -n "$error_4" ] && echo "$error_4"
+    echo
+    echo "${UI_TEXT[ERROR_TROUBLE]}"
+    echo "https://github.com/CosmicScale/PSBBN-Definitive-Project#troubleshooting"
+    echo
+    read -n 1 -s -r -p "${UI_TEXT[MENU_RETURN]}" </dev/tty
     echo
     exit 1
 }
@@ -91,7 +149,10 @@ clean_up() {
         case "$line" in
             "$STORAGE_DIR/"*)
                 echo "Unmounting: <$line>" >> "$LOG_FILE"
-                sudo umount "$line" || error_msg "Error" "Failed to unmount $line"
+                sudo umount "$line" || {
+                    echo "[X] Error: Failed to unmount $line" >> "${LOG_FILE}"
+                    error_msg "${UI_TEXT[ERROR_UNMOUNT_1]} $line"
+                }
                 ;;
         esac
     done
@@ -136,7 +197,8 @@ clean_up() {
     
     # Abort if any failures occurred
     if [ "$failure" -ne 0 ]; then
-        error_msg "Cleanup error(s) occurred. Aborting."
+        echo "[X] Error: Cleanup error(s) occurred. Aborting."
+        error_msg "${UI_TEXT[ERROR_CLEANUP]}"
     fi
 
 }
@@ -151,7 +213,8 @@ exit_script() {
 PFS_COMMANDS() {
     PFS_COMMANDS=$(echo -e "$COMMANDS" | sudo "${PFS_SHELL}" >> "${LOG_FILE}" 2>&1)
     if echo "$PFS_COMMANDS" | grep -q "Exit code is"; then
-        error_msg "PFS Shell returned an error. See ${LOG_FILE}"
+        echo "[X] Error: PFS Shell returned an error." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_PFS_COMMANDS]}"
     fi
 }
 
@@ -164,7 +227,8 @@ mount_pfs() {
             --partition="$PARTITION_NAME" \
             "${DEVICE}" \
             "$MOUNT_POINT" >>"${LOG_FILE}" 2>&1; then
-            error_msg "Failed to mount $PARTITION_NAME partition." "Check the device or filesystem and try again."
+            echo "[X] Error: Failed to mount $PARTITION_NAME" >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_MOUNT_2]} $PARTITION_NAME"
         fi
     done
 }
@@ -195,7 +259,8 @@ BOOTSTRAP() {
 	    # 2000h * 200h = 8192d * 512d = 4194304d = 400000h
 	    sudo dd if="${ASSETS_DIR}/osdmenu/OSDMBR.XLF" of=${DEVICE} bs=1M count=1 seek=4 conv=notrunc >> "${LOG_FILE}" 2>&1
     else
-	    error_msg "Failed to inject bootstrap."
+	    echo "[X] Error: Failed to inject OSDMenu MBR." >> "${LOG_FILE}"
+	    error_msg "${UI_TEXT[ERROR_BOOTSTRAP]}"
     fi
 }
 
@@ -209,10 +274,11 @@ CHECK_PARTITIONS() {
         error_msg "APA partition is broken on ${DEVICE}. Install failed."
     fi
 
-    if echo "${TOC_OUTPUT}" | grep -Eq '\b(__contents|__system|__sysconf|__.POPS|__common)\b'; then
+    if echo "${TOC_OUTPUT}" | grep -Eq '\b(__contents|__system|__sysconf|__common)\b'; then
         echo "All partitions exist." >> "${LOG_FILE}"
     else
-        error_msg "Some partitions are missing on ${DEVICE}. See log for details."
+        echo "[X] Error: Some partitions are missing." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_CHECK_PARTITIONS_2]}"
     fi
 }
 
@@ -227,7 +293,8 @@ UNMOUNT_ALL() {
         if sudo umount "$mount_point"; then
             echo "[✓] Successfully unmounted $mount_point." >> "${LOG_FILE}"
         else
-            error_msg "Failed to unmount $mount_point. Please unmount manually."
+            echo "[X] Error: Failed to unmount $mount_point." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_UNMOUNT_1]} $mount_point."
         fi
     done
 }
@@ -235,13 +302,17 @@ UNMOUNT_ALL() {
 UNMOUNT_OPL() {
     sync
     if ! sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1; then
-        error_msg "Failed to unmount $DEVICE"
+        echo "[X] Error: Failed to unmount $DEVICE" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_UNMOUNT_1]} $DEVICE"
     fi
 }
 
 MOUNT_OPL() {
     echo "Mounting OPL partition." >> "${LOG_FILE}"
-    mkdir -p "${OPL}" 2>>"${LOG_FILE}" || error_msg "Failed to create ${OPL}."
+    mkdir -p "${OPL}" 2>>"${LOG_FILE}" || {
+        echo "[X] Error: Failed to create ${OPL}." >> "${LOG_FILE}" 2>&1
+        error_msg "${UI_TEXT[ERROR_CREATE]} ${OPL}"
+    }
 
     sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
 
@@ -252,7 +323,8 @@ MOUNT_OPL() {
     fi
 
     if [ $? -ne 0 ]; then
-        error_msg "Failed to mount the PS2 drive."
+        echo "[X] Error: Failed to mount ${DEVICE}3" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_MOUNT_2]} ${DEVICE}3"
     fi
 }
 
@@ -261,7 +333,8 @@ HDL_TOC() {
     hdl_output=$(mktemp)
     if ! sudo "${HDL_DUMP}" toc "$DEVICE" 2>>"${LOG_FILE}" > "$hdl_output"; then
         rm -f "$hdl_output"
-        error_msg "Failed to extract list of partitions." "APA partition could be broken on ${DEVICE}"
+        echo "[X] Error: Failed to extract list of partitions. APA partition table could be broken on ${DEVICE}" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_HDL_TOC]}"
     fi
 }
 
@@ -288,34 +361,33 @@ hdd_osd_files_present() {
 download_files() {
 # Check for HDD-OSD files
     if hdd_osd_files_present; then
-        echo | tee -a "${LOG_FILE}"
         echo "All required files are present. Skipping download" >> "${LOG_FILE}"
     else
-        echo | tee -a "${LOG_FILE}"
         echo "Required files are missing in ${ASSETS_DIR}/extras." >> "${LOG_FILE}"
         # Check if extras.zip exists
         if [[ -f "${ASSETS_DIR}/extras.zip" && ! -f "${ASSETS_DIR}/extras.zip.st" ]]; then
-            echo | tee -a "${LOG_FILE}"
-            echo "extras.zip found in ${ASSETS_DIR}. Extracting..." | tee -a "${LOG_FILE}"
+            echo "extras.zip found in ${ASSETS_DIR}. Extracting..." >> "${LOG_FILE}"
             unzip -o "${ASSETS_DIR}/extras.zip" -d "${ASSETS_DIR}" >> "${LOG_FILE}" 2>&1
         else
-            echo | tee -a "${LOG_FILE}"
-            echo -n "Downloading required files..." | tee -a "${LOG_FILE}"
+            echo "Downloading..." >> "${LOG_FILE}"
+            echo -n "${UI_TEXT[DOWNLOAD_LATEST_FILE_2]}..."
             wget --quiet --timeout=10 --tries=3 -O "${ASSETS_DIR}/extras.zip" https://archive.org/download/psbbn-definitive-english-patch-v2/extras.zip
             echo
             if [[ -s "${ASSETS_DIR}/extras.zip" ]]; then
                 unzip -o "${ASSETS_DIR}/extras.zip" -d "${ASSETS_DIR}" >> "${LOG_FILE}" 2>&1
             else
                 rm "${ASSETS_DIR}/extras.zip"
-                error_msg "Download Failed." "Please check the status of archive.org. You may need to use a VPN depending on your location."
+                echo "[X] Error: Download failed for HDD-OSD." >> "${LOG_FILE}" 2>&1
+                error_msg "${UI_TEXT[ERROR_LATEST_FILE_1]} HDD-OSD." "${UI_TEXT[GET_LATEST_FILE_3]}"
             fi
         fi
         # Check if HDD-OSD files exist after extraction
         if hdd_osd_files_present; then
             echo | tee -a "${LOG_FILE}"
-            echo "[✓] Files successfully extracted." | tee -a "${LOG_FILE}"
+            echo "[✓] Files successfully extracted." >> "${LOG_FILE}"
         else
-            error_msg "One or more files are missing after extraction."
+            echo "[X] Error: One or more files are missing after extraction." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_EXTRACTION]}"
         fi
     fi
 }
@@ -342,11 +414,7 @@ if [ $? -ne 0 ]; then
     sudo rm -f "${LOG_FILE}"
     echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
     if [ $? -ne 0 ]; then
-        echo
-        echo "Error: Cannot to create log file."
-        read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
-        echo
-        exit 1
+        error_msg "${UI_TEXT[ERROR_LOG]}"
     fi
 fi
 
@@ -356,6 +424,8 @@ date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 echo "Tootkit path: $TOOLKIT_PATH" >> "${LOG_FILE}"
 echo  >> "${LOG_FILE}"
+echo -n "PSBBN Definitive Project Version: " >> "${LOG_FILE}"
+git rev-parse --short HEAD >> "${LOG_FILE}"
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
 echo >> "${LOG_FILE}"
 echo "Type: $MODE" >> "${LOG_FILE}"
@@ -370,7 +440,8 @@ SPLASH
 download_files
 
 if ! sudo rm -rf "${STORAGE_DIR}"; then
-    error_msg "Failed to remove $STORAGE_DIR folder."
+    echo "[X] Error: Failed to delete $STORAGE_DIR" >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_DELETE]} $STORAGE_DIR"
 fi
 
 # Choose the PS2 storage device
@@ -384,14 +455,14 @@ if [ -z "$DEVICE" ]; then
         lsblk -dp -o NAME,MODEL,SIZE,SERIAL | tee -a "${LOG_FILE}"
         echo | tee -a "${LOG_FILE}"
         
-        read -p "Choose your PS2 HDD from the list above (e.g., /dev/sdx): " DEVICE
+        read -rp "${UI_TEXT[CHOOSE_DRIVE_1]} " DEVICE
         
         # Check if the device exists
         if [[ -n "$DEVICE" ]] && lsblk -dp -n -o NAME | grep -q "^$DEVICE$"; then
             break
         else
             echo
-            echo -n "Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
+            echo -n "${UI_TEXT[CHOOSE_DRIVE_2]}"
             sleep 3
         fi
     done
@@ -405,19 +476,21 @@ SIZE_CHECK=$(lsblk -o NAME,SIZE -b | grep -w $(basename $DEVICE) | awk '{print $
 size_gb=$(echo "$SIZE_CHECK / (1024 * 1024 * 1024)" | bc)
         
 if (( size_gb < 31 )); then
-    error_msg "Device is $size_gb GB. Required minimum is 32 GB."
+    echo "[X] Error: Required minimum is 32 GB. Device is $size_gb GB." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_DRIVE_SIZE]} $size_gb GB."
 else
     echo "Device Name: $DEVICE" >> "${LOG_FILE}"
     [[ -z "$drive_model" ]] && drive_model="$DEVICE"
 
     echo
-    echo "Selected drive: $drive_model" | tee -a "${LOG_FILE}"
+    echo "Selected drive: $drive_model" >> "${LOG_FILE}"
+    echo "${UI_TEXT[CONFIRM_DRIVE_1]} $drive_model"
 
     while true; do
         echo
-        echo "Are you sure you want to install to the selected drive?" | tee -a "${LOG_FILE}"
+        echo "${UI_TEXT[CONFIRM_DRIVE_2]}"
         echo
-        read -p "This will erase all data on the drive. (yes/no): " CONFIRM
+        read -rp "${UI_TEXT[CONFIRM_DRIVE_3]} (yes/no): " CONFIRM
 
         case "$CONFIRM" in
             yes)
@@ -426,13 +499,13 @@ else
                 ;;
             no)
                 echo
-                read -n 1 -s -r -p "Aborted. Press any key to return to the menu..." </dev/tty
+                read -n 1 -s -r -p "${UI_TEXT[MENU_RETURN]}" </dev/tty
                 echo
                 exit 1
                 ;;
             *)
                 echo
-                echo "Please enter 'yes' or 'no'."
+                echo "${UI_TEXT[CONFIRM]} (yes/no)"
                 ;;
         esac
     done
@@ -441,58 +514,52 @@ fi
 UNMOUNT_ALL
 clean_up
 
-echo
-echo "Please select a language from the list below:"
-echo
-echo "1) English"
-echo "2) Japanese"
-echo "3) French"
-echo "4) German"
-echo "5) Italian"
-echo "6) Portuguese (Brazil)"
-echo "7) Spanish"
-echo
-read -p "Enter the number for your chosen language: " choice
-
-case "$choice" in
-    1)
-        LANG="eng"
+case "$LANG_FILE" in
+    eng)
+        lang="eng"
         ;;
-    2)
-        LANG="jpn"
+    jpn)
+        lang="jpn"
         ;;
-    3)
-        LANG="fre"
+    fre)
+        lang="fre"
         ;;
-    4)
-        LANG="ger"
+    ger)
+        lang="ger"
         ;;
-    5)
-        LANG="ita"
+    ita)
+        lang="ita"
         ;;
-    6)
-        LANG="por"
+    por)
+        lang="por"
         ;;
-    7)
-        LANG="spa"
+    spa)
+        lang="spa"
+        ;;
+    hun)
+        lang="hun"
         ;;
     *)
         echo
-        echo "Invalid selection. Defaulting to English." | tee -a "${LOG_FILE}"
-        LANG="eng"
+        echo "Unsupported language. Defaulting to English." >> "${LOG_FILE}"
+        lang="eng"
         ;;
 esac
 
-echo "Language set to: $LANG" >> "${LOG_FILE}"
+echo "Language set to: $lang" >> "${LOG_FILE}"
 
 echo | tee -a "${LOG_FILE}"
-echo -n "Initialising the drive..." | tee -a "${LOG_FILE}"
+echo "Initialising the drive..." >> "${LOG_FILE}"
+echo -n "${UI_TEXT[INITIALISE_DRIVE]}"
 
 {
     sudo wipefs -a ${DEVICE} &&
     sudo dd if=/dev/zero of="${DEVICE}" bs=1M count=100 status=progress &&
     sudo dd if=/dev/zero of="${DEVICE}" bs=1M seek=$(( $(sudo blockdev --getsz "${DEVICE}") / 2048 - 100 )) count=100 status=progress
-} >> "${LOG_FILE}" 2>&1 || error_msg "Failed to Initialising drive"
+} >> "${LOG_FILE}" 2>&1 || {
+        echo "[X] Error: Failed to Initialising drive" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_INITIALISE_DRIVE]}"
+    }
 
 COMMANDS="device ${DEVICE}\n"
 COMMANDS+="initialize yes\n"
@@ -508,54 +575,70 @@ output=$(sudo "${HDL_DUMP}" toc ${DEVICE} 2>&1)
 used=$(echo "$output" | awk '/used:/ {print $6}' | sed 's/,//; s/MB//')
 capacity=$(echo "$SIZE_CHECK / (1024 * 1024)" | bc)
 
-# Calculate available space (capacity - used)
+# Calculate available space for APA (Max 50% of drive, upto max of 2 TB)
+available=$(( capacity / 2 ))
 
-if [ $capacity -gt 2098208 ]; then
-    available=$((2097152 - used - 6400 - 128 ))
+if (( available > 2098208 )); then
+    available=$(( 2098208 - used - 6400 - 128 ))
 else
-    available=$((capacity - used - 6400 - 128 - 32 - 1024 ))
+    available=$(( available - used - 6400 - 128 ))
 fi
 
-max_pops=$((available / 1024 - 1))
+free_space=$((available / 1024))
 
-if [ $max_pops -gt 130 ]; then
-    max_pops="130"
-fi
-
-echo | tee -a "${LOG_FILE}"
-echo | tee -a "${LOG_FILE}"
-SPLASH
-echo "    ====================================== Partitioning the Drive ======================================"
+echo >> "${LOG_FILE}"
 
 # Prompt user for partition size for POPS, Music and Contents, validate input, and keep asking until valid input is provided
 while true; do
+    SPLASH
+    center_title "${UI_TEXT[PARTITION_DRIVE_1]}"
     echo | tee -a "${LOG_FILE}"
-    echo "What size would you like the \"POPS\" partition to be?"
-    echo "This partition is used to store PS1 games. A typically game requires between 200 and 700 MB."
+    echo "Disk Size: $capacity MB" >> "${LOG_FILE}"
+    echo "Used APA: $used MB" >> "${LOG_FILE}"
+    echo "Space available for APA partitions: $available MB" >> "${LOG_FILE}"
+    echo "${UI_TEXT[PARTITION_DRIVE_2]} $free_space GB"
     echo
-    echo "Minimum 1 GB, maximum $max_pops GB"
+    echo "${UI_TEXT[PARTITION_DRIVE_9]}"
     echo
-    read -p "Enter partition size (in GB): " pops_gb
+    read -rp "${UI_TEXT[PARTITION_DRIVE_11]} (y/n): " answer
 
-    if [[ ! "$pops_gb" =~ ^[0-9]+$ ]]; then
+    if [[ "$answer" =~ ^[Yy]$ ]]; then
         echo
-        echo -n "Invalid input. Please enter a valid number."
-        sleep 3
+        echo "${UI_TEXT[PARTITION_DRIVE_12]}"
+        echo "${UI_TEXT[PARTITION_SIZE_1]} $free_space GB"
         echo
-        continue
-    fi
+        read -rp "${UI_TEXT[PARTITION_SIZE_2]} " reserve_gb
 
-    if (( pops_gb < 1 || pops_gb > max_pops )); then
+        # Check if input is a valid number
+        if [[ ! "$reserve_gb" =~ ^[0-9]+$ ]]; then
+            echo
+            echo "${UI_TEXT[PARTITION_SIZE_3]}"
+            sleep 3
+            echo | tee -a "${LOG_FILE}"
+            continue
+        fi
+
+        # Check if input is within valid range
+        if (( reserve_gb < 1 || reserve_gb > free_space )); then
+            echo
+            echo "${UI_TEXT[PARTITION_SIZE_4]} $free_space GB."
+            sleep 3
+            echo | tee -a "${LOG_FILE}"
+            continue
+        fi
+    elif [[ "$answer" =~ ^[Nn]$ ]]; then
+        reserve_gb="0"
+    else
         echo
-        echo -n "Invalid size. Please enter a value between 1 and $max_pops GB."
+        echo -n "${UI_TEXT[CONFIRM]} (y/n)"
         sleep 3
-        echo
+        echo | tee -a "${LOG_FILE}"
         continue
     fi
 
     # Convert bytes to MB
-    pops_partition=$(( pops_gb * 1024 ))
-    APA_MiB=$(( pops_partition + used + 6400 +128 ))
+    reserved_mb=$(( reserve_gb * 1024 ))
+    APA_MiB=$(( reserved_mb + used + 6400 +128 ))
     DIFF_MB=$(( capacity - APA_MiB - 32 ))
 
     # Convert to GiB for display (1 GiB = 1024 MiB) with 2 decimal places
@@ -573,42 +656,49 @@ while true; do
     fi
 
     echo
-    echo "The following partitions will be created:"
-    echo "- POPS partition: $pops_gb GB"
-    echo "- OPL partition: $OPL_SIZE"
+    echo "${UI_TEXT[PARTITION_DRIVE_13]}"
+    echo "${UI_TEXT[PARTITION_DRIVE_14]} $OPL_SIZE"
+    echo "${UI_TEXT[PARTITION_DRIVE_18]} $reserve_gb"
     echo
-    read -p "Do you wish to proceed? (y/n): " confirm
+    read -rp "${UI_TEXT[PROCEED]} (y/n): " confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
         break
     fi
-    done
+done
 
 echo >> "${LOG_FILE}"
 echo "##########################################################################" >> "${LOG_FILE}"
 echo "Disk size: $capacity MB" >> "${LOG_FILE}"
-echo "POPS partition size: $pops_partition MB" >> "${LOG_FILE}"
+echo "Reserved user space: $reserved_mb MB" >> "${LOG_FILE}"
 echo "Total APA Size: $APA_MiB MB" >> "${LOG_FILE}"
 echo "OPL partition size: $DIFF_MB MB" >> "${LOG_FILE}"
 echo "##########################################################################" >> "${LOG_FILE}"
 
-COMMANDS="device ${DEVICE}\n"
-COMMANDS+="mkpart __.POPS ${pops_partition}M PFS\n"
-COMMANDS+="exit"
-echo "Creating partitions..." >>"${LOG_FILE}"
-PFS_COMMANDS
-
 echo | tee -a "${LOG_FILE}"
-echo -n "Installing HOSDMenu..." | tee -a "${LOG_FILE}"
+echo "Installing HOSDMenu..." >> "${LOG_FILE}"
+echo -n "${UI_TEXT[INSTALL_HOSDMENU]}"
 mount_pfs
 
-mkdir -p "${STORAGE_DIR}/__common"/{POPS,"Your Saves"} 2>> "${LOG_FILE}"
-mkdir -p "${STORAGE_DIR}/__system"/{osdmenu,osd100} 2>> "${LOG_FILE}" || error_msg "Failed to create OSDMenu folders."
-mkdir -p "${STORAGE_DIR}/__sysconf/osdmenu/" 2>> "${LOG_FILE}" || error_msg "Failed to create OSDMenu config folder."
-cp "${ASSETS_DIR}/osdmenu/hosdmenu.elf" "${STORAGE_DIR}/__system/osdmenu/" 2>> "${LOG_FILE}" || error_msg "Failed to copy hosdmenu.elf."
-cp "${ASSETS_DIR}/extras"/{OSDSYS_A.XLF,FNTOSD,ICOIMAGE,JISUCS,SKBIMAGE,SNDIMAGE,TEXIMAGE} "${STORAGE_DIR}/__system/osd100/" 2>> "${LOG_FILE}" || error_msg "Failed to copy hosdmenu.elf."
+mkdir -p "${STORAGE_DIR}/__common/Your Saves" 2>> "${LOG_FILE}"
+mkdir -p "${STORAGE_DIR}/__system"/{osdmenu,osd100} 2>> "${LOG_FILE}" || {
+    echo "[X] Error: Failed to create __system/osdmenu" 2>> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_CREATE]} __system/osdmenu"
+}
+mkdir -p "${STORAGE_DIR}/__sysconf/osdmenu/" 2>> "${LOG_FILE}" || {
+    echo "[X] Error: Failed to create __sysconf/osdmenu" 2>> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_CREATE]} __sysconf/osdmenu"
+}
+cp "${ASSETS_DIR}/osdmenu/hosdmenu.elf" "${STORAGE_DIR}/__system/osdmenu/" 2>> "${LOG_FILE}" || {
+    echo "[X] Error: Failed to copy hosdmenu.elf." 2>> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_COPY]} hosdmenu.elf."
+}
+cp "${ASSETS_DIR}/extras"/{OSDSYS_A.XLF,FNTOSD,ICOIMAGE,JISUCS,SKBIMAGE,SNDIMAGE,TEXIMAGE} "${STORAGE_DIR}/__system/osd100/" 2>> "${LOG_FILE}" || {
+    echo "[X] Error: Failed to copy HDD-OSD." 2>> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_COPY]} HDD-OSD."
+}
 
 
-cat > "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" <<'EOL' || error_msg "Error" "Failed to write OSDMBR.CNF."
+cat > "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" <<'EOL'
 boot_auto = $HOSDSYS
 boot_cross =
 boot_circle =
@@ -624,7 +714,12 @@ app_gameid = 1
 prefer_bbn = 0
 EOL
 
-cat > "${STORAGE_DIR}/__sysconf/osdmenu/OSDMENU.CNF" <<'EOL' || error_msg "Error" "Failed to write OSDMBR.CNF."
+if [[ $? -ne 0 ]]; then
+    echo "[X] Error: Failed to write OSDMBR.CNF." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_OSDMBR_CNF]}"
+fi
+
+cat > "${STORAGE_DIR}/__sysconf/osdmenu/OSDMENU.CNF" <<'EOL'
 boot_auto = $HOSDSYS
 OSDSYS_video_mode = AUTO
 OSDSYS_Inner_Browser = 0
@@ -655,12 +750,19 @@ ps1drv_use_ps1vn = 1
 app_gameid = 1
 EOL
 
+if [[ $? -ne 0 ]]; then
+    echo "[X] Error: Failed to write OSDMENU.CNF." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_OSDMENU_CNF]}"
+fi
+
 BOOTSTRAP
 clean_up
 echo | tee -a "${LOG_FILE}"
 
 echo | tee -a "${LOG_FILE}"
-echo -n "Running APA-Jail..." | tee -a "${LOG_FILE}"
+echo "Running APA-Jail..." >> "${LOG_FILE}"
+echo -n "${UI_TEXT[APA_JAIL]}"
+
 ################################### APA-Jail code by Berion ###################################
 
 # Signature injection (type A2):
@@ -705,8 +807,9 @@ sudo umount -l "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
 CHECK_PARTITIONS
 MOUNT_OPL
 
-if ! mkdir -p "${OPL}"/{APPS,ART,CFG,CHT,LNG,THM,VMC,CD,DVD}; then
-    error_msg "Failed to create OPL folders."
+if ! mkdir -p "${OPL}"/{APPS,ART,CFG,CHT,LNG,THM,VMC,CD,DVD,POPS,nhddl}; then
+    echo "[X] Error: Failed to create OPL folders." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_OPL_FOLDER]}"
 fi
 
 echo | tee -a "${LOG_FILE}"
@@ -714,7 +817,7 @@ echo | tee -a "${LOG_FILE}"
 
 printf "OSDMenu = %s\n" "$(cat "${ASSETS_DIR}/osdmenu/version.txt")" >> "${OPL}/version.txt"
 echo "APA_SIZE = $APA_MiB" >> "${OPL}/version.txt"
-echo "LANG = $LANG" >> "${OPL}/version.txt"
+echo "LANG = $lang" >> "${OPL}/version.txt"
 
 UNMOUNT_OPL
 
@@ -723,7 +826,7 @@ echo "${TOC_OUTPUT}" >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT >> "${LOG_FILE}"
 
-echo "[✓] HOSDMenu successfully installed." | tee -a "${LOG_FILE}"
+echo "[✓] ${UI_TEXT[HOSDMENU_SUCCESS]}" | tee -a "${LOG_FILE}"
 echo
-read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
+read -n 1 -s -r -p "${UI_TEXT[MENU_RETURN]}" </dev/tty
 echo

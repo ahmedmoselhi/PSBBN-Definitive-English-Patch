@@ -31,6 +31,10 @@
             tqdm
             PyICU
             pykakasi
+            pillow
+            Unidecode
+            textual
+            wcwidth
           ]
         );
       in
@@ -50,7 +54,7 @@
             zip
             unzip
             wget
-            exfat
+            exfatprogs
             ffmpeg
             parted
             fuse2
@@ -61,6 +65,9 @@
             ffmpegthumbnailer
             pkgsi686Linux.glibc
             unrar-free
+            lvm2
+            dosfstools
+            util-linux
             psbbn
           ];
 

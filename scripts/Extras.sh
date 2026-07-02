@@ -20,16 +20,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+[[ -t 0 && -t 1 ]] || exit 1
+
 if [[ "$LAUNCHED_BY_MAIN" != "1" ]]; then
     echo "This script should not be run directly. Please run: PSBBN-Definitive-Patch.sh"
     exit 1
 fi
+
+term_width=110
 
 # Set paths
 TOOLKIT_PATH="$(pwd)"
 SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
 HELPER_DIR="${SCRIPTS_DIR}/helper"
 ASSETS_DIR="${SCRIPTS_DIR}/assets"
+LANG_DIR="${ASSETS_DIR}/lang"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
 ICONS_DIR="${TOOLKIT_PATH}/icons"
 ARTWORK_DIR="${ICONS_DIR}/art"
@@ -40,10 +45,9 @@ OSDMBR_CNF="${SCRIPTS_DIR}/tmp/OSDMBR.CNF"
 SYSCONF_XML="${SCRIPTS_DIR}/tmp/sysconf.xml"
 LOG_FILE="${TOOLKIT_PATH}/logs/extras.log"
 
-path_arg="$1"
-arch="$(uname -m)"
-
 URL="https://archive.org/download/psbbn-definitive-patch-v4.1"
+
+arch="$(uname -m)"
 
 if [[ "$arch" = "x86_64" ]]; then
     # x86-64
@@ -57,469 +61,94 @@ elif [[ "$arch" = "aarch64" ]]; then
     PFS_SHELL="${HELPER_DIR}/aarch64/PFS Shell.elf"
 fi
 
-error_msg() {
-    error_1="$1"
-    error_2="$2"
-    error_3="$3"
-    error_4="$4"
+LANG_FILE="$1"
+shift  # remove language
+path_arg="$1"
 
-    echo
-    echo "$error_1" | tee -a "${LOG_FILE}"
-    [ -n "$error_2" ] && echo "$error_2" | tee -a "${LOG_FILE}"
-    [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
-    [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
-    echo
-    read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
-    echo
-}
+declare -A UI_TEXT
 
-spinner() {
-    local pid=$1
-    local message=$2
-    local delay=0.1
-    local spinstr='|/-\'
-    local exit_code
-
-    # Print initial spinner
-    echo
-    printf "\r[%c] %s" "${spinstr:0:1}" "$message"
-
-    # Animate while the process is running
-    while kill -0 "$pid" 2>/dev/null; do
-        for i in {0..3}; do
-            printf "\r[%c] %s" "${spinstr:i:1}" "$message"
-            sleep $delay
-        done
-    done
-
-    # Wait for the process to capture its exit code
-    wait "$pid"
-    exit_code=$?
-
-    # Replace spinner with success/failure
-    if [ $exit_code -eq 0 ]; then
-        printf "\r[✓] %s\n" "$message" | tee -a "${LOG_FILE}"
-    else
-        printf "\r[X] %s\n" "$message" | tee -a "${LOG_FILE}"
-    fi
-}
-
-clean_up() {
-
-    sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1
-    sudo rm -rf "${SCRIPTS_DIR}/tmp"
-
-    failure=0
-
-    findmnt -nr -o TARGET | sed 's/\\x20/ /g' | while IFS= read -r line; do
-        case "$line" in
-            "$STORAGE_DIR/"*)
-                echo "Unmounting: <$line>" >> "$LOG_FILE"
-                sudo umount "$line" || error_msg "Error" "Failed to unmount $line"
-                ;;
-        esac
-    done
-
-    if [ -d "${STORAGE_DIR}" ]; then
-        submounts=$(
-            findmnt -nr -o TARGET \
-            | sed 's/\\x20/ /g' \
-            | grep "^${STORAGE_DIR}/" \
-            | sort -r
-        )
-
-        if [ -z "$submounts" ]; then
-            echo "Deleting ${STORAGE_DIR}..." >> "$LOG_FILE"
-            sudo rm -rf "${STORAGE_DIR}" || { echo "[X] Error: Failed to delete ${STORAGE_DIR}" >> "$LOG_FILE"; failure=1; }
-            echo "Deleted ${STORAGE_DIR}." >> "$LOG_FILE"
-        else
-            echo "Some mounts remain under ${STORAGE_DIR}, not deleting." >> "$LOG_FILE"
-            failure=1
-        fi
-    else
-        echo "Directory ${STORAGE_DIR} does not exist." >> "$LOG_FILE"
-    fi
-
-    # Get the device basename
-    DEVICE_CUT=$(basename "$DEVICE")
-
-    # List all existing maps for this device
-    existing_maps=$(sudo dmsetup ls 2>/dev/null | awk -v dev="$DEVICE_CUT" '$1 ~ "^"dev"-" {print $1}')
-
-    # Force-remove each existing map
-    for map_name in $existing_maps; do
-        echo "Removing existing mapper $map_name..." >> "$LOG_FILE"
-        if ! sudo dmsetup remove -f "$map_name" 2>/dev/null; then
-            echo "Failed to delete mapper $map_name." >> "$LOG_FILE"
-            failure=1
-        fi
-    done
-
-    # Abort if any failures occurred
-    if [ "$failure" -ne 0 ]; then
-        echo | tee -a "${LOG_FILE}"
-        error_msg "[X] Error: Cleanup error(s) occurred. Aborting."
-        return 1
-    fi
-
-}
-
-exit_script() {
-    clean_up
-    if [[ -n "$path_arg" ]]; then
-        cp "${LOG_FILE}" "${path_arg}" > /dev/null 2>&1
-    fi
-}
-
-mapper_probe() {
-    DEVICE_CUT=$(basename "${DEVICE}")
-
-    # 1) Remove existing maps for this device
-    existing_maps=$(sudo dmsetup ls 2>/dev/null | awk -v p="^${DEVICE_CUT}-" '$1 ~ p {print $1}')
-    for map in $existing_maps; do
-        sudo dmsetup remove "$map" 2>/dev/null
-    done
-
-    # 2) Build keep list
-    keep_partitions=( "${LINUX_PARTITIONS[@]}" "${APA_PARTITIONS[@]}" )
-
-    # 3) Get HDL Dump --dm output, split semicolons into lines
-    dm_output=$(sudo "${HDL_DUMP}" toc "${DEVICE}" --dm | tr ';' '\n')
-
-    # 4) Create each kept partition individually
-    while IFS= read -r line; do
-        for part in "${keep_partitions[@]}"; do
-            if [[ "$line" == "${DEVICE_CUT}-${part},"* ]]; then
-                echo "$line" | sudo dmsetup create --concise
-                break
-            fi
-        done
-    done <<< "$dm_output"
-
-    # 5) Export base mapper path
-    MAPPER="/dev/mapper/${DEVICE_CUT}-"
-}
-
-mount_cfs() {
-  for PARTITION_NAME in "${LINUX_PARTITIONS[@]}"; do
-    MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
-    if [ -e "${MAPPER}${PARTITION_NAME}" ]; then
-        [ -d "${MOUNT_PATH}" ] || mkdir -p "${MOUNT_PATH}"
-        if ! sudo mount "${MAPPER}${PARTITION_NAME}" "${MOUNT_PATH}" >>"${LOG_FILE}" 2>&1; then
-            error_msg "[X] Error: Failed to mount ${PARTITION_NAME} partition."
-            clean_up
-            return 1
-        fi
-    else
-        error_msg "[X] Error: Partition ${PARTITION_NAME} not found on disk."
-        clean_up
-        return 1
-    fi
-  done
-}
-
-mount_pfs() {
-    for PARTITION_NAME in "${APA_PARTITIONS[@]}"; do
-        MOUNT_POINT="${STORAGE_DIR}/$PARTITION_NAME/"
-        mkdir -p "$MOUNT_POINT"
-        if ! sudo "${PFS_FUSE}" \
-            -o allow_other \
-            --partition="$PARTITION_NAME" \
-            "${DEVICE}" \
-            "$MOUNT_POINT" >>"${LOG_FILE}" 2>&1; then
-            error_msg "[X] Error: Failed to mount $PARTITION_NAME partition." "Check the device or filesystem and try again."
-            clean_up
-            return 1
-        fi
-    done
-}
-
-detect_drive() {
-    DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
-
-    if [[ -z "$DEVICE" ]]; then
-        echo | tee -a "${LOG_FILE}"
-        echo "[X] Error: Unable to detect the PS2 drive. Please ensure the drive is properly connected." | tee -a "${LOG_FILE}"
-        echo
-        echo "You must install PSBBN or HOSDMenu before insalling extras."
-        echo
-        read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
-        return 1
-    fi
-
-    echo "OPL partition found on $DEVICE" >> "${LOG_FILE}"
-
-    # Find all mounted volumes associated with the device
-    mounted_volumes=$(lsblk -ln -o MOUNTPOINT "$DEVICE" | grep -v "^$")
-
-    # Iterate through each mounted volume and unmount it
-    echo "Unmounting volumes associated with $DEVICE..." >> "${LOG_FILE}"
-    for mount_point in $mounted_volumes; do
-        echo "Unmounting $mount_point..." >> "${LOG_FILE}"
-        if sudo umount "$mount_point"; then
-            echo "[✓] Successfully unmounted $mount_point." >> "${LOG_FILE}"
-        else
-            echo
-            echo "Failed to unmount $mount_point. Please unmount manually." | tee -a "${LOG_FILE}"
-            read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
-            return 1
-        fi
-    done
-
-    if ! sudo "${HDL_DUMP}" toc $DEVICE >> "${LOG_FILE}" 2>&1; then
-        echo
-        echo "[X] Error: APA partition is broken on ${DEVICE}." | tee -a "${LOG_FILE}"
-        read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
-        return 1
-    else
-        echo "PS2 HDD detected as $DEVICE" >> "${LOG_FILE}"
-    fi
-}
-
-MOUNT_OPL() {
-    echo | tee -a "${LOG_FILE}"
-    echo "Mounting OPL partition..." >> "${LOG_FILE}"
-
-    if ! mkdir -p "${OPL}" 2>>"${LOG_FILE}"; then
-        read -n 1 -s -r -p "Failed to create ${OPL}. Press any key to return to the menu..." </dev/tty
-        return 1
-    fi
-
-    sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
-
-    # Handle possibility host system's `mount` is using Fuse
-    if [ $? -ne 0 ] && hash mount.exfat-fuse; then
-        echo "Attempting to use exfat.fuse..." >> "${LOG_FILE}"
-        sudo mount.exfat-fuse -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
-    fi
-
-    if [ $? -ne 0 ]; then
-        error_msg "[X] Error: Failed to mount ${DEVICE}3"
-        return 1
-    fi
-
-}
-
-UNMOUNT_OPL() {
-    sync
-    if ! sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1; then
-        read -n 1 -s -r -p "Failed to unmount $DEVICE. Press any key to return to the menu..." </dev/tty
-        return 1;
-    fi
-}
-
-download_linux() {
-    TARGET_MD5="a16eeabf87c97d4112f73f4c3df52091"
-
-    # Check if file exists
-    if [[ -f "${ASSETS_DIR}/PS2Linux.tar.gz" ]]; then
-        # Get md5 checksum
-        FILE_MD5=$(md5sum "${ASSETS_DIR}/PS2Linux.tar.gz" | awk '{print $1}')
-
-        # Compare and delete if matches
-        if [[ "$FILE_MD5" == "$TARGET_MD5" ]]; then
-            rm -f "${ASSETS_DIR}/PS2Linux.tar.gz"
-            echo "Deleted ${ASSETS_DIR}/PS2Linux.tar.gz (MD5 matched)" >> "${LOG_FILE}"
-        else
-            echo "MD5 of ${ASSETS_DIR}/PS2Linux.tar.gz does not match, file not deleted." >> "${LOG_FILE}"
-        fi
-    fi
-
-    if [ -f "${ASSETS_DIR}/PS2Linux.tar.gz" ] && [ ! -f "${ASSETS_DIR}/PS2Linux.tar.gz.st" ]; then
-        echo | tee -a "${LOG_FILE}"
-        echo "All required files are present. Skipping download" | tee -a "${LOG_FILE}"
-    else
-        echo | tee -a "${LOG_FILE}"
-        echo "Downloading required files..." | tee -a "${LOG_FILE}"
-        if axel -a https://archive.org/download/psbbn-definitive-patch-v4.1/PS2Linux.tar.gz -o "${ASSETS_DIR}"; then
-            echo "[✓] Download completed successfully." | tee -a "${LOG_FILE}"
-        else
-            error_msg "[X] Error: Download failed." "Please check the status of archive.org. You may need to use a VPN depending on your location."
-            return 1
-        fi
-    fi
-}
-
-CHECK_PARTITIONS() {
-
-    # only grab the partition name column from lines that begin with 0x0100 or 0x0001
-    mapfile -t names < <(grep -E '^0x0[01][0-9A-Fa-f]{2}' "${hdl_output}" | awk '{print $NF}')
-
-    has_all() {
-        local targets=("$@")
-        for t in "${targets[@]}"; do
-            local found=false
-            for n in "${names[@]}"; do
-                if [[ "$n" == "$t" ]]; then
-                    found=true
-                    break
-                fi
-            done
-            # If any required partition is missing, return failure immediately
-            $found || return 1
-        done
-        return 0  # all partitions found
-        }
-
-    psbbn_parts=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.8 __linux.9 __contents)
-    hosd_parts=(__system __sysconf __.POPS __common)
-
-    if has_all "${psbbn_parts[@]}"; then
-        echo "PSBBN Detected" >> "${LOG_FILE}"
-        OS="PSBBN"
-    elif has_all "${hosd_parts[@]}"; then
-        echo "HOSDMenu Detected" >> "${LOG_FILE}"
-        OS="HOSD"
-    else
-        error_msg "[X] Error: Failed to detect PSBBN or HOSDMenu on ${DEVICE}."
-        return 1
-    fi
-
-}
-
-PFS_COMMANDS() {
-PFS_COMMANDS=$(echo -e "$COMMANDS" | sudo "${PFS_SHELL}" >> "${LOG_FILE}" 2>&1)
-if echo "$PFS_COMMANDS" | grep -q "Exit code is"; then
-    error_msg "PFS Shell returned an error. See ${LOG_FILE}"
-    return 1
+if [[ -f "${LANG_DIR}/$LANG_FILE.txt" ]]; then
+    while IFS='=' read -r key value; do
+        [[ -z "$key" ]] && continue
+        UI_TEXT["$key"]="$value"
+    done < "${LANG_DIR}/$LANG_FILE.txt"
+else
+    echo "[X] Error: Language file not found."
+    sleep 3
+    exit 1
 fi
+
+text_width() {
+    python3 -c '
+from wcwidth import wcswidth
+import sys
+print(wcswidth(sys.argv[1]))
+' "$1"
 }
 
-HDL_TOC() {
-    rm -f "$hdl_output"
-    hdl_output=$(mktemp)
-    if ! sudo "${HDL_DUMP}" toc "$DEVICE" 2>>"${LOG_FILE}" > "$hdl_output"; then
-        rm -f "$hdl_output"
-        error_msg "[X] Error: Failed to extract list of partitions." "APA partition could be broken on ${DEVICE}"
-        return 1
-    fi
+center_title() {
+    local text=" $1 "
+
+    local text_len
+    text_len=$(text_width "$text")
+
+    local total_padding=$(( term_width - text_len ))
+
+    # Prevent negative padding
+    (( total_padding < 0 )) && total_padding=0
+
+    local left_padding=$(( total_padding / 2 ))
+    local right_padding=$(( total_padding - left_padding ))
+
+    printf '%*s' "$left_padding" '' | tr ' ' '='
+    printf '%s' "$text"
+    printf '%*s\n' "$right_padding" '' | tr ' ' '='
 }
 
-AVAILABLE_SPACE(){
-    HDL_TOC || return 1
-    # Extract the "used" value, remove "MB" and any commas
-    used=$(cat "$hdl_output" | awk '/used:/ {print $6}' | sed 's/,//; s/MB//')
+center_menu() {
+    local longest=0
 
-    # Calculate available space (APA_SIZE - used)
-    available=$((APA_SIZE - used - 6400 - 128))
-    free_space=$((available / 1024))
-    echo "Free Space: $free_space GB" >> "${LOG_FILE}"
+    for key in "${MENU_KEYS[@]}"; do
+        local text="${UI_TEXT[$key]}"
+        local width=$(text_width "$text")
+
+        (( width > longest )) && longest=$width
+    done
+
+    padding=$(( (term_width - longest + 3) / 2 ))
 }
 
-get_latest_file() {
-    local prefix="$1"        # e.g., "psbbn-eng" or "psbbn-definitive-patch"
-    local display="$2"       # e.g., "English language pack"
-    local remote_list remote_versions remote_version
-    local local_file local_version
+center_text() {
+    local input="$1"
 
-    # Reset globals
-    LATEST_FILE=""
+    local display_width
+    display_width=$(text_width "$input")
 
-    # Extract .gz filenames from the HTML
-    remote_list=$(grep -oP "${prefix}-v[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz" "$HTML_FILE" 2>/dev/null)
+    local padding=$(( (term_width - display_width) / 2 ))
 
-    if [[ -n "$remote_list" ]]; then
-    # Extract version numbers and sort them
-        remote_versions=$(echo "$remote_list" | \
-            grep -oP 'v[0-9]+\.[0-9]+\.[0-9]+' | \
-            sed 's/v//' | \
-            sort -V)
-        remote_version=$(echo "$remote_versions" | tail -n1)
-        echo | tee -a "${LOG_FILE}"
-        echo "Found $display version $remote_version" | tee -a "${LOG_FILE}"
-    else
-        echo | tee -a "${LOG_FILE}"
-        echo "Could not find the latest version of the $display." | tee -a "${LOG_FILE}"
-        echo "Please check the status of archive.org. You may need to use a VPN depending on your location."
-    fi
+    (( padding < 0 )) && padding=0
 
-   # Check if any local file is newer than the remote version
-    local_file=$(ls "${ASSETS_DIR}/${prefix}"*.tar.gz 2>/dev/null | sort -V | tail -n1)
-    if [[ -n "$local_file" ]]; then
-        local_version=$(basename "$local_file" | sed -E 's/.*-v([0-9.]+)\.tar\.gz/\1/')
-    fi
-
-    #Decide which file wins
-    if [[ -n "$local_file" ]]; then
-        if [[ -z "$remote_version" ]] || \
-           [[ "$(printf '%s\n' "$remote_version" "$local_version" | sort -V | tail -n1)" == "$local_version" ]]; then
-
-            # Local is equal/newer then local wins
-            LATEST_FILE=$(basename "$local_file")
-            echo
-            echo "Newer local file found: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
-
-            # Only set LATEST_VERSION for the patch prefix
-            if [[ "$prefix" == "language-pak-$LANG" ]]; then
-                LATEST_LANG="$local_version"
-            elif [[ "$prefix" == "channels-$LANG" ]]; then
-                LATEST_CHAN="$local_version"
-            fi
-            return 0
-        fi
-    fi
-
-    # Remote exists and is newer then remote wins
-    if [[ -n "$remote_version" ]]; then
-        LATEST_FILE="${prefix}-v${remote_version}.tar.gz"
-
-        # Only set LATEST_VERSION for the patch prefix
-        if [[ "$prefix" == "language-pak-$LANG" ]]; then
-            LATEST_LANG="$remote_version"
-        elif [[ "$prefix" == "channels-$LANG" ]]; then
-            LATEST_CHAN="$remote_version"
-        fi
-        return 0
-    fi
-
-    # If neither version exists error
-    error_msg "[X] Error: Failed to find ${display}. Aborting."
-    return 1
+    text=$(printf "%*s%s" "$padding" "" "$input")
 }
 
-downoad_latest_file() {
-    local prefix="$1"
-    # Check if the latest file exists in ${ASSETS_DIR}
-    if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
-        echo | tee -a "${LOG_FILE}"
-        echo "File ${LATEST_FILE} exists. Skipping download." | tee -a "${LOG_FILE}"
-    else
-        # Check for and delete older files
-        for file in "${ASSETS_DIR}"/$prefix*.tar.gz; do
-            if [[ -f "$file" && "$(basename "$file")" != "$LATEST_FILE" ]]; then
-                echo "Deleting old file: $file" | tee -a "${LOG_FILE}"
-                rm -f "$file"
-            fi
-        done
+if [ -f "$LOG_FILE" ]; then
+    size=$(stat -c%s "$LOG_FILE" 2>/dev/null || stat -f%z "$LOG_FILE")
 
-        # Construct the full URL for the .gz file and download it
-        TAR_URL="$URL/$LATEST_FILE"
-        echo "Downloading ${LATEST_FILE}..." | tee -a "${LOG_FILE}"
-        axel -n 8 -a "$TAR_URL" -o "${ASSETS_DIR}"
-
-        # Check if the file was downloaded successfully
-        if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
-            echo "Download completed: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
-        else
-            error_msg "[X] Error: Download failed for ${LATEST_FILE}." "Please check your internet connection and try again."
-            return 1
-        fi
+    if [ "$size" -gt 4194304 ]; then
+        : > "$LOG_FILE"
     fi
+fi
 
-}
-
-
-SWAP_SPLASH(){
-    clear
+EXTRAS_SPLASH() {
+clear
     cat << "EOF"
-                ______                   _              ______       _   _                  
-                | ___ \                 (_)             | ___ \     | | | |                 
-                | |_/ /___  __ _ ___ ___ _  __ _ _ __   | |_/ /_   _| |_| |_ ___  _ __  ___ 
-                |    // _ \/ _` / __/ __| |/ _` | '_ \  | ___ \ | | | __| __/ _ \| '_ \/ __|
-                | |\ \  __/ (_| \__ \__ \ | (_| | | | | | |_/ / |_| | |_| || (_) | | | \__ \
-                \_| \_\___|\__,_|___/___/_|\__, |_| |_| \____/ \__,_|\__|\__\___/|_| |_|___/
-                                            __/ |                                           
-                                           |___/    
+                                         _____     _                 
+                                        |  ___|   | |                
+                                        | |____  _| |_ _ __ __ _ ___ 
+                                        |  __\ \/ / __| '__/ _` / __|
+                                        | |___>  <| |_| | | (_| \__ \
+                                        \____/_/\_\\__|_|  \__,_|___/
+
 
 
 EOF
@@ -538,7 +167,23 @@ LINUX_SPLASH(){
 
 
 EOF
-}            
+} 
+
+SWAP_SPLASH(){
+    clear
+    cat << "EOF"
+                ______                   _              ______       _   _                  
+                | ___ \                 (_)             | ___ \     | | | |                 
+                | |_/ /___  __ _ ___ ___ _  __ _ _ __   | |_/ /_   _| |_| |_ ___  _ __  ___ 
+                |    // _ \/ _` / __/ __| |/ _` | '_ \  | ___ \ | | | __| __/ _ \| '_ \/ __|
+                | |\ \  __/ (_| \__ \__ \ | (_| | | | | | |_/ / |_| | |_| || (_) | | | \__ \
+                \_| \_\___|\__,_|___/___/_|\__, |_| |_| \____/ \__,_|\__|\__\___/|_| |_|___/
+                                            __/ |                                           
+                                           |___/    
+
+
+EOF
+}           
 
 LANGUAGE_SPLASH(){
     clear
@@ -589,13 +234,503 @@ cat << "EOF"
 EOF
 }
 
+# Function to display the menu
+display_menu() {
+    EXTRAS_SPLASH
+    printf "\n\n\n"
+    printf "%*s%s\n\n" "$padding" "1) " "${UI_TEXT[EXTRAS_MENU_OPTION_1]}"
+    printf "%*s%s\n\n" "$padding" "2) " "${UI_TEXT[EXTRAS_MENU_OPTION_2]}"
+    printf "%*s%s\n\n" "$padding" "3) " "${UI_TEXT[EXTRAS_MENU_OPTION_3]}"
+    printf "%*s%s\n\n" "$padding" "4) " "${UI_TEXT[EXTRAS_MENU_OPTION_4]}"
+    printf "%*s%s\n\n" "$padding" "5) " "${UI_TEXT[EXTRAS_MENU_OPTION_5]}"
+    printf "%*s%s\n\n" "$padding" "b) " "${UI_TEXT[MENU_BACK]}"
+    printf "%*s%s " "$((padding - 3))" "" "${UI_TEXT[MENU_PROMPT]}"
+}
+
+error_msg() {
+  error_1="$1"
+  error_2="$2"
+  error_3="$3"
+  error_4="$4"
+
+  echo
+  echo "[X]" "$error_1"
+  [ -n "$error_2" ] && echo && echo "$error_2"
+  [ -n "$error_3" ] && echo "$error_3"
+  [ -n "$error_4" ] && echo "$error_4"
+  echo
+  echo "${UI_TEXT[ERROR_TROUBLE]}"
+  echo "https://github.com/CosmicScale/PSBBN-Definitive-Project#troubleshooting"
+  echo
+  read -n 1 -s -r -p "${UI_TEXT[EXIT_KEY]}" </dev/tty
+  echo
+}
+
+clean_up() {
+
+    sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1
+    sudo rm -rf "${SCRIPTS_DIR}/tmp"
+
+    failure=0
+
+    findmnt -nr -o TARGET | sed 's/\\x20/ /g' | while IFS= read -r line; do
+        case "$line" in
+            "$STORAGE_DIR/"*)
+                echo "Unmounting: <$line>" >> "$LOG_FILE"
+                sudo umount "$line" || {
+                    echo "[X] Error: Failed to unmount $line" >> "${LOG_FILE}"
+                    failure=1
+                }
+                ;;
+        esac
+    done
+
+    if [ -d "${STORAGE_DIR}" ]; then
+        submounts=$(
+            findmnt -nr -o TARGET \
+            | sed 's/\\x20/ /g' \
+            | grep "^${STORAGE_DIR}/" \
+            | sort -r
+        )
+
+        if [ -z "$submounts" ]; then
+            echo "Deleting ${STORAGE_DIR}..." >> "$LOG_FILE"
+            sudo rm -rf "${STORAGE_DIR}" || { echo "[X] Error: Failed to delete ${STORAGE_DIR}" >> "$LOG_FILE"; failure=1; }
+            echo "Deleted ${STORAGE_DIR}." >> "$LOG_FILE"
+        else
+            echo "Some mounts remain under ${STORAGE_DIR}, not deleting." >> "$LOG_FILE"
+            failure=1
+        fi
+    else
+        echo "Directory ${STORAGE_DIR} does not exist." >> "$LOG_FILE"
+    fi
+
+    # Get the device basename
+    DEVICE_CUT=$(basename "$DEVICE")
+
+    # List all existing maps for this device
+    existing_maps=$(sudo dmsetup ls 2>/dev/null | awk -v dev="$DEVICE_CUT" '$1 ~ "^"dev"-" {print $1}')
+
+    # Force-remove each existing map
+    for map_name in $existing_maps; do
+        echo "Removing existing mapper $map_name..." >> "$LOG_FILE"
+        if ! sudo dmsetup remove -f "$map_name" 2>/dev/null; then
+            echo "Failed to delete mapper $map_name." >> "$LOG_FILE"
+            failure=1
+        fi
+    done
+
+    # Abort if any failures occurred
+    if [ "$failure" -ne 0 ]; then
+        echo | tee -a "${LOG_FILE}"
+        echo "[X] Error: Cleanup error(s) occurred. Aborting." >> "$LOG_FILE"
+        error_msg "${UI_TEXT[ERROR_CLEANUP]}"
+        return 1
+    fi
+
+}
+
+exit_script() {
+    clean_up
+    if [[ -n "$path_arg" ]]; then
+        cp "${LOG_FILE}" "${path_arg}" > /dev/null 2>&1
+    fi
+}
+
+detect_drive() {
+    DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
+
+    if [[ -z "$DEVICE" ]]; then
+        echo "[X] Error: Unable to detect the PS2 drive" >> "${LOG_FILE}"
+        echo "[X] ${UI_TEXT[ERROR_DETECT_DRIVE_1]}"
+        echo
+        echo "${UI_TEXT[ERROR_DETECT_DRIVE_4]}"
+        echo
+        read -n 1 -s -r -p "${UI_TEXT[MENU_RETURN]}" </dev/tty
+        return 1
+    fi
+
+    echo "OPL partition found on $DEVICE" >> "${LOG_FILE}"
+
+    # Find all mounted volumes associated with the device
+    mounted_volumes=$(lsblk -ln -o MOUNTPOINT "$DEVICE" | grep -v "^$")
+
+    # Iterate through each mounted volume and unmount it
+    echo "Unmounting volumes associated with $DEVICE..." >> "${LOG_FILE}"
+    for mount_point in $mounted_volumes; do
+        echo "Unmounting $mount_point..." >> "${LOG_FILE}"
+        if sudo umount "$mount_point"; then
+            echo "[✓] Successfully unmounted $mount_point." >> "${LOG_FILE}"
+        else
+            echo
+            echo "[X] Error: Failed to unmount: $mount_point" >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_UNMOUNT_1]} $mount_point"
+            return 1
+        fi
+    done
+
+    if ! sudo "${HDL_DUMP}" toc $DEVICE >> "${LOG_FILE}" 2>&1; then
+        echo "[X] Error: Failed to extract list of partitions. APA partition table could be broken on ${DEVICE}" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_HDL_TOC]}"
+        return 1
+    else
+        echo "PS2 HDD detected as $DEVICE" >> "${LOG_FILE}"
+    fi
+}
+
+MOUNT_OPL() {
+    echo | tee -a "${LOG_FILE}"
+    echo "Mounting OPL partition..." >> "${LOG_FILE}"
+
+    mkdir -p "${OPL}" 2>>"${LOG_FILE}" || {
+        echo "[X] Error: Failed to create ${OPL}." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_CREATE]} ${OPL}"
+        return 1
+    }
+
+    sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
+
+    # Handle possibility host system's `mount` is using Fuse
+    if [ $? -ne 0 ] && hash mount.exfat-fuse; then
+        echo "Attempting to use exfat.fuse..." >> "${LOG_FILE}"
+        sudo mount.exfat-fuse -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
+    fi
+
+    if [ $? -ne 0 ]; then
+        echo "[X] Error: Failed to mount ${DEVICE}3" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_MOUNT_2]} ${DEVICE}3"
+        return 1
+    fi
+
+}
+
+UNMOUNT_OPL() {
+    sync
+    if ! sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1; then
+        echo "[X] Error: Failed to unmount $DEVICE" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_UNMOUNT_1]} $DEVICE"
+        return 1;
+    fi
+}
+
+CHECK_PARTITIONS() {
+
+    # only grab the partition name column from lines that begin with 0x0100 or 0x0001
+    mapfile -t names < <(grep -E '^0x0[01][0-9A-Fa-f]{2}' "${hdl_output}" | awk '{print $NF}')
+
+    has_all() {
+        local targets=("$@")
+        for t in "${targets[@]}"; do
+            local found=false
+            for n in "${names[@]}"; do
+                if [[ "$n" == "$t" ]]; then
+                    found=true
+                    break
+                fi
+            done
+            # If any required partition is missing, return failure immediately
+            $found || return 1
+        done
+        return 0  # all partitions found
+        }
+
+    psbbn_parts=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.8 __linux.9 __contents)
+    hosd_parts=(__system __sysconf __.POPS __common)
+
+    if has_all "${psbbn_parts[@]}"; then
+        echo "PSBBN Detected" >> "${LOG_FILE}"
+        OS="PSBBN"
+    elif has_all "${hosd_parts[@]}"; then
+        echo "HOSDMenu Detected" >> "${LOG_FILE}"
+        OS="HOSD"
+    else
+        echo "[X] Error: Failed to detect PSBBN or HOSDMenu on ${DEVICE}." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_OS_CHECK_1]}"
+        return 1
+    fi
+
+}
+
+mapper_probe() {
+    DEVICE_CUT=$(basename "${DEVICE}")
+
+    # 1) Remove existing maps for this device
+    existing_maps=$(sudo dmsetup ls 2>/dev/null | awk -v p="^${DEVICE_CUT}-" '$1 ~ p {print $1}')
+    for map in $existing_maps; do
+        sudo dmsetup remove "$map" 2>/dev/null
+    done
+
+    # 2) Build keep list
+    keep_partitions=( "${LINUX_PARTITIONS[@]}" "${APA_PARTITIONS[@]}" )
+
+    # 3) Get HDL Dump --dm output, split semicolons into lines
+    dm_output=$(sudo "${HDL_DUMP}" toc "${DEVICE}" --dm | tr ';' '\n')
+
+    # 4) Create each kept partition individually
+    while IFS= read -r line; do
+        for part in "${keep_partitions[@]}"; do
+            if [[ "$line" == "${DEVICE_CUT}-${part},"* ]]; then
+                echo "$line" | sudo dmsetup create --concise
+                break
+            fi
+        done
+    done <<< "$dm_output"
+
+    # 5) Export base mapper path
+    MAPPER="/dev/mapper/${DEVICE_CUT}-"
+}
+
+mount_cfs() {
+  for PARTITION_NAME in "${LINUX_PARTITIONS[@]}"; do
+    MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
+    if [ -e "${MAPPER}${PARTITION_NAME}" ]; then
+        [ -d "${MOUNT_PATH}" ] || mkdir -p "${MOUNT_PATH}"
+        if ! sudo mount "${MAPPER}${PARTITION_NAME}" "${MOUNT_PATH}" >>"${LOG_FILE}" 2>&1; then
+            error_msg "[X] Error: Failed to mount ${PARTITION_NAME} partition."
+            clean_up
+            return 1
+        fi
+    else
+        echo "[X] Error: Partition not found on disk: ${PARTITION_NAME}" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_MOUNT_3]} ${PARTITION_NAME}"
+        clean_up
+        return 1
+    fi
+  done
+}
+
+mount_pfs() {
+    for PARTITION_NAME in "${APA_PARTITIONS[@]}"; do
+        MOUNT_POINT="${STORAGE_DIR}/$PARTITION_NAME/"
+        mkdir -p "$MOUNT_POINT"
+        if ! sudo "${PFS_FUSE}" \
+            -o allow_other \
+            --partition="$PARTITION_NAME" \
+            "${DEVICE}" \
+            "$MOUNT_POINT" >>"${LOG_FILE}" 2>&1; then
+            echo "[X] Error: Failed to mount $PARTITION_NAME" >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_MOUNT_2]} $PARTITION_NAME"
+            clean_up
+            return 1
+        fi
+    done
+}
+
+spinner() {
+    local pid=$1
+    local message=$2
+    local delay=0.1
+    local spinstr='|/-\'
+    local exit_code
+
+    # Print initial spinner
+    echo
+    printf "\r[%c] %s" "${spinstr:0:1}" "$message"
+
+    # Animate while the process is running
+    while kill -0 "$pid" 2>/dev/null; do
+        for i in {0..3}; do
+            printf "\r[%c] %s" "${spinstr:i:1}" "$message"
+            sleep $delay
+        done
+    done
+
+    # Wait for the process to capture its exit code
+    wait "$pid"
+    exit_code=$?
+
+    # Replace spinner with success/failure
+    if [ $exit_code -eq 0 ]; then
+        printf "\r[✓] %s\n" "$message" | tee -a "${LOG_FILE}"
+    else
+        printf "\r[X] %s\n" "$message" | tee -a "${LOG_FILE}"
+    fi
+}
+
+download_linux() {
+    TARGET_MD5="a16eeabf87c97d4112f73f4c3df52091"
+
+    # Check if file exists
+    if [[ -f "${ASSETS_DIR}/PS2Linux.tar.gz" ]]; then
+        # Get md5 checksum
+        FILE_MD5=$(md5sum "${ASSETS_DIR}/PS2Linux.tar.gz" | awk '{print $1}')
+
+        # Compare and delete if matches
+        if [[ "$FILE_MD5" == "$TARGET_MD5" ]]; then
+            rm -f "${ASSETS_DIR}/PS2Linux.tar.gz"
+            echo "Deleted ${ASSETS_DIR}/PS2Linux.tar.gz (MD5 matched)" >> "${LOG_FILE}"
+        else
+            echo "MD5 of ${ASSETS_DIR}/PS2Linux.tar.gz does not match, file not deleted." >> "${LOG_FILE}"
+        fi
+    fi
+
+    if [ -f "${ASSETS_DIR}/PS2Linux.tar.gz" ] && [ ! -f "${ASSETS_DIR}/PS2Linux.tar.gz.st" ]; then
+        echo | tee -a "${LOG_FILE}"
+        echo "All required files are present. Skipping download" >> "${LOG_FILE}"
+    else
+        echo | tee -a "${LOG_FILE}"
+        echo "Downloading PS2 Linux..." >> "${LOG_FILE}"
+        echo "${UI_TEXT[DOWNLOAD_REQUIRED]}"
+        if axel -a https://archive.org/download/psbbn-definitive-patch-v4.1/PS2Linux.tar.gz -o "${ASSETS_DIR}"; then
+            echo "[✓] Download completed successfully." >> "${LOG_FILE}"
+            echo "[✓] ${UI_TEXT[DOWNLOAD_COMPLETE]}"
+        else
+            echo "[X] Error: PS2 Linux Download failed." >> "${LOG_FILE}"
+            error_msg "[X] ${UI_TEXT[ERROR_DOWNLOAD]}" "${UI_TEXT[GET_LATEST_FILE_3]}"
+            return 1
+        fi
+    fi
+}
+
+PFS_COMMANDS() {
+PFS_COMMANDS=$(echo -e "$COMMANDS" | sudo "${PFS_SHELL}" >> "${LOG_FILE}" 2>&1)
+if echo "$PFS_COMMANDS" | grep -q "Exit code is"; then
+    echo "[X] Error: PFS Shell returned an error." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_PFS_COMMANDS]}"
+    return 1
+fi
+}
+
+HDL_TOC() {
+    rm -f "$hdl_output"
+    hdl_output=$(mktemp)
+    if ! sudo "${HDL_DUMP}" toc "$DEVICE" 2>>"${LOG_FILE}" > "$hdl_output"; then
+        rm -f "$hdl_output"
+        echo "[X] Error: Failed to extract list of partitions. APA partition table could be broken on ${DEVICE}" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_HDL_TOC]}"
+        return 1
+    fi
+}
+
+AVAILABLE_SPACE(){
+    HDL_TOC || return 1
+    # Extract the "used" value, remove "MB" and any commas
+    used=$(cat "$hdl_output" | awk '/used:/ {print $6}' | sed 's/,//; s/MB//')
+
+    # Calculate available space (APA_SIZE - used)
+    available=$((APA_SIZE - used - 6400 - 128))
+    free_space=$((available / 1024))
+    echo "Free Space: $free_space GB" >> "${LOG_FILE}"
+}
+
+get_latest_file() {
+    local prefix="$1"        # e.g., "psbbn-eng" or "psbbn-definitive-patch"
+    local display="$2"       # e.g., "English language pack"
+    local remote_list remote_versions remote_version
+    local local_file local_version
+
+    # Reset globals
+    LATEST_FILE=""
+
+    # Extract .gz filenames from the HTML
+    remote_list=$(grep -oP "${prefix}-v[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz" "$HTML_FILE" 2>/dev/null)
+
+    if [[ -n "$remote_list" ]]; then
+    # Extract version numbers and sort them
+        remote_versions=$(echo "$remote_list" | \
+            grep -oP 'v[0-9]+\.[0-9]+\.[0-9]+' | \
+            sed 's/v//' | \
+            sort -V)
+        remote_version=$(echo "$remote_versions" | tail -n1)
+        echo | tee -a "${LOG_FILE}"
+        echo "Found $display version $remote_version" >> "${LOG_FILE}"
+        echo "${UI_TEXT[GET_LATEST_FILE_1]} $display $remote_version"
+    else
+        echo | tee -a "${LOG_FILE}"
+        echo "Could not find the latest version of the $display." >> "${LOG_FILE}"
+        echo "${UI_TEXT[GET_LATEST_FILE_2]} $display."
+        echo "${UI_TEXT[GET_LATEST_FILE_3]}"
+    fi
+
+   # Check if any local file is newer than the remote version
+    local_file=$(ls "${ASSETS_DIR}/${prefix}"*.tar.gz 2>/dev/null | sort -V | tail -n1)
+    if [[ -n "$local_file" ]]; then
+        local_version=$(basename "$local_file" | sed -E 's/.*-v([0-9.]+)\.tar\.gz/\1/')
+    fi
+
+    #Decide which file wins
+    if [[ -n "$local_file" ]]; then
+        if [[ -z "$remote_version" ]] || \
+           [[ "$(printf '%s\n' "$remote_version" "$local_version" | sort -V | tail -n1)" == "$local_version" ]]; then
+
+            # Local is equal/newer then local wins
+            LATEST_FILE=$(basename "$local_file")
+            echo
+            echo "Newer local file found: ${LATEST_FILE}" >> "${LOG_FILE}"
+            echo "${UI_TEXT[GET_LATEST_FILE_4]} ${LATEST_FILE}"
+
+            # Only set LATEST_VERSION for the patch prefix
+            if [[ "$prefix" == "language-pak-$lang" ]]; then
+                LATEST_LANG="$local_version"
+            elif [[ "$prefix" == "channels-$lang" ]]; then
+                LATEST_CHAN="$local_version"
+            fi
+            return 0
+        fi
+    fi
+
+    # Remote exists and is newer then remote wins
+    if [[ -n "$remote_version" ]]; then
+        LATEST_FILE="${prefix}-v${remote_version}.tar.gz"
+
+        # Only set LATEST_VERSION for the patch prefix
+        if [[ "$prefix" == "language-pak-$lang" ]]; then
+            LATEST_LANG="$remote_version"
+        elif [[ "$prefix" == "channels-$lang" ]]; then
+            LATEST_CHAN="$remote_version"
+        fi
+        return 0
+    fi
+
+    # If neither version exists error
+    echo "[X] Error: Failed to find: ${display}" >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_GET_LATEST_FILE]} ${display}"
+    return 1
+}
+
+downoad_latest_file() {
+    local prefix="$1"
+    # Check if the latest file exists in ${ASSETS_DIR}
+    if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
+        echo | tee -a "${LOG_FILE}"
+        echo "${LATEST_FILE} already exists. Skipping download." >> "${LOG_FILE}"
+        echo "${UI_TEXT[DOWNLOAD_LATEST_FILE_1]}"
+    else
+        # Check for and delete older files
+        for file in "${ASSETS_DIR}"/$prefix*.tar.gz; do
+            if [[ -f "$file" && "$(basename "$file")" != "$LATEST_FILE" ]]; then
+                echo "Deleting old file: $file" >> "${LOG_FILE}"
+                rm -f "$file"
+            fi
+        done
+
+        # Construct the full URL for the .gz file and download it
+        TAR_URL="$URL/$LATEST_FILE"
+        echo "Downloading ${LATEST_FILE}..." >> "${LOG_FILE}"
+        echo "${UI_TEXT[DOWNLAD_LATEST_FILE_2]}"
+        axel -n 8 -a "$TAR_URL" -o "${ASSETS_DIR}"
+
+        # Check if the file was downloaded successfully
+        if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
+            echo "Download completed: ${LATEST_FILE}" >> "${LOG_FILE}"
+            echo "${UI_TEXT[DOWNLOAD_LATEST_FILE_3]} ${LATEST_FILE}"
+        else
+            echo "[X] Error: Download failed for ${LATEST_FILE}." "Please check your internet connection and try again." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_LATEST_FILE_1]} ${LATEST_FILE}." "${UI_TEXT[ERROR_LATEST_FILE_2]}"
+            return 1
+        fi
+    fi
+
+}
+
 # Function for Option 1 - Install PS2 Linux
 option_one() {
     echo "########################################################################################################" >> "${LOG_FILE}"
     echo "Install PS2 Linux:" >> "${LOG_FILE}"
     LINUX_SPLASH
     if [ "$OS" = "HOSD" ]; then
-        error_msg "[X] Error: PSBBN is not installed. Please install PSBBN to use this feature."
+        echo "[X] Error: PSBBN is not installed. Please install PSBBN to use this feature." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_OS_CHECK_2]}"
         return 1
     fi
 
@@ -614,29 +749,28 @@ option_one() {
     if cat "${hdl_output}" | grep -q '\b__linux\.3\b'; then
         linux3="yes"
         if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
-            error_msg "Linux is already installed." "If you want to reinstall Linux, update to PSBBN version 4.0.0 or higher first."
-            return 0
+            echo "[X] Error: Linux is already installed on your PS2. If you want to reinstall Linux, update to PSBBN version 4.0.0 or higher first." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_PS2_LINUX_1]}" " " "${UI_TEXT[ERROR_PS2_LINUX_2]}"
+            return 1
         else
             while true; do
                 LINUX_SPLASH
-                echo "                   Linux is already installed on your PS2. Do you want to reinstall it?" | tee -a "${LOG_FILE}"
-                
+                echo "Reinstall PS2 Linux?" >> "${LOG_FILE}"
+                printf '\n%s\n\n' "${UI_TEXT[PS2_LINUX_1]}"
                 if cat "${hdl_output}" | grep -q '\b__linux\.10\b'; then
-                    echo
-                    echo "                   - All Linux system files will be reinstalled." | tee -a "${LOG_FILE}"
-                    echo "                   - Your personal files in the home directory will not be affected." | tee -a "${LOG_FILE}"
+                    echo "Home partition found."  >> "${LOG_FILE}"
+                    printf '%s\n' "${UI_TEXT[PS2_LINUX_2]}"
+                    printf '%s\n\n' "${UI_TEXT[PS2_LINUX_3]}"
                 else
                     echo
-                    echo "                   ============================== WARNING ============================="
-                    echo
-                    echo "                    All PS2 Linux data will be erased, including your home direcrtory." | tee -a "${LOG_FILE}"
-                    echo "                    Make sure to back up your files before continuing."
-                    echo
-                    echo "                   ===================================================================="
+                    echo "Home partition not found."  >> "${LOG_FILE}"
+                    center_title "${UI_TEXT[WARNING]}"
+                    printf '\n  %s\n' "${UI_TEXT[PS2_LINUX_4]}"
+                    printf '  %s\n\n' "${UI_TEXT[PS2_LINUX_5]}"
+                    printf "==============================================================================================================\n\n"
                 fi
                 
-                echo
-                read -p "                   Reinstall PS2 Linux? (y/n): " answer
+                read -rp "${UI_TEXT[PS2_LINUX_6]} (y/n): " answer
                 case "$answer" in
                     [Yy])
                         break
@@ -646,7 +780,7 @@ option_one() {
                         ;;
                     *)
                         echo
-                        echo -n "                   Please enter y or n."
+                        echo -n "${UI_TEXT[MENU_INVALID]}"
                         sleep 3
                         ;;
                 esac
@@ -658,16 +792,19 @@ option_one() {
 
     if [ "$linux3" != "yes" ]; then
         if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
-            error_msg "To install or reinstall PS2 Linux, update to PSBBN version 4.0.0 or higher."
-            return 0
+            echo "[X] Error: To install or reinstall PS2 Linux, update to PSBBN version 4.0.0 or higher." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_PS2_LINUX_3]}"
+            return 1
         else
             if [ -z "$APA_SIZE" ]; then
-                error_msg "[X] Error: Unable to determine APA free space."
+                echo "[X] Error: Unable to determine APA free space." >> "${LOG_FILE}"
+                error_msg "${UI_TEXT[ERROR_PS2_LINUX_4]}"
                 return 1
             else
                 AVAILABLE_SPACE || return 1
                 if [ "$free_space" -lt 3 ]; then
-                    error_msg "[X] Error: Insufficient disk space. At least 3 GB of free space is required to install Linux."
+                    echo "[X] Error: Insufficient disk space. At least 3 GB of free space is required to install Linux." >> "${LOG_FILE}"
+                    error_msg "${UI_TEXT[ERROR_PS2_LINUX_5]}"
                     return 1
                 else
                     free_space=$((free_space -2))
@@ -677,6 +814,8 @@ option_one() {
     fi
 
     download_linux || return 1
+
+    LINUX_SPLASH
 
     if [ "$linux3" == "yes" ]; then
         HDL_TOC || return 1
@@ -694,23 +833,22 @@ option_one() {
         echo "Free Space available for home partition: $free_space GB" >> "${LOG_FILE}"
 
         while true; do
-            echo | tee -a "${LOG_FILE}"
-            echo "APA Space Available: $free_space GB" >> "${LOG_FILE}"
-            echo "What size would you like the \"home\" partition to be?"
-            echo "Minimum 1 GB, maximum $free_space GB"
-            echo
-            read -p "Enter partition size (in GB): " home_gb
+            printf '\n%s\n' "${UI_TEXT[PS2_LINUX_8]}"
+            printf '%s\n' "${UI_TEXT[PS2_LINUX_9]}"
+            printf '%s\n\n' "${UI_TEXT[PARTITION_SIZE_1]} $free_space GB"
+
+            read -rp "${UI_TEXT[PARTITION_SIZE_2]} " home_gb
 
             if [[ ! "$home_gb" =~ ^[0-9]+$ ]]; then
                 echo
-                echo -n "Invalid input. Please enter a valid number."
+                echo -n "${UI_TEXT[PARTITION_SIZE_3]}"
                 sleep 3
                 continue
             fi
 
             if (( home_gb < 1 || home_gb > free_space )); then
                 echo
-                echo "Invalid size. Please enter a value between 1 and $free_space GB."
+                echo "${UI_TEXT[PARTITION_SIZE_4]} $free_space GB"
                 sleep 3
                 continue
             fi
@@ -738,7 +876,8 @@ option_one() {
     fi
 
     echo | tee -a "${LOG_FILE}"
-    echo -n "Installing PS2 Linux..." | tee -a "${LOG_FILE}"
+    echo "Installing PS2 Linux..." >> "${LOG_FILE}"
+    echo -n "${UI_TEXT[PS2_LINUX_10]}"
 
     LINUX_PARTITIONS=("__linux.3" )
     APA_PARTITIONS=("__system" "__sysconf" )
@@ -750,14 +889,23 @@ option_one() {
     mount_pfs    || return 1
 
     if ! sudo tar zxpf "${ASSETS_DIR}/PS2Linux.tar.gz" -C "${STORAGE_DIR}/__linux.3" >>"${LOG_FILE}" 2>&1; then
-        error_msg "Failed to extract files. Install Failed."
+        echo "[X] Error: Failed to extract files. Install Failed." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_PS2_LINUX_6]}"
         return 1
     fi
 
-    cp -f "${ASSETS_DIR}/kernel/ps2-linux-"{ntsc,vga} "${STORAGE_DIR}/__system/p2lboot/" 2>> "${LOG_FILE}" || { error_msg "Failed to copy kernel files."; return 1; }
+    cp -f "${ASSETS_DIR}/kernel/ps2-linux-"{ntsc,vga} "${STORAGE_DIR}/__system/p2lboot/" 2>> "${LOG_FILE}" || {
+        echo "[X] Error: Failed to copy kernel files." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_PS2_LINUX_7]}"
+        return 1
+    }
 
     TMP_FILE=$(mktemp /tmp/OSDMBR.XXXXXX)
-    cp -f "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "$TMP_FILE" 2>> "${LOG_FILE}" || { error_msg "Failed to copy OSDMBR.CNF."; return 1; }
+    cp -f "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "$TMP_FILE" 2>> "${LOG_FILE}" || {
+        echo "[X] Error: Failed to copy: ${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_COPY]} ${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF"
+        return 1
+    }
 
     # Remove any existing boot_circle lines
     sed -i '/^boot_circle/d' "$TMP_FILE" 2>> "${LOG_FILE}"
@@ -772,27 +920,26 @@ option_one() {
         echo 'boot_circle_arg2 = pfs0:/p2lboot/ps2-linux-ntsc'
         echo 'boot_circle_arg3 = -noflags'
     } >> "$TMP_FILE"
-    cp -f $TMP_FILE "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" 2>> "${LOG_FILE}" || { error_msg "Failed to copy OSDMBR.CNF."; return 1; }
+    cp -f $TMP_FILE "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" 2>> "${LOG_FILE}" || {
+        echo "[X] Error: Failed to copy: $TMP_FILE" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_COPY]} $TMP_FILE"
+        return 1
+        }
 
     clean_up || return 1
 
     LINUX_SPLASH
-    echo "    =============================== [✓] PS2 Linux Successfully Installed ==============================" | tee -a "${LOG_FILE}"
-    cat << "EOF"
+    echo "[✓] PS2 Linux Successfully Installed" >> "${LOG_FILE}"
+    center_title "[✓] ${UI_TEXT[PS2_LINUX_11]}"
 
-        To launch PS2 Linux, power on your PS2 console and hold the CIRCLE button on the controller.
-
-        PS2 Linux requires a USB keyboard; a mouse is optional but recommended.
-
-        Default "root" password: password
-        Default password for "ps2" user account: password
-
-        To launch a graphical interface type: startx
-
-    ====================================================================================================
-
-EOF
-    read -n 1 -s -r -p "                                   Press any key to return to the menu..." </dev/tty
+    printf '\n  %s\n\n' "${UI_TEXT[PS2_LINUX_12]}"
+    printf '  %s\n\n' "${UI_TEXT[PS2_LINUX_13]}"
+    printf '  %s\n' "${UI_TEXT[PS2_LINUX_14]}"
+    printf '  %s\n\n' "${UI_TEXT[PS2_LINUX_15]}"
+    printf '  %s\n\n' "${UI_TEXT[PS2_LINUX_16]}"
+    printf "==============================================================================================================\n\n"
+    center_text "${UI_TEXT[CONTINUE]}"
+    read -n 1 -s -r -p "$text" </dev/tty
 
 }
 
@@ -804,7 +951,8 @@ option_two() {
 
     clean_up
     if [ "$OS" = "HOSD" ]; then
-        error_msg "[X] Error: PSBBN is not installed. Please install PSBBN to use this feature."
+        echo "[X] Error: PSBBN is not installed. Please install PSBBN to use this feature." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_OS_CHECK_2]}"
         return 1
     fi
 
@@ -814,12 +962,14 @@ option_two() {
     
     if [[ "$(printf '%s\n' "$psbbn_version" "2.10" | sort -V | head -n1)" != "2.10" ]]; then
         # $psbbn_version < 2.10
-        error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 3.00." "To update, please select 'Install PSBBN' from the main menu and try again."
+        echo "[X] Error: PSBBN Definitive Patch version $psbbn_version is lower than the required version of 3.00. To update, please select 'Install PSBBN' from the main menu and try again." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_VERSION_3]} $psbbn_version" "${UI_TEXT[ERROR_VERSION_4]} 3.00" " " "${UI_TEXT[ERROR_VERSION_5]}"
         UNMOUNT_OPL
         return 1
     elif [[ "$(printf '%s\n' "$psbbn_version" "3.00" | sort -V | head -n1)" = "$psbbn_version" ]] \
         && [[ "$psbbn_version" != "3.00" ]]; then
-        error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 3.00." "To update, please select “Update PSBBN Software” from the main menu and try again."
+        echo "[X] Error: PSBBN Definitive Patch version $psbbn_version is lower than the required version of 3.00. To update, please select Update PSBBN Software from the main menu and try again." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_VERSION_3]} $psbbn_version" "${UI_TEXT[ERROR_VERSION_4]} 3.00" " " "${UI_TEXT[ERROR_VERSION_6]}"
         UNMOUNT_OPL
         return 1
     fi
@@ -827,47 +977,89 @@ option_two() {
     choice=""
     while :; do
         SWAP_SPLASH
-        cat << "EOF"
-                                      Please select a button layout:
+        MENU_KEYS=(
+            REASSIGN_BUTTONS_1
+            REASSIGN_BUTTONS_2
+            REASSIGN_BUTTONS_3
+        )
+        center_menu
+        printf "\n\n\n"
+        printf "%*s%s\n\n" "$((padding - 3))" "" "${UI_TEXT[REASSIGN_BUTTONS_1]}"
+        printf "%*s%s\n\n" "$padding" "1) " "${UI_TEXT[REASSIGN_BUTTONS_2]}"
+        printf "%*s%s\n\n" "$padding" "2) " "${UI_TEXT[REASSIGN_BUTTONS_3]}"
+        printf "%*s%s\n\n" "$padding" "b) " "${UI_TEXT[MENU_BACK]}"
+        printf "%*s%s " "$((padding - 3))" "" "${UI_TEXT[MENU_PROMPT]}"
+        read -rp "" choice
 
-                                      1) Cross = Enter, Circle = Back
-
-                                      2) Circle = Enter, Cross = Back
-
-                                      b) Back
-
-EOF
-        read -rp "                                      Select an option: " choice
-
-            case "$choice" in
+        case "$choice" in
             1|2|b|B)
-                break
-                ;;
+            break
+            ;;
             *)
-                echo "                                      Invalid choice, please enter 1, 2, or b."
-                sleep 3
-                ;;
+            printf "%*s%s " "$((padding - 3))" "" "${UI_TEXT[MENU_INVALID]}"
+            sleep 3
+            ;;
         esac
     done
 
     if [[ "$choice" == "1" ]]; then
         BUTTON="X"
+        OPL_ENTER="1"
+        R3CONFIG_ENTER="0"
     else
         BUTTON="O"
+        OPL_ENTER="0"
+        R3CONFIG_ENTER="1"
     fi
 
-    if grep -q '^ENTER =' "$OPL/version.txt"; then
+    if grep -q '^ENTER =' "$OPL/version.txt" 2>> "${LOG_FILE}"; then
         sed -i "s/^ENTER =.*/ENTER = $BUTTON/" "$OPL/version.txt" || {
-            error_msg "[X] Error: Failed to update button config in version.txt."
+            echo "[X] Error: Failed to update button config in version.txt." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_3]}" "$OPL/version.txt"
             UNMOUNT_OPL
             return 1
         }
     else
         echo "ENTER = $BUTTON" >> "$OPL/version.txt" || {
-            error_msg "[X] Error: Failed to add button config to version.txt."
+            echo "[X] Error: Failed to add button config to version.txt." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_3]}" "$OPL/version.txt"
             UNMOUNT_OPL
             return 1
         }
+    fi
+
+    if grep -q '^swap_select_btn=' "${OPL}/conf_opl.cfg" 2>> "${LOG_FILE}"; then
+        sed -i "s/^swap_select_btn=.*/swap_select_btn=$OPL_ENTER/" "${OPL}/conf_opl.cfg" || {
+            echo "[X] Error: Failed to update button config in conf_opl.cfg." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_3]}" "${OPL}/conf_opl.cfg"
+            UNMOUNT_OPL
+            return 1
+    }
+    else
+        echo "swap_select_btn=$OPL_ENTER" >> "${OPL}/conf_opl.cfg" || {
+            echo "[X] Error: Failed to add button config to conf_opl.cfg." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_3]}" "${OPL}/conf_opl.cfg"
+            UNMOUNT_OPL
+            return 1
+        }
+    fi
+
+    if [[ -d "${OPL}/APPS/SYS_R3CONFIGURATOR" ]]; then
+        if grep -q '^swap_select_btn =' "${OPL}/APPS/SYS_R3CONFIGURATOR/r3configurator.cnf" 2>> "${LOG_FILE}"; then
+        sed -i "s/^swap_button[[:space:]]*=.*/swap_buttons = $R3CONFIG_ENTER/" "${OPL}/APPS/SYS_R3CONFIGURATOR/r3configurator.cnf" || {
+            echo "[X] Error: Failed to update button config in r3configurator.cnf." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_3]}" "${OPL}/APPS/SYS_R3CONFIGURATOR/r3configurator.cnf"
+            UNMOUNT_OPL
+            return 1
+        }
+        else
+            echo "swap_buttons = $R3CONFIG_ENTER" >> "${OPL}/APPS/SYS_R3CONFIGURATOR/r3configurator.cnf" || {
+                echo "[X] Error: Failed to add button config to r3configurator.cnf." >> "${LOG_FILE}"
+                error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_3]}" "${OPL}/APPS/SYS_R3CONFIGURATOR/r3configurator.cnf"
+                UNMOUNT_OPL
+                return 1
+            }
+        fi
     fi
 
     UNMOUNT_OPL || return 1
@@ -890,12 +1082,15 @@ EOF
                 && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1
             then
                 SWAP_SPLASH
-                echo "    ================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
+                echo "[✓] Buttons Swapped Successfully" >> "${LOG_FILE}"
+                center_title "[✓] ${UI_TEXT[REASSIGN_BUTTONS_4]}"
                 echo
-                read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
+                center_text "${UI_TEXT[CONTINUE]}"
+                read -n 1 -s -r -p "$text" </dev/tty
             else
                 SWAP_SPLASH
-                error_msg "[X] Error: Failed to swap buttons. See log for details."
+                echo "[X] Error: Failed to swap buttons." >> "${LOG_FILE}"
+                error_msg "${UI_TEXT[ERROR_REASSIGN_BUTTONS_3]}"
                 return 1
             fi
             ;;
@@ -908,12 +1103,16 @@ EOF
                 && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1
             then
                 SWAP_SPLASH
-                echo "    ================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
+                echo "[✓] Buttons Swapped Successfully" >> "${LOG_FILE}"
+                center_title "[✓] ${UI_TEXT[REASSIGN_BUTTONS_4]}"
                 echo
-                read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
+                center_text "${UI_TEXT[CONTINUE]}"
+                echo
+                read -n 1 -s -r -p "$text" </dev/tty
             else
                 SWAP_SPLASH
-                error_msg "[X] Error: Failed to swap buttons. See log for details."
+                echo "[X] Error: Failed to swap buttons." >> "${LOG_FILE}"
+                error_msg "${UI_TEXT[ERROR_REASSIGN_BUTTONS_3]}"
                 return 1
             fi
             ;;
@@ -943,7 +1142,7 @@ option_three() {
         SCREEN=$(awk -F' *= *' '$1=="SCREEN"{print $2}' "${OPL}/version.txt")
 
         if [[ -z "$ENTER" ]]; then
-            if [[ "$LANG" == "jpn" ]]; then
+            if [[ "$lang" == "jpn" ]]; then
                 echo "ENTER = O" >> "$OPL/version.txt"
             else
                 echo "ENTER = X" >> "$OPL/version.txt"
@@ -956,12 +1155,14 @@ option_three() {
 
         if [[ "$(printf '%s\n' "$psbbn_version" "2.10" | sort -V | head -n1)" != "2.10" ]]; then
             # $psbbn_version < 2.10
-            error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.1.0." "To update, please select 'Install PSBBN' from the main menu and try again."
+            echo "[X] Error: PSBBN Definitive Patch version $psbbn_version is lower than the required version of 4.1.0. To update, please select 'Install PSBBN' from the main menu and try again." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_VERSION_3]} $psbbn_version" "${UI_TEXT[ERROR_VERSION_4]} 4.1.0" " " "${UI_TEXT[ERROR_VERSION_5]}"
             UNMOUNT_OPL
             return 1
         elif [[ "$(printf '%s\n' "$psbbn_version" "4.1.0" | sort -V | head -n1)" = "$psbbn_version" ]] \
             && [[ "$psbbn_version" != "4.1.0" ]]; then
-            error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.1.0." "To update, please select “Update PSBBN Software” from the main menu and try again."
+            echo "[X] Error: PSBBN Definitive Patch version $psbbn_version is lower than the required version of 4.1.0. To update, please select Update PSBBN Software from the main menu and try again." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_VERSION_3]} $psbbn_version" "${UI_TEXT[ERROR_VERSION_4]} 4.1.0" " " "${UI_TEXT[ERROR_VERSION_6]}"
             UNMOUNT_OPL
             return 1
         fi
@@ -969,62 +1170,86 @@ option_three() {
 
     while :; do
         LANGUAGE_SPLASH
-        cat << "EOF"
-                               Please select a language from the list below:
-
-                               1) English
-
-                               2) Japanese
-
-                               3) French
-
-                               4) German
-
-                               5) Italian
-
-                               6) Portuguese (Brazil)
-
-                               7) Spanish
-
-                               b) Back
-
-EOF
-        read -rp "                               Select an option: " choice
+        MENU_KEYS=(
+            CHANGE_LANGUAGE_1
+            CHANGE_LANGUAGE_2
+            CHANGE_LANGUAGE_3
+            CHANGE_LANGUAGE_4
+            CHANGE_LANGUAGE_5
+            CHANGE_LANGUAGE_6
+            CHANGE_LANGUAGE_7
+            CHANGE_LANGUAGE_8
+            CHANGE_LANGUAGE_9
+        )
+        center_menu
+        printf "%*s%s\n\n" "$((padding - 3))" "" "${UI_TEXT[CHANGE_LANGUAGE_1]}"
+        printf "%*s%s\n\n" "$padding" "1) " "${UI_TEXT[CHANGE_LANGUAGE_2]}"
+        printf "%*s%s\n\n" "$padding" "2) " "${UI_TEXT[CHANGE_LANGUAGE_3]}"
+        printf "%*s%s\n\n" "$padding" "3) " "${UI_TEXT[CHANGE_LANGUAGE_4]}"
+        printf "%*s%s\n\n" "$padding" "4) " "${UI_TEXT[CHANGE_LANGUAGE_5]}"
+        printf "%*s%s\n\n" "$padding" "5) " "${UI_TEXT[CHANGE_LANGUAGE_6]}"
+        printf "%*s%s\n\n" "$padding" "6) " "${UI_TEXT[CHANGE_LANGUAGE_7]}"
+        printf "%*s%s\n\n" "$padding" "7) " "${UI_TEXT[CHANGE_LANGUAGE_8]}"
+        printf "%*s%s\n\n" "$padding" "8) " "${UI_TEXT[CHANGE_LANGUAGE_9]}"
+        printf "%*s%s\n\n" "$padding" "b) " "${UI_TEXT[MENU_BACK]}"
+        printf "%*s%s " "$((padding - 3))" "" "${UI_TEXT[MENU_PROMPT]}"
+        read -rp "" choice
 
         case "$choice" in
             1)
-                LANG="eng"
-                LANG_DISPLAY="English"
+                lang="eng"
+                OPL_LANG="English (internal)"
+                R3CONFIG_LANG="en"
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_2]}"
                 break
                 ;;
             2)
-                LANG="jpn"
-                LANG_DISPLAY="Japanese"
+                lang="jpn"
+                OPL_LANG="japanese"
+                R3CONFIG_LANG="en"
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_3]}"
                 break
                 ;;
             3)
-                LANG="fre"
-                LANG_DISPLAY="French"
+                lang="fre"
+                OPL_LANG="French"
+                R3CONFIG_LANG="fr"
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_4]}"
                 break
                 ;;
             4)
-                LANG="ger"
-                LANG_DISPLAY="German"
+                lang="ger"
+                OPL_LANG="German"
+                R3CONFIG_LANG="en"
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_5]}"
                 break
                 ;;
             5)
-                LANG="ita"
-                LANG_DISPLAY="Italian"
+                lang="hun"
+                OPL_LANG="Hungarian"
+                R3CONFIG_LANG="en"
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_6]}"
                 break
                 ;;
             6)
-                LANG="por"
-                LANG_DISPLAY="Portuguese (Brazil)"
+                lang="ita"
+                OPL_LANG="Italian"
+                R3CONFIG_LANG="en"
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_7]}"
                 break
                 ;;
             7)
-                LANG="spa"
-                LANG_DISPLAY="Spanish"
+                lang="por"
+                OPL_LANG="Portuguese_BR"
+                R3CONFIG_LANG="pt"
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_8]}"
+                break
+                ;;
+            8)
+                lang="spa"
+                OPL_LANG="Spanish"
+                R3CONFIG_LANG="es"
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_9]}"
                 break
                 ;;
             b|B)
@@ -1033,14 +1258,67 @@ EOF
                 ;;
             *)
                 echo
-                echo -n "                               Invalid choice, enter a number between 1 and 7."
+                printf "%*s%s " "$((padding - 3))" "" "${UI_TEXT[MENU_INVALID]}"
                 sleep 3
                 ;;
         esac
     done
 
     echo "Language selected: $LANG_DISPLAY" >> "${LOG_FILE}"
+
     LANGUAGE_SPLASH
+
+    cp "${ASSETS_DIR}/OPL/LNG"/* "${OPL}/LNG" >> "${LOG_FILE}" 2>&1
+
+    if [[ "$lang" == "jpn" ]]; then
+        rm -f "${OPL}/POPS/"{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} 2>> "${LOG_FILE}" || {
+            echo "[X] Error: Failed to update POPS IGR textures." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_9]}"
+            UNMOUNT_OPL
+            return 1
+    }
+    else
+        cp -f "${ASSETS_DIR}/POPStarter/$lang/"{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} "${OPL}/POPS/" 2>> "${LOG_FILE}" || {
+            echo "[X] Error: Failed to update POPS IGR textures." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_9]}"
+            UNMOUNT_OPL
+            return 1
+        }
+    fi
+
+    if grep -q '^^language_text=' "${OPL}/conf_opl.cfg" 2>> "${LOG_FILE}"; then
+    sed -i "s/^language_text=.*/language_text=$OPL_LANG/" "${OPL}/conf_opl.cfg" || {
+        echo "[X] Error: Failed to update button config in conf_opl.cfg." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_3]}" "${OPL}/conf_opl.cfg"
+        UNMOUNT_OPL
+        return 1
+    }
+    else
+        echo "language_text=$OPL_LANG" >> "${OPL}/conf_opl.cfg" || {
+            echo "[X] Error: Failed to add button config to conf_opl.cfg." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_3]}" "${OPL}/conf_opl.cfg"
+            UNMOUNT_OPL
+            return 1
+        }
+    fi
+
+    if [[ -d "${OPL}/APPS/SYS_R3CONFIGURATOR" ]]; then
+        if grep -q '^swap_select_btn =' "${OPL}/APPS/SYS_R3CONFIGURATOR/r3configurator.cnf" 2>> "${LOG_FILE}"; then
+        sed -i "s/^default_language[[:space:]]*=.*/default_language = $R3CONFIG_LANG/" "${OPL}/APPS/SYS_R3CONFIGURATOR/r3configurator.cnf" || {
+            echo "[X] Error: Failed to update button config in r3configurator.cnf." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_3]}" "${OPL}/APPS/SYS_R3CONFIGURATOR/r3configurator.cnf"
+            UNMOUNT_OPL
+            return 1
+        }
+        else
+            echo "default_language = $R3CONFIG_LANG" >> "${OPL}/APPS/SYS_R3CONFIGURATOR/r3configurator.cnf" || {
+                echo "[X] Error: Failed to add button config to r3configurator.cnf." >> "${LOG_FILE}"
+                error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_3]}" "${OPL}/APPS/SYS_R3CONFIGURATOR/r3configurator.cnf"
+                UNMOUNT_OPL
+                return 1
+            }
+        fi
+    fi
 
     if [ "$OS" = "PSBBN" ]; then
         # Download the HTML of the page
@@ -1048,24 +1326,29 @@ EOF
         timeout 20 wget -O "$HTML_FILE" "$URL" -o - >> "$LOG_FILE" 2>&1 &
         WGET_PID=$!
 
-        spinner $WGET_PID "Checking for latest version of the PSBBN Definitive Patch"
+        spinner $WGET_PID "${UI_TEXT[CHANGE_LANGUAGE_10]}"
 
-        get_latest_file "language-pak-$LANG" "$LANG_DISPLAY language pack" || return 1
-        downoad_latest_file "language-pak-$LANG" || return 1
+        get_latest_file "language-pak-$lang" "$LANG_DISPLAY ${UI_TEXT[CHANGE_LANGUAGE_11]}" || return 1
+        downoad_latest_file "language-pak-$lang" || return 1
         LANG_PACK="${ASSETS_DIR}/${LATEST_FILE}"
 
-        if [[ "$LANG" == "jpn" ]]; then
-            get_latest_file "channels-$LANG" "$LANG_DISPLAY channels" || return 1
+        if [[ "$lang" == "jpn" ]]; then
+            get_latest_file "channels-$lang" "$LANG_DISPLAY channels" || return 1
             downoad_latest_file "channels" || return 1
             CHANNELS="${ASSETS_DIR}/${LATEST_FILE}"
         fi
 
         echo
-        echo -n "Installing language pack..."
-
-        sed -i "s/^LANG =.*/LANG = $LANG/" "$OPL/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
-        sed -i "s|^LANG_VER =.*|LANG_VER = $LATEST_LANG|" "${OPL}/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
-        sed -i "s|^CHAN_VER =.*|CHAN_VER = $LATEST_CHAN|" "${OPL}/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
+        echo -n "${UI_TEXT[CHANGE_LANGUAGE_12]}"
+        {
+            sed -i "s/^LANG =.*/LANG = $lang/" "$OPL/version.txt" &&
+            sed -i "s|^LANG_VER =.*|LANG_VER = $LATEST_LANG|" "$OPL/version.txt" &&
+            sed -i "s|^CHAN_VER =.*|CHAN_VER = $LATEST_CHAN|" "$OPL/version.txt"
+        } >> "${LOG_FILE}" 2>&1 || {
+            echo "[X] Error: Failed to update version.txt." >> "$LOG_FILE"
+            error_msg "${UI_TEXT[ERROR_UPDATE_VER]}"
+            return 1
+        }
 
         LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.9" )
         APA_PARTITIONS=("__system" "__sysconf" "__common")
@@ -1078,42 +1361,79 @@ EOF
         ls -l /dev/mapper >> "${LOG_FILE}"
         df >> "${LOG_FILE}"
 
-        sudo tar zxpf "$LANG_PACK" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || { error_msg "[X] Error: Failed to install $LANG_DISPLAY language pack." "See ${LOG_FILE} for details."; return 1; }
+        sudo tar zxpf "$LANG_PACK" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || {
+            echo "[X] Error: Failed to install language pack: $LANG_DISPLAY" >> "$LOG_FILE"
+            error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_2]}"
+            return 1
+        }
 
-        if [[ "$LANG" == "jpn" ]]; then
-            cp -f "${ASSETS_DIR}/kernel/vmlinux_jpn" "${STORAGE_DIR}/__system/p2lboot/vmlinux" 2>> "${LOG_FILE}" || { error_msg "[X] Error: Failed to copy kernel file."; return 1; }
-            sudo tar zxpf "${CHANNELS}" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || { error_msg "[X] Error: Failed to install channels." "See ${LOG_FILE} for details."; return 1; }
+        if [[ "$lang" == "jpn" ]]; then
+            cp -f "${ASSETS_DIR}/kernel/vmlinux_jpn" "${STORAGE_DIR}/__system/p2lboot/vmlinux" 2>> "${LOG_FILE}" || {
+                echo "[X] Error: Failed to copy kernel file." >> "$LOG_FILE"
+                error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_5]}"
+                return 1
+            }
+            sudo tar zxpf "${CHANNELS}" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || {
+                echo "[X] Error: Failed to install channels." >> "$LOG_FILE"
+                error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_4]}"
+                return 1
+            }
         else
-            cp -f "${ASSETS_DIR}/kernel/vmlinux" "${STORAGE_DIR}/__system/p2lboot/vmlinux" 2>> "${LOG_FILE}" || { error_msg "[X] Error: Failed to copy kernel file."; return 1; }
+            cp -f "${ASSETS_DIR}/kernel/vmlinux" "${STORAGE_DIR}/__system/p2lboot/vmlinux" 2>> "${LOG_FILE}" || {
+                echo "[X] Error: Failed to copy kernel file." >> "$LOG_FILE"
+                error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_5]}"
+                return 1
+            }
         fi
 
         mkdir -p "${SCRIPTS_DIR}/tmp"
-        cp "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to copy OSDMBR.CNF."; return 1; }
-        sed -i "s/^osd_language =.*/osd_language = $LANG/" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to update language in OSDMBR.CNF."; return 1; }
-        cp -f "${OSDMBR_CNF}" "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" || { error_msg "[X] Error: Failed to replace OSDMBR.CNF."; return 1; }
+
+        case "$lang" in
+            ger|ita|por|spa|fre|dut|rus|kor|tch|sch)
+                OSD_LANG="$lang"
+                ;;
+            jpn)
+                OSD_LANG="jap"
+                ;;
+            *)
+                OSD_LANG="eng"
+                ;;
+        esac
+
+        {
+            cp "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "${OSDMBR_CNF}" &&
+            sed -i "s/^osd_language =.*/osd_language = $OSD_LANG/" "${OSDMBR_CNF}" &&
+            cp -f "${OSDMBR_CNF}" "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF"
+        } >> "${LOG_FILE}" 2>&1 || {
+            echo  "[X] Error: Failed to update OSDMBR.CNF." >> "$LOG_FILE"
+            error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_6]}"
+            return 1
+        }
         
         # Update buttons
-        if [[ "$ENTER" == "O" ]] || { [[ -z "$ENTER" ]] && [[ "$LANG" == "jpn" ]]; }; then
+        if [[ "$ENTER" == "O" ]] || { [[ -z "$ENTER" ]] && [[ "$lang" == "jpn" ]]; }; then
             if sudo cp -f "${ASSETS_DIR}/kernel/vmlinux_jpn" "${STORAGE_DIR}/__system/p2lboot/vmlinux" >> "${LOG_FILE}" 2>&1 \
                 && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_r.tm2" >> "${LOG_FILE}" 2>&1 \
                 && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1 ; then
                 echo "Enter button swapped to O" >> "${LOG_FILE}"
             else
-                error_msg "Failed to swap enter button. See log for details."
+                echo "[X] Error: Failed to swap enter button." >> "$LOG_FILE"
+
             fi
-        elif [[ "$ENTER" == "X" ]] || { [[ -z "$ENTER" ]] && [[ "$LANG" != "jpn" ]]; }; then
+        elif [[ "$ENTER" == "X" ]] || { [[ -z "$ENTER" ]] && [[ "$lang" != "jpn" ]]; }; then
             if sudo cp -f "${ASSETS_DIR}/kernel/vmlinux" "${STORAGE_DIR}/__system/p2lboot/vmlinux" >> "${LOG_FILE}" 2>&1 \
                 && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_r.tm2" >> "${LOG_FILE}" 2>&1 \
                 && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1 ; then
                 echo "Enter button swapped to X" >> "${LOG_FILE}"
             else
-                error_msg "Failed to swap enter button. See log for details."
+                echo "Failed to swap enter button. See log for details." >> "$LOG_FILE"
+                error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_7]}"
             fi
         fi
 
         if [[ "$SCREEN" == "full" ]]; then
             SIZE_NAME="Full"
-            case "$LANG" in
+            case "$lang" in
                 jpn) SIZE_NAME="フル" ;;
                 fre) SIZE_NAME="Plein écran" ;;
                 spa) SIZE_NAME="Pantalla Completa" ;;
@@ -1121,6 +1441,7 @@ EOF
                 ita) SIZE_NAME="Schermo Intero" ;;
                 dut) SIZE_NAME="Volledig" ;;
                 por) SIZE_NAME="Completo" ;;
+                hun) SIZE_NAME="Teljes" ;;
             esac
         elif [[ "$SCREEN" == "16:9" ]]; then
             SIZE_NAME="16:9"
@@ -1128,33 +1449,30 @@ EOF
 
         if [[ "$SCREEN" == "full" || "$SCREEN" == "16:9" ]]; then
             mkdir -p "${SCRIPTS_DIR}/tmp"
-            sudo cp "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" "${SYSCONF_XML}" || error_msg "Failed to copy sysconf.xml"
 
-            sed -i "/<menu id=\"sysconf_value_2_0\">/,/<\/menu>/ {
-                /<item value=/ {
-                    s|<item value=.*|<item value=\"$SIZE_NAME\"/>|
-                    :done
-                    n
-                    b done
-                }
-            }" "$SYSCONF_XML" ||
-            error_msg "Failed to update $SYSCONF_XML";
-
-            sudo cp -f "${SYSCONF_XML}" "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" || error_msg "Failed to replace sysconf.xml."
+            {
+                sudo cp "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" "${SYSCONF_XML}" &&
+                sed -i "/<menu id=\"sysconf_value_2_0\">/,/<\/menu>/ {
+                    /<item value=/ {
+                        s|<item value=.*|<item value=\"$SIZE_NAME\"/>|
+                        :done
+                        n
+                        b done
+                    }
+                }" "${SYSCONF_XML}" &&
+                sudo cp -f "${SYSCONF_XML}" "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml"
+            } >> "${LOG_FILE}" 2>&1 || {
+                echo "[X] Error: Failed to update sysconf.xml." >> "${LOG_FILE}"
+                error_msg "${UI_TEXT[ERROR_CHANGE_LANGUAGE_8]}"
+                return 1
+            }
         fi
     else
-        sed -i "s/^LANG =.*/LANG = $LANG/" "$OPL/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
-        APA_PARTITIONS=("__common")
-        clean_up   && \
-        mapper_probe && \
-        mount_pfs    || return 1
-    fi
-
-    if [[ "$LANG" == "jpn" ]]; then
-        rm -f "${STORAGE_DIR}/__common/POPS/"{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} 2>> "${LOG_FILE}" || { error_msg "[X] Error: Update POPS IGR textures."; return 1; }
-    else
-        mkdir -p "${STORAGE_DIR}/__common/POPS"
-        cp -f "${ASSETS_DIR}/POPStarter/$LANG/"{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} "${STORAGE_DIR}/__common/POPS/" 2>> "${LOG_FILE}" || { error_msg "[X] Error: Update POPS IGR textures."; return 1; }
+        sed -i "s/^LANG =.*/LANG = $lang/" "$OPL/version.txt" || {
+            echo "[X] Error: Failed to update version.txt." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_UPDATE_VER]}"
+            return 1
+        }
     fi
 
     clean_up || return 1
@@ -1162,39 +1480,23 @@ EOF
     ls -l /dev/mapper >> "${LOG_FILE}"
     df >> "${LOG_FILE}"
 
-    msg=" [✓] Language Successfully Changed to $LANG_DISPLAY "
-    total_width=100
-
-    # Length of the message including spaces around it
-    msg_len=${#msg}
-
-    # Calculate number of "=" on each side
-    pad=$(( (total_width - msg_len) / 2 ))
-
-    # If odd padding required, right side will get one more "=", so account for it
-    extra=$(( (total_width - msg_len) % 2 ))
-
-    left_pad=$(printf '%*s' "$pad" | tr ' ' '=')
-    right_pad=$(printf '%*s' $((pad + extra)) | tr ' ' '=')
-
     LANGUAGE_SPLASH
-    echo "    ${left_pad}${msg}${right_pad}"
-    echo
-    echo "      It is recommended to rerun the Game Installer and choose \"Add Additional Games and Apps\" to"
+    echo "[✓] Language Successfully Changed to: $LANG_DISPLAY" >> "${LOG_FILE}"
+    center_title "[✓] ${UI_TEXT[CHANGE_LANGUAGE_13]} $LANG_DISPLAY"
+
+    printf '\n  %s\n\n' "${UI_TEXT[CHANGE_LANGUAGE_14]}"
+
     if [ "$OS" = "PSBBN" ]; then
-        echo "      update the game titles and PlaySation game manuals to your selected language."
+        printf '  %s\n\n' "${UI_TEXT[CHANGE_LANGUAGE_15]}"
         if [[ -z "$ENTER" ]]; then
-            echo
-            echo "      If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
+            printf '  %s\n\n' "${UI_TEXT[CHANGE_LANGUAGE_16]}"
         fi
     else
-        echo "      update the game titles to your selected language."
+        printf '  %s\n\n' "${UI_TEXT[CHANGE_LANGUAGE_17]}"
     fi
-    echo
-    echo "    ===================================================================================================="
-    echo
-    read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
-    
+    printf "==============================================================================================================\n\n"
+    center_text "${UI_TEXT[CONTINUE]}"
+    read -n 1 -s -r -p "$text" </dev/tty
 }
 
 option_four() {
@@ -1206,7 +1508,8 @@ option_four() {
     clean_up
 
     if [ "$OS" = "HOSD" ]; then
-        error_msg "[X] Error: PSBBN is not installed. Please install PSBBN to use this feature."
+        echo "[X] Error: PSBBN is not installed. Please install PSBBN to use this feature." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_OS_CHECK_2]}"
         return 1
     fi
 
@@ -1216,32 +1519,32 @@ option_four() {
     
     if [[ "$(printf '%s\n' "$psbbn_version" "2.10" | sort -V | head -n1)" != "2.10" ]]; then
         # $psbbn_version < 2.10
-        error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.0.0." "To update, please select 'Install PSBBN' from the main menu and try again."
+        echo "[X] Error: PSBBN Definitive Patch version $psbbn_version is lower than the required version of 4.0. 0. To update, please select 'Install PSBBN' from the main menu and try again." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_VERSION_3]} $psbbn_version" "${UI_TEXT[ERROR_VERSION_4]} 4.0.0" " " "${UI_TEXT[ERROR_VERSION_5]}"
         return 1
     elif [[ "$(printf '%s\n' "$psbbn_version" "4.0.0" | sort -V | head -n1)" = "$psbbn_version" ]] \
         && [[ "$psbbn_version" != "4.0.0" ]]; then
-        error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.0.0." "To update, please select “Update PSBBN Software” from the main menu and try again."
+        echo "[X] Error: PSBBN Definitive Patch version $psbbn_version is lower than the required version of 4.0.0. To update, please select Update PSBBN Software from the main menu and try again." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_VERSION_3]} $psbbn_version" "${UI_TEXT[ERROR_VERSION_4]} 4.0.0" " " "${UI_TEXT[ERROR_VERSION_6]}"
         return 1
     fi
 
-    LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
-    echo "Language: $LANG" >> "${LOG_FILE}"
+    lang=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
+    echo "Language: $lang" >> "${LOG_FILE}"
 
         while :; do
         SCREEN_SPLASH
-        cat << "EOF"
-                              Please select a screen size from the list below:
-
-                              1) 4:3
-
-                              2) Full
-
-                              3) 16:9
-
-                              b) Back
-
-EOF
-        read -rp "                              Select an option: " choice
+        MENU_KEYS=(
+            SCREEN_SIZE_1
+        )
+        center_menu
+        printf "%*s%s\n\n" "$((padding - 3))" "" "${UI_TEXT[SCREEN_SIZE_1]}"
+        printf "%*s%s\n\n" "$padding" "1) " "4:3"
+        printf "%*s%s\n\n" "$padding" "2) " "${UI_TEXT[SCREEN_SIZE_2]}"
+        printf "%*s%s\n\n" "$padding" "3) " "16:9"
+        printf "%*s%s\n\n" "$padding" "b) " "${UI_TEXT[MENU_BACK]}"
+        printf "%*s%s " "$((padding - 3))" "" "${UI_TEXT[MENU_PROMPT]}"
+        read -rp "" choice
 
         case "$choice" in
             1)
@@ -1252,7 +1555,7 @@ EOF
             2)
                 SCREEN_SIZE="full"
                 SIZE_NAME="Full"
-                case "$LANG" in
+                case "$lang" in
                     jpn) SIZE_NAME="フル" ;;
                     fre) SIZE_NAME="Plein écran" ;;
                     spa) SIZE_NAME="Pantalla Completa" ;;
@@ -1260,6 +1563,7 @@ EOF
                     ita) SIZE_NAME="Schermo Intero" ;;
                     dut) SIZE_NAME="Volledig" ;;
                     por) SIZE_NAME="Completo" ;;
+                    hun) SIZE_NAME="Teljes" ;;
                 esac
                 break
                 ;;
@@ -1274,7 +1578,7 @@ EOF
                 ;;
             *)
                 echo
-                echo -n "                               Invalid choice, enter a number between 1 and 3."
+                printf "%*s%s " "$((padding - 3))" "" "${UI_TEXT[MENU_INVALID]}"
                 sleep 3
                 ;;
         esac
@@ -1285,12 +1589,14 @@ EOF
 
     if grep -q '^SCREEN =' "$OPL/version.txt"; then
         sed -i "s/^SCREEN =.*/SCREEN = $SCREEN_SIZE/" "$OPL/version.txt" || {
-            error_msg "[X] Error: Failed to update screen size in version.txt."
+            echo "[X] Error: Failed to update version.txt." >> "$LOG_FILE"
+            error_msg "${UI_TEXT[ERROR_UPDATE_VER]}"
             return 1
         }
     else
         echo "SCREEN = $SCREEN_SIZE" >> "$OPL/version.txt" || {
-            error_msg "[X] Error: Failed to add screen size to version.txt."
+            echo "[X] Error: Failed to update version.txt." >> "$LOG_FILE"
+            error_msg "${UI_TEXT[ERROR_UPDATE_VER]}"
             return 1
         }
     fi
@@ -1307,28 +1613,42 @@ EOF
     df >> "${LOG_FILE}"
 
     mkdir -p "${SCRIPTS_DIR}/tmp"
-    cp "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to copy OSDMBR.CNF."; return 1; }
+    cp "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "${OSDMBR_CNF}" || {
+        echo "[X] Error: Failed to copy OSDMBR.CNF." >> "$LOG_FILE"
+        error_msg "${UI_TEXT[ERROR_SCREEN_SIZE_1]}"
+        return 1
+    }
 
     # OSDMBR.CNF - Update osd_screentype if exists, otherwise append it
     if grep -q '^osd_screentype =' "${OSDMBR_CNF}"; then
         sed -i "s/^osd_screentype =.*/osd_screentype = $SCREEN_SIZE/" "${OSDMBR_CNF}" || {
-            error_msg "[X] Error: Failed to update osd_screentype in OSDMBR.CNF."; 
-            return 1; 
+            echo "[X] Error: Failed to update osd_screentype in OSDMBR.CNF." >> "$LOG_FILE"
+            error_msg "${UI_TEXT[ERROR_SCREEN_SIZE_2]}"
+            return 1
         }
     else
         # Ensure the file ends with a newline
         [ -n "$(tail -c1 "$OSDMBR_CNF" | tr -d '\n')" ] && echo >> "$OSDMBR_CNF"
 
         echo "osd_screentype = $SCREEN_SIZE" >> "${OSDMBR_CNF}" || {
-            error_msg "[X] Error: Failed to add osd_screentype in OSDMBR.CNF."; 
-            return 1; 
+            echo "[X] Error: Failed to add osd_screentype in OSDMBR.CNF." >> "$LOG_FILE"
+            error_msg "${UI_TEXT[ERROR_SCREEN_SIZE_3]}"
+            return 1
         }
     fi
 
-    cp -f "${OSDMBR_CNF}" "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" || { error_msg "[X] Error: Failed to replace OSDMBR.CNF."; return 1; }
+    cp -f "${OSDMBR_CNF}" "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" || {
+        echo "[X] Error: Failed to replace OSDMBR.CNF." >> "$LOG_FILE"
+        error_msg "${UI_TEXT[ERROR_SCREEN_SIZE_4]}"
+        return 1
+    }
 
     # Update sysconf.xml
-    sudo cp "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" "${SYSCONF_XML}" || { error_msg "[X] Error: Failed to copy sysconf.xml"; return 1; }
+    sudo cp "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" "${SYSCONF_XML}" || {
+        echo "[X] Error: Failed to copy sysconf.xml" >> "$LOG_FILE"
+        error_msg "${UI_TEXT[ERROR_SCREEN_SIZE_5]}"
+        return 1
+    }
 
    # Use sed to replace the first <item value= inside the menu block
     sed -i "/<menu id=\"sysconf_value_2_0\">/,/<\/menu>/ {
@@ -1339,11 +1659,16 @@ EOF
             b done
         }
     }" "$SYSCONF_XML" || {
-        error_msg "[X] Error: Failed to update $SYSCONF_XML";
+        echo "[X] Error: Failed to update $SYSCONF_XML" >> "$LOG_FILE"
+        error_msg "${UI_TEXT[ERROR_APP_SUCCESS_CHECK]} $SYSCONF_XML"
         return 1;
     }
 
-    sudo cp -f "${SYSCONF_XML}" "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" || { error_msg "[X] Error: Failed to replace sysconf.xml."; return 1; }
+    sudo cp -f "${SYSCONF_XML}" "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" || {
+        echo "[X] Error: Failed to replace sysconf.xml" >> "$LOG_FILE"
+        error_msg "${UI_TEXT[ERROR_SCREEN_SIZE_6]}"
+        return 1
+    }
 
     clean_up || return 1
     echo clean up afterwards: >> "${LOG_FILE}"
@@ -1351,10 +1676,11 @@ EOF
     df >> "${LOG_FILE}"
 
     SCREEN_SPLASH
-    echo "    =============================== [✓] Screen Size Successfully Changed ===============================" | tee -a "${LOG_FILE}"
+    echo "[✓] Screen Size Successfully Changed" >> "${LOG_FILE}"
+    center_title "[✓] ${UI_TEXT[SCREEN_SIZE_3]}"
+    center_text "${UI_TEXT[CONTINUE]}"
     echo
-    read -n 1 -s -r -p "                                   Press any key to return to the menu..." </dev/tty
-
+    read -n 1 -s -r -p "$text" </dev/tty
 }
 
 option_five() {
@@ -1363,15 +1689,17 @@ option_five() {
     # === Delete files in ARTWORK_DIR ===
     if ! find "$ARTWORK_DIR" -maxdepth 1 -type f ! \( \
         -name "APP.png" -o \
-        -name "APP_WLE-ISR.png" -o \
+        -name "APP_WLE-R3Z.png" -o \
         -name "HOSDMENU.png" -o \
-        -name "OSDMENUCONF.png" -o \
+        -name "SYS_R3CONFIG.png" -o \
         -name "NHDDL.png" -o \
         -name "OPENPS2LOAD.png" -o \
         -name "ps1.png" -o \
-        -name "ps2.png" \
+        -name "ps2.png" -o \
+        -name "POPSLOADER.png" \
     \) -delete; then
-    error_msg "[X] Error: Some files in $ARTWORK_DIR could not be deleted."
+    echo "[X] Error: Some files could not be deleted in $ARTWORK_DIR" >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_CLEAR_CACHE]}"
     return 1
     fi
 
@@ -1387,58 +1715,22 @@ option_five() {
         -name "opl.ico" -o \
         -name "ps1.ico" -o \
         -name "psbbn-del.ico" -o \
-        -name "psbbn.ico" \
+        -name "psbbn.ico" -o \
+        -name "popsloader.ico" -o \
+        -name "popsloader-del.ico" \
     \) -delete; then
-        error_msg "[X] Error: Some files in $ICO_DIR could not be deleted."
+        echo "[X] Error: Some files could not be deleted in $ICO_DIR" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_CLEAR_CACHE]}"
         return 1
     fi
 
     # === Delete files in VMC_ICON_DIR ===
-    if ! find "$VMC_ICON_DIR" -maxdepth 1 -type f ! \( \
-        -name "VMC.ico" -o \
-        -name "GP_*" \
-    \) -delete; then
-        error_msg "[X] Error: Some files in $VMC_ICON_DIR could not be deleted."
-        return 1
-    fi
+    rm -rf "$VMC_ICON_DIR"
 
-    echo "    ============================= [✓] Icon & Art Cache Cleared Successfully ============================"
+    center_title "[✓] ${UI_TEXT[CLEAR_CACHE]}"
+    center_text "${UI_TEXT[CONTINUE]}"
     echo
-    read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
-}
-
-EXTRAS_SPLASH() {
-clear
-    cat << "EOF"
-                                         _____     _                 
-                                        |  ___|   | |                
-                                        | |____  _| |_ _ __ __ _ ___ 
-                                        |  __\ \/ / __| '__/ _` / __|
-                                        | |___>  <| |_| | | (_| \__ \
-                                        \____/_/\_\\__|_|  \__,_|___/
-
-
-
-EOF
-}
-
-# Function to display the menu
-display_menu() {
-    EXTRAS_SPLASH
-    cat << "EOF"
-                                    1) Install PS2 Linux
-
-                                    2) Reassign Cross and Circle Buttons
-
-                                    3) Change Language
-
-                                    4) Change Screen Settings
-
-                                    5) Clear Art & Icon Cache
-
-                                    b) Back to Main Menu
-
-EOF
+    read -n 1 -s -r -p "$text" </dev/tty
 }
 
 clear
@@ -1452,16 +1744,17 @@ if [ $? -ne 0 ]; then
     sudo rm -f "${LOG_FILE}"
     echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
     if [ $? -ne 0 ]; then
-        echo
-        echo "[X] Error: Cannot to create log file."
-        read -n 1 -s -r -p "Press any key to exit..." </dev/tty
-        echo
+        error_msg "${UI_TEXT[ERROR_LOG]}"
         exit 1
     fi
 fi
 
 date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
+echo "Tootkit path: $TOOLKIT_PATH" >> "${LOG_FILE}"
+echo >> "${LOG_FILE}"
+echo -n "PSBBN Definitive Project Version: " >> "${LOG_FILE}"
+git rev-parse --short HEAD >> "${LOG_FILE}"
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
 
 EXTRAS_SPLASH
@@ -1470,14 +1763,24 @@ HDL_TOC || exit 1
 CHECK_PARTITIONS || exit 1
 
 if ! sudo rm -rf "${STORAGE_DIR}"; then
-    error_msg "Failed to remove $STORAGE_DIR folder."
+    echo "[X] Error: Failed to delete: $STORAGE_DIR" >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_DELETE]} $STORAGE_DIR"
+    exit 1
 fi
 
 # Main loop
 
 while true; do
+    MENU_KEYS=(
+        EXTRAS_MENU_OPTION_1
+        EXTRAS_MENU_OPTION_2
+        EXTRAS_MENU_OPTION_3
+        EXTRAS_MENU_OPTION_4
+        EXTRAS_MENU_OPTION_5
+    )
+    center_menu
     display_menu
-    read -p "                                    Select an option: " choice
+    read -rp "" choice
 
     case $choice in
         1)
@@ -1499,8 +1802,7 @@ while true; do
             break
             ;;
         *)
-            echo
-            echo -n "                                    Invalid option, please try again."
+            printf "%*s%s " "$((padding - 3))" "" "${UI_TEXT[MENU_INVALID]}"
             sleep 2
             ;;
     esac

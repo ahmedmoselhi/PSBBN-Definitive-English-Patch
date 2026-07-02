@@ -1,0 +1,15 @@
+• Teljes lokalizáció hozzáadva angol, japán, francia, spanyol, német, olasz és brazil portugál nyelven. A nyelv automatikusan felismerésre kerül, az angol az alapértelmezett. (Windows felhasználóknak frissíteniük kell a PSBBN Launcher legújabb verziójára.)
+
+• Hozzáadva egy Játékválasztó, amely lehetővé teszi, hogy kiválaszd, mely játékok jelenjenek meg a Játékgyűjteményben és a Böngészőben.
+
+• A PS1 játékok mostantól az exFAT partícióra települnek a PS2 játékok és alkalmazások mellé.
+
+• Az SMB hálózati megosztáson tárolt PS1 játékok mostantól elindíthatók a Játékgyűjteményből és a Böngészőből.
+
+• Hozzáadva a POPSLoader a PS1 játékok böngészéséhez és indításához. Elindítható a menükből vagy a △ gomb nyomva tartásával indításkor.
+
+• POPSLoader integráció hozzáadva a Játéktelepítőhöz, beleértve az automatikus borítóletöltést.
+
+• A wLaunchELF-ISR lecserélve wLaunchELF-R3Z-re, amely támogatja a belső meghajtó exFAT partícióit. Indításkor a START gomb nyomva tartásával indítható.
+
+• Az OSDMenu Configurator lecserélve R3CONFIGURATOR-ra, többnyelvű támogatással.

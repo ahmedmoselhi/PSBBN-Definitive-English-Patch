@@ -26,7 +26,13 @@ if [ -z "$BASH_VERSION" ]; then
     exit 1
 fi
 
+[[ -t 0 && -t 1 ]] || exit 1
+
+echo -e "\e[8;45;110t"
+term_width=110
+
 export LC_MESSAGES=C
+export LC_ALL=C.UTF-8
 export LAUNCHED_BY_MAIN=1
 
 # Set paths
@@ -36,6 +42,7 @@ SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
 ASSETS_DIR="${SCRIPTS_DIR}/assets"
 HELPER_DIR="${SCRIPTS_DIR}/helper"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
+LANG_DIR="${ASSETS_DIR}/lang"
 OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/setup.log"
 arch="$(uname -m)"
@@ -64,6 +71,16 @@ elif [[ "$arch" = "aarch64" ]]; then
     SQLITE="${HELPER_DIR}/aarch64/sqlite"
 fi
 
+mkdir -p "${TOOLKIT_PATH}/logs" >/dev/null 2>&1
+
+if [ -f "$LOG_FILE" ]; then
+    size=$(stat -c%s "$LOG_FILE" 2>/dev/null || stat -f%z "$LOG_FILE")
+
+    if [ "$size" -gt 4194304 ]; then
+        : > "$LOG_FILE"
+    fi
+fi
+
 # Initialize variable
 wsl=false
 
@@ -83,6 +100,237 @@ if [[ "$1" == "-wsl" ]]; then
     done
 fi
 
+# Get system locale if $SYS_LANG is not already set
+if [[ -z "$SYS_LANG" ]]; then
+    SYS_LANG="${LANG:-$(locale 2>/dev/null | awk -F= '/^LANG=/{print $2}')}"
+fi
+
+SYS_LANG="${SYS_LANG,,}"  # lowercase for easier matching
+
+case "$SYS_LANG" in
+    ja*|jp*)
+        LANG_FILE="jpn"
+        ;;
+    fr*)
+        LANG_FILE="fre"
+        ;;
+    es*)
+        LANG_FILE="spa"
+        ;;
+    de*)
+        LANG_FILE="ger"
+        ;;
+    it*)
+        LANG_FILE="ita"
+        ;;
+    pt*)
+        LANG_FILE="por"
+        ;;
+    #hu*)
+    #    LANG_FILE="hun"
+    #   ;;
+    *)
+        LANG_FILE="eng"
+        ;;
+esac
+
+declare -A UI_TEXT
+
+if [[ -f "${LANG_DIR}/$LANG_FILE.txt" ]]; then
+    while IFS='=' read -r key value; do
+        [[ -z "$key" ]] && continue
+        UI_TEXT["$key"]="$value"
+    done < "${LANG_DIR}/$LANG_FILE.txt"
+else
+    echo "[X] Error: Language file not found."
+    sleep 3
+    exit 1
+fi
+
+text_width() {
+    python3 -c '
+from wcwidth import wcswidth
+import sys
+print(wcswidth(sys.argv[1]))
+' "$1"
+}
+
+center_title() {
+    local text=" $1 "
+
+    local text_len
+    text_len=$(text_width "$text")
+
+    local total_padding=$(( term_width - text_len ))
+
+    # Prevent negative padding
+    (( total_padding < 0 )) && total_padding=0
+
+    local left_padding=$(( total_padding / 2 ))
+    local right_padding=$(( total_padding - left_padding ))
+
+    printf '%*s' "$left_padding" '' | tr ' ' '='
+    printf '%s' "$text"
+    printf '%*s\n' "$right_padding" '' | tr ' ' '='
+}
+
+center_menu() {
+    local longest=0
+    local MENU_KEYS=(
+        MAIN_MENU_OPTION_1
+        MAIN_MENU_OPTION_2
+        MAIN_MENU_OPTION_3
+        MAIN_MENU_OPTION_4
+        MAIN_MENU_OPTION_5
+        MAIN_MENU_OPTION_6
+    )
+
+    for key in "${MENU_KEYS[@]}"; do
+        local text="${UI_TEXT[$key]}"
+        local width=$(text_width "$text")
+
+        (( width > longest )) && longest=$width
+    done
+
+    padding=$(( (term_width - longest + 3) / 2 ))
+}
+
+center_text() {
+    local text="$1"
+
+    local display_width=$(text_width "$text")
+
+    local padding=$(( (term_width - display_width) / 2 ))
+
+    (( padding < 0 )) && padding=0
+
+    printf "%*s%s" "$padding" "" "$text"
+}
+
+print_centered_file() {
+    local file="$1"
+
+    python3 - "$term_width" "$file" <<'PY'
+import sys
+import re
+from wcwidth import wcwidth
+
+term_width = int(sys.argv[1])
+file = sys.argv[2]
+
+INDENT = "  "
+INDENT_W = 2
+
+_wcwidth = wcwidth
+
+def w(s):
+    total = 0
+    for c in s:
+        wc = _wcwidth(c)
+        if wc > 0:
+            total += wc
+    return total
+
+
+def wrap_english(text):
+    words = text.split()
+    lines = []
+    cur = []
+    cur_w = 0
+
+    available_width = term_width
+
+    for word in words:
+        word_w = w(word)
+        add_w = word_w + (1 if cur else 0)
+
+        if cur_w + add_w <= available_width:
+            cur.append(word)
+            cur_w += add_w
+        else:
+            if cur:
+                lines.append(" ".join(cur))
+            cur = [word]
+            cur_w = word_w
+            available_width = term_width - INDENT_W
+
+    if cur:
+        lines.append(" ".join(cur))
+
+    return lines
+
+
+def wrap_japanese(text):
+    lines = []
+    cur = ""
+    cur_w = 0
+
+    available_width = term_width
+
+    for ch in text:
+        ch_w = _wcwidth(ch)
+        if ch_w < 0:
+            ch_w = 0
+
+        if cur_w + ch_w <= available_width:
+            cur += ch
+            cur_w += ch_w
+        else:
+            lines.append(cur)
+            cur = ch
+            cur_w = ch_w
+            available_width = term_width - INDENT_W
+
+    if cur:
+        lines.append(cur)
+
+    return lines
+
+
+def is_mostly_latin(text):
+    return sum(1 for c in text if ord(c) < 128) > len(text) * 0.5
+
+
+def wrap(line):
+    return wrap_english(line) if is_mostly_latin(line) else wrap_japanese(line)
+
+
+wrapped = []
+max_w = 0
+
+with open(file, encoding="utf-8") as f:
+    for raw in f:
+        line = raw.rstrip("\n")
+
+        if not line:
+            wrapped.append("")
+            continue
+
+        is_bullet = line.startswith("•")
+
+        parts = wrap(line)
+
+        for i, p in enumerate(parts):
+
+            if is_bullet:
+                if i > 0:
+                    p = INDENT + p
+            else:
+                p = INDENT + p
+
+            wrapped.append(p)
+            max_w = max(max_w, w(p))
+
+
+pad = max((term_width - max_w) // 2, 0)
+prefix = " " * pad
+
+for line in wrapped:
+    print(prefix + line)
+
+PY
+}
+
 error_msg() {
   error_1="$1"
   error_2="$2"
@@ -90,12 +338,15 @@ error_msg() {
   error_4="$4"
 
   echo
-  echo "[X] Error: $error_1" | tee -a "${LOG_FILE}"
-  [ -n "$error_2" ] && echo && echo "$error_2" | tee -a "${LOG_FILE}"
-  [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
-  [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
+  echo "[X]" "$error_1"
+  [ -n "$error_2" ] && echo && echo "$error_2"
+  [ -n "$error_3" ] && echo "$error_3"
+  [ -n "$error_4" ] && echo "$error_4"
   echo
-  read -n 1 -s -r -p "Press any key to exit..." </dev/tty
+  echo "${UI_TEXT[ERROR_TROUBLE]}"
+  echo "https://github.com/CosmicScale/PSBBN-Definitive-Project#troubleshooting"
+  echo
+  read -n 1 -s -r -p "${UI_TEXT[EXIT_KEY]}" </dev/tty
   echo
   exit 1
 }
@@ -109,7 +360,8 @@ copy_log() {
 git_update() {
     # Check if the current directory is a Git repository
     if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-        error_msg "This script cannot continue due to an unsupported installation." "The PSBBN Definitive Project is a rolling release." "To ensure you are always running the latest version, follow the installation instructions here:" "https://github.com/CosmicScale/PSBBN-Definitive-Project?tab=readme-ov-file#user-guide"
+        echo "[X] Error: This script cannot continue due to an unsupported installation." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_UNSUPPORTED_1]}" "${UI_TEXT[ERROR_UNSUPPORTED_2]}" "${UI_TEXT[ERROR_UNSUPPORTED_3]}" "https://github.com/CosmicScale/PSBBN-Definitive-Project#installation-guide"
     else
         # Fetch updates from the remote
         git fetch >> "${LOG_FILE}" 2>&1
@@ -122,12 +374,14 @@ git_update() {
         if [ "$LOCAL" = "$REMOTE" ]; then
             echo "No updates available — running the latest version." >> "${LOG_FILE}"
         else
-            echo "Downloading updates..." | tee -a "${LOG_FILE}"
+            echo "Downloading updates..." >> "${LOG_FILE}"
+            echo "${UI_TEXT[UPDATE_GIT_1]}"
             # Get a list of files that have changed remotely
             UPDATED_FILES=$(git diff --name-only "$LOCAL" "$REMOTE")
 
             if [ -n "$UPDATED_FILES" ]; then
-                echo "Files updated in the remote repository:" | tee -a "${LOG_FILE}"
+                echo "Files updated in the remote repository:" >> "${LOG_FILE}"
+                echo "${UI_TEXT[UPDATE_GIT_2]}"
                 echo "$UPDATED_FILES" | tee -a "${LOG_FILE}"
 
                 # Reset only the files that were updated remotely (discard local changes to them)
@@ -135,12 +389,14 @@ git_update() {
 
                 # Pull the latest changes
                 if ! git pull --ff-only >> "${LOG_FILE}" 2>&1; then
-                    error_msg "Update failed. Delete the PSBBN-Definitive-Project directory and run the command:" "git clone https://github.com/CosmicScale/PSBBN-Definitive-Project.git" "Then try running the script again."
+                    echo "[X] Error: Git pull failed." >> "${LOG_FILE}"
+                    error_msg "${UI_TEXT[ERROR_GIT_1]}" "git clone https://github.com/CosmicScale/PSBBN-Definitive-Project.git" "${UI_TEXT[ERROR_GIT_2]}"
                 fi
                 echo
-                echo "[✓] The repository has been successfully updated." | tee -a "${LOG_FILE}"
+                echo "[✓] The repository has been successfully updated." >> "${LOG_FILE}"
+                echo "[✓] ${UI_TEXT[UPDATE_GIT_3]}"
                 echo
-                read -n 1 -s -r -p "Press any key to exit, then run the script again." </dev/tty
+                read -n 1 -s -r -p "${UI_TEXT[UPDATE_GIT_4]}" </dev/tty
                 echo
                 exit 0
             fi
@@ -168,16 +424,16 @@ check_required_files() {
         "${HELPER_DIR}/ps2iconmaker.sh"
         "${HELPER_DIR}/txt_to_icon_sys.py"
         "${HELPER_DIR}/ziso.py"
-        "${HELPER_DIR}/AppDB.csv"
-        "${HELPER_DIR}/ArtDB.csv"
-        "${HELPER_DIR}/TitlesDB_PS1.csv"
-        "${HELPER_DIR}/TitlesDB_PS2.csv"
-        "${HELPER_DIR}/vmc_groups.list"
-        "${HELPER_DIR}/ps2_vmc_groups.list"
+        "${ASSETS_DIR}/database/AppDB.csv"
+        "${ASSETS_DIR}/database/ArtDB.csv"
+        "${ASSETS_DIR}/database/TitlesDB_PS1.csv"
+        "${ASSETS_DIR}/database/TitlesDB_PS2.csv"
+        "${ASSETS_DIR}/database/ps1_vmc_groups.list"
+        "${ASSETS_DIR}/database/ps2_vmc_groups.list"
+        "${ASSETS_DIR}/database/POP-game-fixes.list"
         "${HELPER_DIR}/genvmc.c"
         "${HELPER_DIR}/genvmc.h"
         "${HELPER_DIR}/psmbuild.py"
-        "${HELPER_DIR}/POP-game-fixes.list"
         "${CUE2POPS}"
         "${HDL_DUMP}"
         "${MKFS_EXFAT}"
@@ -220,7 +476,7 @@ check_required_files() {
     # Check each file
     for file in "${required_files[@]}"; do
         if [[ ! -f "$file" ]]; then
-            echo "Missing file: $file"
+            echo "Missing file: $file" >> "$LOG_FILE"
             missing=true
         fi
     done
@@ -228,14 +484,15 @@ check_required_files() {
     # Check each directory
     for dir in "${required_dirs[@]}"; do
         if [[ ! -d "$dir" || -z "$(ls -A "$dir" 2>/dev/null)" ]]; then
-            echo "Missing or empty directory: $dir"
+            echo "Missing or empty directory: $dir" >> "$LOG_FILE"
             missing=true
         fi
     done
 
     # If any were missing, exit with error
     if [[ "$missing" == true ]]; then
-        error_msg "Essential files not found." "The script must be run from the 'PSBBN-Definitive-Project' directory."
+        echo "[X] Error: Essential files not found." >> "$LOG_FILE"
+        error_msg "${UI_TEXT[ERROR_MISSING_1]}" "${UI_TEXT[ERROR_MISSING_2]}"
     fi
 }
 
@@ -284,6 +541,7 @@ check_dep(){
     check_cmd pkg-config
     check_cmd ffmpegthumbnailer
     check_cmd unrar-free
+    check_cmd dmsetup
 
     if ! pkg-config --exists icu-i18n 2>/dev/null; then
         echo "[X] libicu-dev not found." >> "$LOG_FILE"
@@ -334,6 +592,9 @@ check_dep(){
         check_python_pkg icu
         check_python_pkg pykakasi
         check_python_pkg PIL
+        check_python_pkg unidecode
+        check_python_pkg textual
+        check_python_pkg wcwidth
     fi
 
     if { ldconfig -p 2>/dev/null | grep -q "libfuse.so.2"; } || pkg-config --exists fuse 2>/dev/null; then
@@ -372,9 +633,9 @@ get_latest_file() {
 
         if [[ "$prefix" == "psbbn-definitive-patch" ]]; then
             LATEST_VERSION="$remote_version"
-        elif [[ "$prefix" == "language-pak-$LANG" ]]; then
+        elif [[ "$prefix" == "language-pak-$lang" ]]; then
             LATEST_LANG="$remote_version"
-        elif [[ "$prefix" == "channels-$LANG" ]]; then
+        elif [[ "$prefix" == "channels-$lang" ]]; then
             LATEST_CHAN="$remote_version"
         fi
     else
@@ -389,15 +650,20 @@ UNMOUNT_ALL() {
         echo "Unmounting $mount_point..." >> "${LOG_FILE}"
 
         sudo umount -- "$mount_point" \
-            && echo "[✓] Successfully unmounted $mount_point." >> "${LOG_FILE}" \
-            || error_msg "Failed to unmount $mount_point. Please unmount manually."
+            && echo "[✓] Successfully unmounted $mount_point." >> "${LOG_FILE}" || {
+                echo "[X] Error: Failed to unmount: $mount_point"
+                error_msg "${UI_TEXT[ERROR_UNMOUNT]} $mount_point"
+            }
     done < <(lsblk -ln -o MOUNTPOINT "$DEVICE")
 
     findmnt -nr -o TARGET | sed 's/\\x20/ /g' | while IFS= read -r line; do
         case "$line" in
             "$STORAGE_DIR/"*)
                 echo "Unmounting: <$line>" >> "$LOG_FILE"
-                sudo umount "$line" || error_msg "Error" "Failed to unmount $line"
+                sudo umount "$line" || {
+                    echo "[X] Error: Failed to unmount $line" >> "${LOG_FILE}"
+                    error_msg "${UI_TEXT[ERROR_UNMOUNT]} $line"
+                    }
                 ;;
         esac
     done
@@ -415,7 +681,10 @@ UNMOUNT_ALL() {
 }
 
 MOUNT_OPL() {
-    mkdir -p "${OPL}" 2>>"${LOG_FILE}" || error_msg "Failed to create ${OPL}."
+    mkdir -p "${OPL}" 2>>"${LOG_FILE}" || {
+        echo "[X] Error: Failed to create ${OPL}." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_CREATE]} ${OPL}."
+        }
 
     sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
 
@@ -436,49 +705,83 @@ flash_update() {
     # Only flash if UPDATE is "YES"
     [[ "$UPDATE" != "YES" ]] && return
 
+    prompt_len=$(( ${#UI_TEXT[MENU_PROMPT]} + padding ))
+    opt3_len=$(( ${#UI_TEXT[MAIN_MENU_OPTION_3]} + padding ))
+
+    if (( prompt_len > opt3_len )); then
+        # Prompt is longer
+        diff=$(( prompt_len - opt3_len - 4 ))
+        move="tput cub $diff"
+    elif (( prompt_len < opt3_len )); then
+        # Prompt is shorter
+        diff=$(( opt3_len - prompt_len + 4 ))
+        move="tput cuf $diff"
+    fi
+
     # Save current cursor (so user can type)
     tput sc
     # Move cursor up 10 lines from prompt to option 3
     tput cuu 10
-    tput cuf 12
+    $move
 
     if (( on )); then
-        printf "**UPDATE AVAILABLE!**"
+        printf %s "${UI_TEXT[UPDATE_AVAILABLE]}"
     else
-        printf "                     "
+        printf "%*s" "${#UI_TEXT[UPDATE_AVAILABLE]}" ""
     fi
 
     # Restore cursor so input stays at prompt
     tput rc
 }
 
+activate_python() {
+
+    if [ -n "$IN_NIX_SHELL" ]; then
+        echo "Running in Nix environment - packages should be provided by flake." >> "${LOG_FILE}"
+        return
+    fi
+
+    echo "Activating Python virtual environment..." >> "${LOG_FILE}"
+    # Try activating the virtual environment twice before failing
+    if ! source "${SCRIPTS_DIR}/venv/bin/activate" 2>>"${LOG_FILE}"; then
+        echo "Failed to activate the Python virtual environment. Retrying..." >> "${LOG_FILE}"
+        sleep 2
+    
+        if ! source "${SCRIPTS_DIR}/venv/bin/activate" 2>>"${LOG_FILE}"; then
+            echo "[X] Error: Failed to activate the Python virtual environment." >> "${LOG_FILE}"
+            error_msg "Error" "${UI_TEXT[ERROR_ACTIVATE_PYTHON]}"
+        fi
+    fi
+}
+
 option_one() {
-    "${SCRIPTS_DIR}/PSBBN-Installer.sh" -install "$serialnumber" "$path_arg"
+    "${SCRIPTS_DIR}/PSBBN-Installer.sh" -install "$LANG_FILE" "$serialnumber" "$path_arg"
 }
 
 option_two() {
-    "${SCRIPTS_DIR}/HOSDMenu-Installer.sh" "$serialnumber" "$path_arg"
+    "${SCRIPTS_DIR}/HOSDMenu-Installer.sh" "$LANG_FILE" "$serialnumber" "$path_arg"
 }
 
 option_three() {
-    "${SCRIPTS_DIR}/PSBBN-Installer.sh" -update "$path_arg"
+    "${SCRIPTS_DIR}/PSBBN-Installer.sh" -update "$LANG_FILE" "$path_arg"
 }
 
 option_four() {
-    "${SCRIPTS_DIR}/Game-Installer.sh" "$path_arg"
+    "${SCRIPTS_DIR}/Game-Installer.sh" "$LANG_FILE" "$path_arg"
 }
 
 option_five() {
-    "${SCRIPTS_DIR}/Media-Installer.sh" "$wsl" "$path_arg"
+    "${SCRIPTS_DIR}/Media-Installer.sh" "$LANG_FILE" "$wsl" "$path_arg"
 }
 
 option_six() {
-    "${SCRIPTS_DIR}/Extras.sh" "$path_arg"
+    "${SCRIPTS_DIR}/Extras.sh" "$LANG_FILE" "$path_arg"
 }
 
 SPLASH() {
     clear
     cat << "EOF"
+
  ______  _________________ _   _  ______      __ _       _ _   _            ______          _           _   
  | ___ \/  ___| ___ \ ___ \ \ | | |  _  \    / _(_)     (_) | (_)           | ___ \        (_)         | |  
  | |_/ /\ `--.| |_/ / |_/ /  \| | | | | |___| |_ _ _ __  _| |_ ___   _____  | |_/ / __ ___  _  ___  ___| |_ 
@@ -488,34 +791,22 @@ SPLASH() {
                                                                                           _/ |              
                                                                                          |__/               
 
-                                            Created by CosmicScale
-
-
-
 EOF
 }
 
 # Function to display the menu
 display_menu() {
     SPLASH
-    cat << "EOF"
-                   1) Install PSBBN & HOSDMenu (Official Sony Network Adapter required)
-
-                   2) Install HOSDMenu only (3rd-party HDD adapters supported)
-
-                   3) Update PS2 System Software
-
-                   4) Install Games and Apps
-
-                   5) Install Media
-
-                   6) Optional Extras
-
-                   q) Quit
-
-EOF
-    # Print prompt without newline so cursor is ready
-    printf "                   Select an option: "
+    center_text "${UI_TEXT[CREDIT]}"
+    printf "\n\n\n\n"
+    printf "%*s%s\n\n" "$padding" "1) " "${UI_TEXT[MAIN_MENU_OPTION_1]}"
+    printf "%*s%s\n\n" "$padding" "2) " "${UI_TEXT[MAIN_MENU_OPTION_2]}"
+    printf "%*s%s\n\n" "$padding" "3) " "${UI_TEXT[MAIN_MENU_OPTION_3]}"
+    printf "%*s%s\n\n" "$padding" "4) " "${UI_TEXT[MAIN_MENU_OPTION_4]}"
+    printf "%*s%s\n\n" "$padding" "5) " "${UI_TEXT[MAIN_MENU_OPTION_5]}"
+    printf "%*s%s\n\n" "$padding" "6) " "${UI_TEXT[MAIN_MENU_OPTION_6]}"
+    printf "%*s%s\n\n" "$padding" "q) " "${UI_TEXT[MENU_QUIT]}"
+    printf "%*s%s " "$((padding - 3))" "" "${UI_TEXT[MENU_PROMPT]}"
 }
 
 check_required_files
@@ -527,19 +818,13 @@ fi
 trap 'echo; exit 130' INT
 trap copy_log EXIT
 
-echo -e "\e[8;45;110t"
-
-SPLASH
-
 cd "${TOOLKIT_PATH}"
-
-mkdir -p "${TOOLKIT_PATH}/logs" >/dev/null 2>&1
 
 if ! echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1; then
     sudo rm -f "${LOG_FILE}"
     if ! echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1; then
         echo
-        error_msg "Cannot create log file."
+        error_msg "${UI_TEXT[ERROR_LOG]}"
     fi
 fi
 
@@ -547,15 +832,18 @@ date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 echo "Tootkit path: $TOOLKIT_PATH" >> "${LOG_FILE}"
 echo  >> "${LOG_FILE}"
+{ echo -n "PSBBN Definitive Project Version: "; git rev-parse --short HEAD; } >> "${LOG_FILE}" 2>&1
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
 echo >> "${LOG_FILE}"
 echo "WSL: $wsl" >> "${LOG_FILE}"
 echo "Disk Serial: $serialnumber" >> "${LOG_FILE}"
 echo "Path: $path_arg" >> "${LOG_FILE}"
+echo "Language: $lang" >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 
 if [[ "$arch" != "x86_64" && "$arch" != "aarch64" ]]; then
-    error_msg "Unsupported CPU architecture: $(uname -m). This script requires x86-64 or ARM64."
+    echo "[X] Error: Unsupported CPU architecture: $(uname -m). This script requires x86-64 or ARM64." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_UNSUPPORTED_4]}"
     exit 1
 fi
 
@@ -567,6 +855,7 @@ if grep -qi microsoft /proc/version; then
         case " $ID $ID_LIKE " in
             *" fedora "*|*" arch "*)
                 echo "Unsupported distro under WSL: $NAME. Please use Debian instead."
+                echo -n "${UI_TEXT[ERROR_UNSUPPORTED_5]}"; echo -n " $NAME. "; echo "${UI_TEXT[ERROR_UNSUPPORTED_6]}"
                 exit 1
                 ;;
         esac
@@ -580,12 +869,17 @@ rm -rf "${TOOLKIT_PATH}/scripts/assets/"psbbn-definitive-image* >/dev/null 2>&1
 rmdir "${TOOLKIT_PATH}/OPL" >/dev/null 2>&1
 
 if ! check_dep; then
-    if ! "${TOOLKIT_PATH}/scripts/Setup.sh"; then
+    if ! "${TOOLKIT_PATH}/scripts/Setup.sh" $LANG_FILE; then
         exit 1
     else
-        check_dep || error_msg "Dependencies still missing after setup." 
+        check_dep || {
+            echo "[X] Error: Dependencies still missing after setup." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_CHECK_DEP]}"
+        }
     fi
 fi
+
+activate_python
 
 DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
 
@@ -601,10 +895,10 @@ else
         osdmenu_version="1.0.0"
     fi
 
-    LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
+    lang=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
 
-    if [[ "$LANG" != "jpn" && "$LANG" != "ger" && "$LANG" != "ita" && "$LANG" != "por" && "$LANG" != "spa" && "$LANG" != "fre" ]]; then
-        LANG="eng"
+    if [[ "$lang" != "jpn" && "$lang" != "ger" && "$lang" != "ita" && "$lang" != "por" && "$lang" != "spa" && "$lang" != "fre" && "$lang" != "hun" ]]; then
+        lang="eng"
     fi
 
     LANG_VER=$(awk -F' *= *' '$1=="LANG_VER"{print $2}' "${OPL}/version.txt")
@@ -612,14 +906,14 @@ else
 
     echo "psbbn_version = $psbbn_version" >> "${LOG_FILE}"
     echo "osdmenu_version = $osdmenu_version" >> "${LOG_FILE}"
-    echo "LANG = $LANG" >> "${LOG_FILE}"
-    echo "LANG_VER = $LANG_VER" >> "${LOG_FILE}"
+    echo "LANG = $lang" >> "${LOG_FILE}"
+    echo "LANG_VER = $lang_VER" >> "${LOG_FILE}"
     echo "CHAN_VER = $CHAN_VER" >> "${LOG_FILE}"
 
 
     UNMOUNT_OPL
 
-    if [[ -n "$psbbn_version" || -n $osdmenu_version || -n "$LANG_VER" || -n "$CHAN_VER" ]]; then
+    if [[ -n "$psbbn_version" || -n $osdmenu_version || -n "$lang_VER" || -n "$CHAN_VER" ]]; then
 
         HTML_FILE=$(mktemp)
         timeout 20 wget -O "$HTML_FILE" "$URL" -o - >> "$LOG_FILE" 2>&1
@@ -632,16 +926,16 @@ else
             fi
         fi
 
-        if [[ -n "$LANG_VER" ]]; then
-            get_latest_file "language-pak-$LANG" "$LANG_DISPLAY language pack"
+        if [[ -n "$lang_VER" ]]; then
+            get_latest_file "language-pak-$lang" "$lang language pack"
 
-            if [ "$(printf '%s\n' "$LATEST_LANG" "$LANG_VER" | sort -V | tail -n1)" != "$LANG_VER" ]; then
+            if [ "$(printf '%s\n' "$LATEST_LANG" "$lang_VER" | sort -V | tail -n1)" != "$lang_VER" ]; then
                 LANG_UPDATE="YES"
             fi
         fi
 
         if [[ -n "$CHAN_VER" ]]; then
-            get_latest_file "channels-$LANG" "$LANG_DISPLAY channels"
+            get_latest_file "channels-$lang" "$lang channels"
 
             if [ "$(printf '%s\n' "$LATEST_CHAN" "$CHAN_VER" | sort -V | tail -n1)" != "$CHAN_VER" ]; then
                 CHAN_UPDATE="YES"
@@ -656,7 +950,7 @@ else
             fi
         fi
 
-        if [ "$PSBBN_UPDATE" == "YES" ] || [ "$OSD_UPDATE" == "YES" ] || [ "$LANG_UPDATE" == "YES" ] || [ "$CHAN_UPDATE" == "YES" ]; then
+        if [ "$PSBBN_UPDATE" == "YES" ] || [ "$OSD_UPDATE" == "YES" ] || [ "$lang_UPDATE" == "YES" ] || [ "$CHAN_UPDATE" == "YES" ]; then
             UPDATE="YES"
         else
             UPDATE="NO"
@@ -666,7 +960,32 @@ fi
 
 echo "UPDATE: $UPDATE" >> "$LOG_FILE"
 
+if [ -f "${ASSETS_DIR}/lang/changelog_main_$LANG_FILE.txt" ]; then
+    SPLASH
+    center_title "${UI_TEXT[CHANGELOG]}"
+    echo
+    print_centered_file "${ASSETS_DIR}/lang/changelog_main_$LANG_FILE.txt"
+    echo
+    echo
+    center_text "${UI_TEXT[CHANGELOG_1]}"
+    echo "$text"
+    center_text "https://github.com/CosmicScale/PSBBN-Definitive-Project/tree/main#changelog"
+    echo "$text"
+    echo
+    center_text "${UI_TEXT[CHANGELOG_2]}"
+    echo "$text"
+    center_text "https://youtu.be/Bqf8XCfa0QM"
+    echo "$text"
+    echo
+    echo "=============================================================================================================="
+    echo
+    center_text "${UI_TEXT[CONTINUE]}"
+    read -n 1 -s -r -p "$text" </dev/tty
+    rm "${ASSETS_DIR}/lang/changelog_main_$LANG_FILE.txt"
+fi
+
 clear
+center_menu
 display_menu
 
 # Main loop
@@ -685,7 +1004,7 @@ while true; do
             5) option_five; display_menu ;;
             6) option_six; display_menu ;;
             q|Q) clear; break ;;
-            *) echo -n "                   Invalid option, please try again."
+            *) printf "%*s%s " "$((padding - 3))" "" "${UI_TEXT[MENU_INVALID]}"
                sleep 2
                display_menu ;;
         esac

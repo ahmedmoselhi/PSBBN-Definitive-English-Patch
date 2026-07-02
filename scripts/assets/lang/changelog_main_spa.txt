@@ -1,0 +1,15 @@
+• Se añadió localización completa para inglés, japonés, francés, español, alemán, italiano y portugués brasileño. El idioma se detecta automáticamente, con inglés como idioma predeterminado. (Los usuarios de Windows deben actualizar a la última versión del PSBBN Launcher.)
+
+• Se añadió un Selector de Juegos, que permite elegir qué juegos aparecen en la Colección de Juegos y el Navegador.
+
+• Los juegos de PS1 ahora se instalan en la partición exFAT junto con tus juegos de PS2 y aplicaciones.
+
+• Los juegos de PS1 almacenados en un recurso compartido de red SMB ahora pueden iniciarse desde la Colección de juegos y el Navegador.
+
+• Se añadió POPSLoader para explorar e iniciar juegos de PS1. Puede iniciarse desde los menús o manteniendo pulsado △ durante el arranque.
+
+• Se añadió integración de POPSLoader en el Instalador de Juegos, incluyendo la descarga automática de carátulas.
+
+• Se reemplazó wLaunchELF-ISR por wLaunchELF-R3Z, añadiendo soporte para particiones exFAT en la unidad interna. Ahora puede iniciarse manteniendo pulsado START durante el arranque.
+
+• Se reemplazó OSDMenu Configurator por R3CONFIGURATOR, añadiendo soporte multilingüe.

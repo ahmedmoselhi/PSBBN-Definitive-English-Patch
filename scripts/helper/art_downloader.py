@@ -29,7 +29,7 @@ from urllib.parse import urlparse
 from pathlib import Path
 from html.parser import HTMLParser
 
-CSV_FILE_PATH = './scripts/helper/ArtDB.csv'
+CSV_FILE_PATH = './scripts/assets/database/ArtDB.csv'
 OUTPUT_DIR = './icons/art/tmp'
 
 IGNORED_IMAGES = [

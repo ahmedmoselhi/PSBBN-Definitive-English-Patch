@@ -20,17 +20,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+[[ -t 0 && -t 1 ]] || exit 1
+
+
 if [[ "$LAUNCHED_BY_MAIN" != "1" ]]; then
     echo "This script should not be run directly. Please run: PSBBN-Definitive-Patch.sh"
-    # exit 1
+    #exit 1
 fi
 
-clear
+term_width=110
 
 TOOLKIT_PATH="$(pwd)"
 SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
 HELPER_DIR="${SCRIPTS_DIR}/helper"
 ASSETS_DIR="${SCRIPTS_DIR}/assets"
+LANG_DIR="${ASSETS_DIR}/lang"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
 MEDIA_DIR="${TOOLKIT_PATH}/media"
 OPL="${SCRIPTS_DIR}/OPL"
@@ -50,8 +54,23 @@ elif [[ "$arch" = "aarch64" ]]; then
     SQLITE="${HELPER_DIR}/aarch64/sqlite"
 fi
 
+LANG_FILE="$1"
+shift  # remove language
 wsl="$1"
 path_arg="$2"
+
+declare -A UI_TEXT
+
+if [[ -f "${LANG_DIR}/$LANG_FILE.txt" ]]; then
+    while IFS='=' read -r key value; do
+        [[ -z "$key" ]] && continue
+        UI_TEXT["$key"]="$value"
+    done < "${LANG_DIR}/$LANG_FILE.txt"
+else
+    echo "[X] Error: Language file not found."
+    sleep 3
+    exit 1
+fi
 
 if [[ "$wsl" = "true" ]]; then
   PS2STR="${ASSETS_DIR}/ps2str/win32/ps2str.exe"
@@ -70,15 +89,85 @@ elif [[ -f "$CONFIG_FILE" && -s "$CONFIG_FILE" ]]; then
     fi
 fi
 
+text_width() {
+    python3 -c '
+from wcwidth import wcswidth
+import sys
+print(wcswidth(sys.argv[1]))
+' "$1"
+}
+
+center_title() {
+    local text=" $1 "
+
+    local text_len
+    text_len=$(text_width "$text")
+
+    local total_padding=$(( term_width - text_len ))
+
+    # Prevent negative padding
+    (( total_padding < 0 )) && total_padding=0
+
+    local left_padding=$(( total_padding / 2 ))
+    local right_padding=$(( total_padding - left_padding ))
+
+    printf '%*s' "$left_padding" '' | tr ' ' '='
+    printf '%s' "$text"
+    printf '%*s\n' "$right_padding" '' | tr ' ' '='
+}
+
+center_menu() {
+    local longest=0
+    local MENU_KEYS=(
+      MEDIA_MENU_OPTION_1
+      MEDIA_MENU_OPTION_2
+      MEDIA_MENU_OPTION_3
+      MEDIA_MENU_OPTION_4
+      MEDIA_MENU_OPTION_5
+    )
+
+    for key in "${MENU_KEYS[@]}"; do
+        local text="${UI_TEXT[$key]}"
+        local width=$(text_width "$text")
+
+        (( width > longest )) && longest=$width
+    done
+
+    padding=$(( (term_width - longest + 3) / 2 ))
+}
+
+center_text() {
+    local input="$1"
+
+    local display_width
+    display_width=$(text_width "$input")
+
+    local padding=$(( (term_width - display_width) / 2 ))
+
+    (( padding < 0 )) && padding=0
+
+    text=$(printf "%*s%s" "$padding" "" "$input")
+}
+
+if [ -f "$LOG_FILE" ]; then
+    size=$(stat -c%s "$LOG_FILE" 2>/dev/null || stat -f%z "$LOG_FILE")
+
+    if [ "$size" -gt 4194304 ]; then
+        : > "$LOG_FILE"
+    fi
+fi
+
+
+
 MEDIA_SPLASH() {
   clear
   cat << "EOF"
-                    ___  ___         _ _         _____          _        _ _           
-                    |  \/  |        | (_)       |_   _|        | |      | | |          
-                    | .  . | ___  __| |_  __ _    | | _ __  ___| |_ __ _| | | ___ _ __ 
-                    | |\/| |/ _ \/ _` | |/ _` |   | || '_ \/ __| __/ _` | | |/ _ \ '__|
-                    | |  | |  __/ (_| | | (_| |  _| || | | \__ \ || (_| | | |  __/ |   
-                    \_|  |_/\___|\__,_|_|\__,_|  \___/_| |_|___/\__\__,_|_|_|\___|_|
+                     ___  ___         _ _         _____          _        _ _           
+                     |  \/  |        | (_)       |_   _|        | |      | | |          
+                     | .  . | ___  __| |_  __ _    | | _ __  ___| |_ __ _| | | ___ _ __ 
+                     | |\/| |/ _ \/ _` | |/ _` |   | || '_ \/ __| __/ _` | | |/ _ \ '__|
+                     | |  | |  __/ (_| | | (_| |  _| || | | \__ \ || (_| | | |  __/ |   
+                     \_|  |_/\___|\__,_|_|\__,_|  \___/_| |_|___/\__\__,_|_|_|\___|_|
 
 
 
@@ -95,36 +184,6 @@ MUSIC_SPLASH() {
                       | |  | | |_| \__ \ | (__   _| || | | \__ \ || (_| | | |  __/ |   
                       \_|  |_/\__,_|___/_|\___|  \___/_| |_|___/\__\__,_|_|_|\___|_|   
 
-
-
-EOF
-}
-
-INI_SPLASH() {
-  clear
-  cat << "EOF"
-                      _____      _ _   _       _ _           ___  ___          _      
-                     |_   _|    (_) | (_)     | (_)          |  \/  |         (_)     
-                       | | _ __  _| |_ _  __ _| |_ ___  ___  | .  . |_   _ ___ _  ___ 
-                       | || '_ \| | __| |/ _` | | / __|/ _ \ | |\/| | | | / __| |/ __|
-                      _| || | | | | |_| | (_| | | \__ \  __/ | |  | | |_| \__ \ | (__ 
-                      \___/_| |_|_|\__|_|\__,_|_|_|___/\___| \_|  |_/\__,_|___/_|\___|
-                                                                 
-
-
-EOF
-}
-
-LOCATION_SPLASH() {
-  clear
-  cat << "EOF"
-           _____      _    ___  ___         _ _         _                     _   _             
-          /  ___|    | |   |  \/  |        | (_)       | |                   | | (_)            
-          \ `--.  ___| |_  | .  . | ___  __| |_  __ _  | |     ___   ___ __ _| |_ _  ___  _ __  
-           `--. \/ _ \ __| | |\/| |/ _ \/ _` | |/ _` | | |    / _ \ / __/ _` | __| |/ _ \| '_ \ 
-          /\__/ /  __/ |_  | |  | |  __/ (_| | | (_| | | |___| (_) | (_| (_| | |_| | (_) | | | |
-          \____/ \___|\__| \_|  |_/\___|\__,_|_|\__,_| \_____/\___/ \___\__,_|\__|_|\___/|_| |_|
-                                                                                      
 
 
 EOF
@@ -160,23 +219,66 @@ PHOTO_SPLASH() {
 EOF
 }
 
+LOCATION_SPLASH() {
+  clear
+  cat << "EOF"
+           _____      _    ___  ___         _ _         _                     _   _             
+          /  ___|    | |   |  \/  |        | (_)       | |                   | | (_)            
+          \ `--.  ___| |_  | .  . | ___  __| |_  __ _  | |     ___   ___ __ _| |_ _  ___  _ __  
+           `--. \/ _ \ __| | |\/| |/ _ \/ _` | |/ _` | | |    / _ \ / __/ _` | __| |/ _ \| '_ \ 
+          /\__/ /  __/ |_  | |  | |  __/ (_| | | (_| | | |___| (_) | (_| (_| | |_| | (_) | | | |
+          \____/ \___|\__| \_|  |_/\___|\__,_|_|\__,_| \_____/\___/ \___\__,_|\__|_|\___/|_| |_|
+                                                                                      
+
+
+EOF
+}
+
+INI_SPLASH() {
+  clear
+  cat << "EOF"
+                      _____      _ _   _       _ _           ___  ___          _      
+                     |_   _|    (_) | (_)     | (_)          |  \/  |         (_)     
+                       | | _ __  _| |_ _  __ _| |_ ___  ___  | .  . |_   _ ___ _  ___ 
+                       | || '_ \| | __| |/ _` | | / __|/ _ \ | |\/| | | | / __| |/ __|
+                      _| || | | | | |_| | (_| | | \__ \  __/ | |  | | |_| \__ \ | (__ 
+                      \___/_| |_|_|\__|_|\__,_|_|_|___/\___| \_|  |_/\__,_|___/_|\___|
+                                                                 
+
+
+EOF
+}
+
 # Function to display the menu
 display_menu() {
     MEDIA_SPLASH
-    cat << "EOF"
-                                        1) Install Music
+    printf "\n\n\n"
+    printf "%*s%s\n\n" "$padding" "1) " "${UI_TEXT[MEDIA_MENU_OPTION_1]}"
+    printf "%*s%s\n\n" "$padding" "2) " "${UI_TEXT[MEDIA_MENU_OPTION_2]}"
+    printf "%*s%s\n\n" "$padding" "3) " "${UI_TEXT[MEDIA_MENU_OPTION_3]}"
+    printf "%*s%s\n\n" "$padding" "4) " "${UI_TEXT[MEDIA_MENU_OPTION_4]}"
+    printf "%*s%s\n\n" "$padding" "5) " "${UI_TEXT[MEDIA_MENU_OPTION_5]}"
+    printf "%*s%s\n\n" "$padding" "b) " "${UI_TEXT[MENU_BACK]}"
+    printf "%*s%s " "$((padding - 3))" "" "${UI_TEXT[MENU_PROMPT]}"
+}
 
-                                        2) Install Movies
+error_msg() {
+  error_1="$1"
+  error_2="$2"
+  error_3="$3"
+  error_4="$4"
 
-                                        3) Install Photos
-                                    
-                                        4) Set Media Location
-
-                                        5) Initialise Music Partition
-
-                                        b) Back to Main Menu
-
-EOF
+  echo
+  echo "[X]" "$error_1"
+  [ -n "$error_2" ] && echo && echo "$error_2"
+  [ -n "$error_3" ] && echo "$error_3"
+  [ -n "$error_4" ] && echo "$error_4"
+  echo
+  echo "${UI_TEXT[ERROR_TROUBLE]}"
+  echo "https://github.com/CosmicScale/PSBBN-Definitive-Project#troubleshooting"
+  echo
+  read -n 1 -s -r -p "${UI_TEXT[EXIT_KEY]}" </dev/tty
+  echo
 }
 
 prevent_sleep_start() {
@@ -246,7 +348,10 @@ clean_up() {
         case "$line" in
             "$STORAGE_DIR/"*)
                 echo "Unmounting: <$line>" >> "$LOG_FILE"
-                sudo umount "$line" || error_msg "Error" "Failed to unmount $line"
+                sudo umount "$line" || {
+                    echo "[X] Error: Failed to unmount $line" >> "${LOG_FILE}"
+                    failure=1
+                }
                 ;;
         esac
     done
@@ -288,7 +393,8 @@ clean_up() {
 
     # Abort if any failures occurred
     if [ "$failure" -ne 0 ]; then
-        error_msg "[X] Error: Cleanup error(s) occurred. Aborting."
+        echo "[X] Error: Cleanup error(s) occurred. Aborting." >> "$LOG_FILE"
+        error_msg "${UI_TEXT[ERROR_CLEANUP]}"
         return 1
     fi
 }
@@ -301,32 +407,13 @@ exit_script() {
     fi
 }
 
-error_msg() {
-  error_1="$1"
-  error_2="$2"
-  error_3="$3"
-  error_4="$4"
-
-  echo
-  echo
-  echo "[X] Error: $error_1" | tee -a "${LOG_FILE}"
-  echo
-  [ -n "$error_2" ] && echo "$error_2" | tee -a "${LOG_FILE}"
-  [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
-  [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
-  echo
-  clean_up
-  prevent_sleep_stop
-  read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
-  echo
-}
-
 detect_drive() {
     DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
 
     if [[ -z "$DEVICE" ]]; then
-        error_msg "Unable to detect the PS2 drive. Please ensure the drive is properly connected." "You must install PSBBN first before insalling media."
-        exit 1
+      echo "[X] Error: Unable to detect the PS2 drive" >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_DETECT_DRIVE_1]}" "${UI_TEXT[ERROR_DETECT_DRIVE_3]}"
+      exit 1
     fi
 
     echo "OPL partition found on $DEVICE" >> "${LOG_FILE}"
@@ -339,28 +426,32 @@ detect_drive() {
     for mount_point in $mounted_volumes; do
         echo "Unmounting $mount_point..." >> "${LOG_FILE}"
         if sudo umount "$mount_point" >> "${LOG_FILE}" 2>&1; then
-            echo "[✓] Successfully unmounted $mount_point." >> "${LOG_FILE}"
+          echo "[✓] Successfully unmounted $mount_point." >> "${LOG_FILE}"
         else
-            error_msg "Failed to unmount $mount_point. Please unmount manually."
-            exit 1
+          echo "[X] Error: Failed to unmount: $mount_point" >> "${LOG_FILE}"
+          error_msg "${UI_TEXT[ERROR_UNMOUNT_1]} $mount_point"
+          exit 1
         fi
     done
 
     if ! sudo "${HDL_DUMP}" toc $DEVICE >> /dev/null 2>&1; then
-        error_msg "APA partition is broken on ${DEVICE}."
-        exit 1
+      echo "[X] Error: Failed to extract list of partitions. APA partition table could be broken on ${DEVICE}" >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_HDL_TOC]}"
+      exit 1
     else
-        echo "PS2 HDD detected as $DEVICE" >> "${LOG_FILE}"
+      echo "PS2 HDD detected as $DEVICE" >> "${LOG_FILE}"
     fi
 }
 
 MOUNT_OPL() {
     echo "Mounting OPL partition..." >> "${LOG_FILE}"
 
-    if ! mkdir -p "${OPL}" 2>>"${LOG_FILE}"; then
-      error_msg "Failed to create ${OPL}."
-      exit 1
-    fi
+    mkdir -p "${OPL}" 2>>"${LOG_FILE}" || {
+        echo "[X] Error: Failed to create ${OPL}." >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_CREATE]} ${OPL}"
+        exit 1
+    }
+
 
     sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
 
@@ -371,7 +462,8 @@ MOUNT_OPL() {
     fi
 
     if [ $? -ne 0 ]; then
-        error_msg "Failed to mount ${DEVICE}3"
+        echo "[X] Error: Failed to mount ${DEVICE}3" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_MOUNT_2]} ${DEVICE}3"
         exit 1
     fi
 }
@@ -380,7 +472,8 @@ UNMOUNT_OPL() {
     echo "Unmounting OPL partition..." >> "${LOG_FILE}"
     sync
     if ! sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1; then
-        error_msg "Failed to unmount $DEVICE."
+        echo "[X] Error: Failed to unmount $DEVICE" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_UNMOUNT_1]} $DEVICE"
         exit 1
     fi
 }
@@ -390,16 +483,19 @@ CHECK_PARTITIONS() {
     STATUS=$?
 
     if [ $STATUS -ne 0 ]; then
-        error_msg "APA partition is broken on ${DEVICE}. Install failed."
+        echo "[X] Error: Failed to extract list of partitions. APA partition table could be broken on ${DEVICE}" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_HDL_TOC]}"
+        exit 1
     fi
 
     # List of required partitions
-    required=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.8 __linux.9 __contents __system __sysconf __.POPS __common)
+    required=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.9 __contents __system __sysconf __.POPS __common)
 
     # Check all required partitions
     for part in "${required[@]}"; do
         if ! echo "$TOC_OUTPUT" | grep -Fq "$part"; then
-            error_msg "PSBBN is not installed. Please install PSBBN to use this feature."
+            error_msg "PSBBN is not installed." >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_OS_CHECK_2]}"
             exit 1
         fi
     done
@@ -425,27 +521,27 @@ mount_cfs() {
         case "$PARTITION_NAME" in
           "__linux.7")
             if [ "$arg" = "music" ]; then
-              error_msg "Failed to mount the Database." "Before using the Music Installer:" "If you've just upgraded from PSBBN v2.11 or earlier, connect the drive to your PS2 console and boot" "into PSBBN to complete the installation. Then initialise the 'Music Partition' with the Media menu."
-              exit 1
-            else
-              error_msg "Failed to mount the Database." "If you've just upgraded from PSBBN v2.11 or earlier, connect the drive to your PS2 console and boot" "into PSBBN to complete the installation. Then initialise the 'Music Partition' with the Media menu."
-              exit 1
+              echo "[X] Error: Failed to mount the Database partition." >>"${LOG_FILE}"
+              error_msg "${UI_TEXT[ERROR_MOUNT_4]}"
+              return 1
             fi
             ;;
           "__linux.8")
+            echo  "[X] Error: Failed to mount the Music partition." >>"${LOG_FILE}"
             if [ "$arg" = "music" ]; then
-              error_msg "Failed to mount the Music partition." "Select 'Initialise Music Partition' from the Media Installer menu, then re-run the Music Installer."
+              error_msg "${UI_TEXT[ERROR_MOUNT_5]}" "${UI_TEXT[ERROR_MOUNT_6]}" 
               return 1
             else
-              error_msg "Failed to mount the Music partition." "Failed to initialise the Music Partition."
+              error_msg "${UI_TEXT[ERROR_MOUNT_5]}" "${UI_TEXT[ERROR_MOUNT_7]}"
               return 1
             fi
             ;;
         esac
       fi
     else
-      error_msg "Partition ${PARTITION_NAME} not found on disk."
-      exit 1
+      echo "[X] Error: Partition not found on disk: ${PARTITION_NAME}" >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_MOUNT_3]} ${PARTITION_NAME}"
+      return 1
     fi
   done
 }
@@ -459,7 +555,9 @@ mount_pfs() {
             --partition="$PARTITION_NAME" \
             "${DEVICE}" \
             "$MOUNT_POINT" >>"${LOG_FILE}" 2>&1; then
-            error_msg "Failed to mount $PARTITION_NAME partition." "Check the device or filesystem and try again."
+            echo "[X] Error: Failed to mount $PARTITION_NAME" >> "${LOG_FILE}"
+            error_msg "${UI_TEXT[ERROR_MOUNT_2]} $PARTITION_NAME"
+            return 1
         fi
     done
 }
@@ -483,10 +581,12 @@ fi
 download_ps2str() {
     # Check if ps2str_v1.08_2001.zip exists
     if [[ -f "${ASSETS_DIR}/ps2str_v1.08_2001.zip" ]]; then
-        echo "ps2str_v1.08_2001.zip found in ${ASSETS_DIR}. Extracting..." | tee -a "${LOG_FILE}"
+      echo "Found ${ASSETS_DIR}/ps2str_v1.08_2001.zip..." >> "${LOG_FILE}"
+        echo "${UI_TEXT[GET_LATEST_FILE_1]} ${ASSETS_DIR}/ps2str_v1.08_2001.zip..."
         unzip -o "${ASSETS_DIR}/ps2str_v1.08_2001.zip" -d "${ASSETS_DIR}" >> "${LOG_FILE}" 2>&1
     else
-        echo -n "Downloading required ps2str..." | tee -a "${LOG_FILE}"
+        echo "Downloading ps2str..." >> "${LOG_FILE}"
+        echo "${UI_TEXT[DOWNLOAD_REQUIRED]}"
         wget --quiet --timeout=10 --tries=3 -O "${ASSETS_DIR}/ps2str_v1.08_2001.zip" https://archive.org/download/ps2str_v1.08_2001/ps2str_v1.08_2001.zip
         echo
         if [[ -s "${ASSETS_DIR}/ps2str_v1.08_2001.zip" ]]; then
@@ -607,43 +707,42 @@ option_one() {
 
   MUSIC_SPLASH
 
-  PARTITION_NAMES=("__linux.7" "__linux.8")
+  PARTITION_NAMES=("__linux.7" "__linux.8" )
   TMP_DIR="${SCRIPTS_DIR}/tmp"
 
   mkdir -p "${MEDIA_DIR}/music" &>> "${LOG_FILE}" || {
-    error_msg "Failed to create music directory."
+    echo "Failed to create folder: ${MEDIA_DIR}/music" >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_CREATE_FOLDER]} ${MEDIA_DIR}/music"
     return 1
   }
 
   mkdir -p "${TMP_DIR}" &>> "${LOG_FILE}" || {
     error_msg "Failed to create tmp directory."
+    echo "Failed to create folder: ${TMP_DIR}" >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_CREATE_FOLDER]} ${TMP_DIR}"
     return 1
   }
 
   get_display_path
 
-  cat << EOF
-======================================== Using the Music Installer =========================================
+  center_title "${UI_TEXT[MUSIC_INSTALLER_1]}"
 
-    Supported formats:
-    The music installer supports mp3, m4a, flac, and ogg files.
-
-    Place your music files in:
-    ${display_path}music
-
-    Note:
-    If you encounter any problems, please initialise the music partition from the Media Installer menu.
-
-============================================================================================================
-EOF
+  printf '\n  %s\n'    "${UI_TEXT[MUSIC_INSTALLER_2]}"
+  printf '  %s\n\n'  "${UI_TEXT[MUSIC_INSTALLER_3]}"
+  printf '  %s\n'    "${UI_TEXT[MUSIC_INSTALLER_4]}"
+  printf '  %s\n\n'  "${display_path}music"
+  printf '  %s\n'    "${UI_TEXT[MUSIC_INSTALLER_5]}"
+  printf '  %s\n\n'  "${UI_TEXT[MUSIC_INSTALLER_6]}"
+  printf "==============================================================================================================\n"
 
   echo
-  read -n 1 -s -r -p "Press any key to return to continue..."
-  echo
-  echo
+  center_text "${UI_TEXT[CONTINUE]}"
+  read -n 1 -s -r -p "$text" </dev/tty
+  MUSIC_SPLASH
 
   if find "${MEDIA_DIR}/music" -type f ! -name ".*" \( -iname "*.mp3" -o -iname "*.m4a" -o -iname "*.flac" -o -iname "*.ogg" \) | grep -q .; then
-    echo -n "Preparing to installing music..." | tee -a "${LOG_FILE}"
+    echo "Preparing to installing music..." >> "${LOG_FILE}"
+    echo -n "${UI_TEXT[MUSIC_INSTALLER_7]}"
 
     prevent_sleep_start
 
@@ -662,12 +761,14 @@ EOF
 
     if [[ -n $sql_out ]]; then
       printf '%s\n' "$sql_out" >> "${LOG_FILE}"
-      error_msg "Failed to extract database."
+      echo "[X] Error: Failed to extract music database." >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_MUSIC_INSTALLER_1]}"
       return 1
     fi
 
     if ! sudo "${SCRIPTS_DIR}/venv/bin/python" "${HELPER_DIR}/music-installer.py" "${MEDIA_DIR}/music"; then
-      error_msg "Failed to convert music."
+      echo "[X] Error: Failed to convert music." >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_MUSIC_INSTALLER_2]}"
       return 1
     else
       echo
@@ -678,23 +779,25 @@ EOF
 
     if [[ -n $sql_out ]]; then
       printf '%s\n' "$sql_out" >> "${LOG_FILE}"
-      error_msg "Failed to create database."
+      echo "[X] Error: Failed to create music database." >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_MUSIC_INSTALLER_3]}"
       return 1
     fi
 
     if ! sudo mv "${TMP_DIR}/music.db" "${STORAGE_DIR}/__linux.7/database/sqlite/"; then
-      error_msg "Failed to install music database."
+      echo "[X] Error: Failed to install music database." >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_MUSIC_INSTALLER_4]}"
       return 1
     fi
 
     clean_up || return 1
+    echo "[✓] Music successfully converted and database updated." >> "${LOG_FILE}"
+    echo "[✓] ${UI_TEXT[MUSIC_INSTALLER_8]}"
     echo
-    echo "[✓] Music successfully converted and database updated." | tee -a "${LOG_FILE}"
-    echo
-    read -n 1 -s -r -p "Press any key to return to the menu..."
+    read -n 1 -s -r -p "${UI_TEXT[MENU_RETURN]}"
   else
-    error_msg "No music to install."
-
+    echo "[X] Error: No music to install." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_MUSIC_INSTALLER_5]}"
   fi
 
 }
@@ -705,7 +808,8 @@ option_two() {
   MOVIE_SPLASH
 
   if [[ "$arch" != "x86_64" ]]; then
-    error_msg "The movie install requires a x86 processor."
+    echo "[X] Error: The movie install requires a x86 processor." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_MOVIE_INSTALLER_1]}"
     return 1
   fi
 
@@ -718,10 +822,11 @@ option_two() {
 
     # Check if ps2str exists after extraction
     if [[ -f "$PS2STR" ]]; then
-        echo "[✓] ps2str successfully extracted." | tee -a "${LOG_FILE}"
+        echo "[✓] ps2str successfully extracted." >> "${LOG_FILE}"
     else
       rm "${ASSETS_DIR}/ps2str_v1.08_2001.zip"
-      error_msg "Download Failed." "Please check the status of archive.org. You may need to use a VPN depending on your location."
+      echo "[X] Error: ps2str_v1.08_2001.zip Download failed" >> "${LOG_FILE}"
+      error_msg "[X] ${UI_TEXT[ERROR_DOWNLOAD]}" "${UI_TEXT[GET_LATEST_FILE_3]}"
       return 1
     fi  
   fi
@@ -732,21 +837,18 @@ option_two() {
   echo "Movie Path ${MEDIA_DIR}/movie" >> "$LOG_FILE"
   get_display_path
 
-  cat << EOF
+  center_title "${UI_TEXT[MOVIE_INSTALLER_1]}"
 
-======================================== Using the Movie Installer =========================================
+  printf '\n  %s\n' "${UI_TEXT[MOVIE_INSTALLER_2]}"
+  printf '  %s\n' "${UI_TEXT[MOVIE_INSTALLER_3]}"
+  printf '  %s\n\n' "${UI_TEXT[MOVIE_INSTALLER_4]}"
+  printf '  %s\n' "${UI_TEXT[MOVIE_INSTALLER_5]}"
+  printf '  %s\n\n' "${display_path}movie"
+  printf "==============================================================================================================\n\n"
 
-    Supported formats:
-    The movie installer supports most common video formats including mp4, m4v, mkv, and vob, as well as
-    the PlayStation 2 video formats pss and psm.
+  center_text "${UI_TEXT[CONTINUE]}"
+  read -n 1 -s -r -p "$text" </dev/tty
 
-    Place your movie files in:
-    ${display_path}movie
-
-============================================================================================================
-
-EOF
-  read -n 1 -s -r -p "                                   Press any key to return to continue..."
   MOVIE_SPLASH
 
   # Collect movie files (case-insensitive, no hidden files, top-level only)
@@ -759,24 +861,8 @@ EOF
   )
 
   if (( ${#movies[@]} )); then
-    echo "Movies found. Processing movies ${display_path}movie..." | tee -a "${LOG_FILE}"
-
-    if [ -n "$IN_NIX_SHELL" ]; then
-      echo "Running in Nix environment - packages should be provided by flake." >> "${LOG_FILE}"
-    else
-      echo "Activating Python virtual environment..." >> "${LOG_FILE}"
-      # Try activating the virtual environment twice before failing
-      if ! source "${SCRIPTS_DIR}/venv/bin/activate" 2>>"${LOG_FILE}"; then
-        echo -n "Failed to activate the Python virtual environment. Retrying..." | tee -a "${LOG_FILE}"
-        sleep 2
-        echo | tee -a "${LOG_FILE}"
-    
-        if ! source "${SCRIPTS_DIR}/venv/bin/activate" 2>>"${LOG_FILE}"; then
-          error_msg "Error" "Failed to activate the Python virtual environment."
-          return 1
-        fi
-      fi
-    fi
+    echo "Movies found. Processing movies: ${display_path}movie..." >> "${LOG_FILE}"
+    echo "${UI_TEXT[MOVIE_INSTALLER_6]}"
 
     failure=0
     MOVIE_DIR=""
@@ -785,8 +871,16 @@ EOF
     TMP_DIR="${MEDIA_DIR}/movie/tmp"
     SQL_FILE="${TMP_DIR}/movie.sql"
 
-    mkdir -p "$TMP_DIR" || { error_msg "Failed to create $TMP_DIR"; return 1; }
-    cd "$TMP_DIR" || { error_msg "Failed to change directory to $TMP_DIR"; return 1; }
+    mkdir -p "$TMP_DIR" || {
+        echo "[X] Error: Failed to create folder: $TMP_DIR" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_CREATE_FOLDER]} $TMP_DIR"
+        return 1
+      }
+    cd "$TMP_DIR" || {
+        echo "[X] Error: Failed to change directory: $TMP_DIR" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_CD]} $TMP_DIR"
+        return 1
+      }
 
     mapper_probe
   
@@ -803,13 +897,15 @@ EOF
     if [[ -f  "${STORAGE_DIR}/__linux.7/database/sqlite/movie.db" ]]; then
       sql_out="$("${SQLITE}" "${STORAGE_DIR}/__linux.7/database/sqlite/movie.db" .dump > "${SQL_FILE}" 2>&1)"
     else
-      error_msg "Failed to extract movie database."
+      echo "[X] Error: Failed to extract movie database." >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_MOVIE_INSTALLER_2]}"
       return 1
     fi
 
     if [[ -n $sql_out ]]; then
       printf '%s\n' "$sql_out" >> "${LOG_FILE}"
-      error_msg "Failed to extract database."
+      echo "[X] Error: Failed to extract movie database." >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_MOVIE_INSTALLER_2]}"
       return 1
     fi
 
@@ -829,7 +925,8 @@ EOF
     fi
 
     mkdir -p "${STORAGE_DIR}/__contents/contents/video/${MOVIE_DIR}" || {
-      error_msg "Failed to create $STORAGE_DIR/__contents/contents/video/$MOVIE_DIR"
+      echo "[X] Error: Failed to create folder: $STORAGE_DIR/__contents/contents/video/$MOVIE_DIR" >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_CREATE_FOLDER]} $STORAGE_DIR/__contents/contents/video/$MOVIE_DIR"
       return 1
     }
 
@@ -855,7 +952,8 @@ EOF
       # Skip if .psm already exists
       if [[ -f "$psm" ]]; then
         echo | tee -a "${LOG_FILE}"
-        echo "Skipping (already processed): ${f##*/}" | tee -a "${LOG_FILE}"
+        echo "Skipping (already processed): ${f##*/}" >> "${LOG_FILE}"
+        echo "${UI_TEXT[MOVIE_INSTALLER_7]} ${f##*/}"
         continue
       fi
 
@@ -865,8 +963,12 @@ EOF
 
         if [ "$local_space" = "1" ]; then
           echo | tee -a "${LOG_FILE}"
-          echo "Warning: Not enough local storage space to convert ${f##*/}." | tee -a "${LOG_FILE}"
-          echo "Need $(format_size "$TOTAL_ROUNDED"), but only $(format_size "$AVAILABLE_LOCAL_MB") available." | tee -a "${LOG_FILE}"
+          echo "[!] Warning: Not enough local storage space to convert: ${f##*/}." >> "${LOG_FILE}"
+          echo "[!] ${UI_TEXT[WARN_MOVIE_INSTALLER_1]} ${f##*/}."
+          echo "Required: $(format_size "$TOTAL_ROUNDED")" >> "${LOG_FILE}"
+          echo "${UI_TEXT[REQUIRED]} $(format_size "$TOTAL_ROUNDED")"
+          echo "Available: $(format_size "$AVAILABLE_LOCAL_MB")" >> "${LOG_FILE}"
+          echo "${UI_TEXT[AVAILABLE_SPACE]} $(format_size "$AVAILABLE_LOCAL_MB")"
           failure=1
           continue
         else
@@ -876,8 +978,12 @@ EOF
 
         if [ "$ps2_space" = "1" ]; then
           echo | tee -a "${LOG_FILE}"
-          echo "Warning: Not enough PS2 storage space to convert ${f##*/}." | tee -a "${LOG_FILE}"
-          echo "Need $(format_size "$VIDEO_ESTIMATED_SIZE_ROUNDED"), but only $(format_size "$AVAILABLE_STORAGE_MB") available." | tee -a "${LOG_FILE}"
+          echo "[!] Warning: Not enough PS2 storage space to convert: ${f##*/}." >> "${LOG_FILE}"
+          echo "[!] ${UI_TEXT[WARN_MOVIE_INSTALLER_2]} ${f##*/}."
+          echo "Required: $(format_size "$VIDEO_ESTIMATED_SIZE_ROUNDED")" >> "${LOG_FILE}"
+          echo "${UI_TEXT[REQUIRED]} $(format_size "$VIDEO_ESTIMATED_SIZE_ROUNDED")"
+          echo "Available: $(format_size "$AVAILABLE_STORAGE_MB")" >> "${LOG_FILE}"
+          echo "${UI_TEXT[AVAILABLE_SPACE]} $(format_size "$AVAILABLE_STORAGE_MB")"
           failure=1
           continue
         else
@@ -886,23 +992,24 @@ EOF
 
         if [ "$ps2_space" = "2" ]; then
           echo | tee -a "${LOG_FILE}"
-          echo "Warning: ${f##*/} might be too long." | tee -a "${LOG_FILE}"
-          echo "The recommended maximum video length is approximately 2h 15m."
-          echo "The video will be converted at a low bitrate and may fail to convert." | tee -a "${LOG_FILE}"
+          echo "[!] Warning: The following movie might be too long: ${f##*/}" >> "${LOG_FILE}"
+          echo "[!] ${UI_TEXT[WARN_MOVIE_INSTALLER_3]} ${f##*/}."
+          echo "${UI_TEXT[WARN_MOVIE_INSTALLER_4]}"
+          echo "${UI_TEXT[WARN_MOVIE_INSTALLER_5]}"
           echo
           while true; do
-            read -p "Convert the video anyway? (y/n):" CONVERT
+            read -rp "${UI_TEXT[WARN_MOVIE_INSTALLER_6]} (y/n):" CONVERT
             case "$CONVERT" in
             [Yy])
                 break
                 ;;
             [Nn])
-                echo "Skipping: ${f##*/}" | tee -a "${LOG_FILE}"
+                echo "${UI_TEXT[MOVIE_INSTALLER_8]} ${f##*/}" | tee -a "${LOG_FILE}"
                 continue 2
                 ;;
             *)
                 echo
-                echo "Please enter y or n."
+                echo "${UI_TEXT[MENU_INVALID]}"
                 ;;
             esac
           done
@@ -910,7 +1017,7 @@ EOF
           echo "Video not too long." >> "${LOG_FILE}"
         fi
 
-        echo "Processing: ${f##*/}" | tee -a "${LOG_FILE}"
+        echo "${UI_TEXT[MOVIE_INSTALLER_9]} ${f##*/}" | tee -a "${LOG_FILE}"
 
         tmp_log="$(mktemp)"
 
@@ -931,13 +1038,14 @@ EOF
 
         if [[ "$field_order" == "progressive" ]]; then
           interlace_opts=""
-          echo "Input is progressive → encoding progressive" | tee -a "${LOG_FILE}"
+          echo "Input is progressive → encoding progressive" >> "${LOG_FILE}"
         else
           interlace_opts="-flags +ilme+ildct -top 1"
-          echo "Input is interlaced → encoding interlaced" | tee -a "${LOG_FILE}"
+          echo "Input is interlaced → encoding interlaced" >> "${LOG_FILE}"
         fi
 
-        echo "Encoding video at $bitrate kbps" | tee -a "${LOG_FILE}"
+        echo "Encoding video at: $bitrate kbps" >> "${LOG_FILE}"
+        echo "${UI_TEXT[MOVIE_INSTALLER_10]} $bitrate kbps"
         # Convert video
         ffmpeg -y -hide_banner -loglevel error -stats \
           -i "$f" \
@@ -960,9 +1068,11 @@ EOF
         rm -f "$tmp_log"
 
         if (( $(stat -c%s "$wav") + $(stat -c%s "$m2v") > 2147483648 - 15728640 )); then
-          echo "Warning: The file $file_name.psm will be larger than 2048 MiB" | tee -a "${LOG_FILE}"
+          echo "[!] Warning: The following file will be larger than 2048 MiB: $file_name.psm" >> "${LOG_FILE}"
+          echo "${UI_TEXT[WARN_MOVIE_INSTALLER_7]}"
           bitrate=$((bitrate - 200))
-          echo "Re-encoding at $bitrate kbps" | tee -a "${LOG_FILE}"
+          echo "Re-encoding at: $bitrate kbps" >> "${LOG_FILE}"
+          echo "${UI_TEXT[WARN_MOVIE_INSTALLER_8]} $bitrate kbps"
           rm -f "$m2v"
           ffmpeg -y -hide_banner -loglevel error -stats \
             -i "$f" \
@@ -979,7 +1089,8 @@ EOF
             "$m2v" 2>&1 | tee -a "$tmp_log"
 
             if (( $(stat -c%s "$wav") + $(stat -c%s "$m2v") > 2147483648 - 15728640 )); then
-              echo "Warning: Skipping video - file $file_name.psm larger than 2048 MiB" | tee -a "${LOG_FILE}"
+              echo "[!] Warning: Skipping video - larger than 2048 MiB: $file_name.psm " >> "${LOG_FILE}"
+              echo "${UI_TEXT[WARN_MOVIE_INSTALLER_9]} $file_name.psm"
               failure=1
               rm -f "$wav" "$m2v"
               continue
@@ -996,7 +1107,8 @@ EOF
           fi
 
           if ! "${PS2STR}" encode -v "$wav" "$ads" >> "${LOG_FILE}" 2>&1; then
-            echo "Warning: Skipping video - Failed to encode $ads" | tee -a "${LOG_FILE}"
+            echo "Warning: Skipping video - Failed to encode: $ads" >> "${LOG_FILE}"
+            echo "${UI_TEXT[WARN_MOVIE_INSTALLER_10]} $ads"
             ads="${TMP_DIR}/${file_name}.ads"
             wav="${TMP_DIR}/${file_name}.wav"
             rm -f "$wav" "$ads" "$m2v"
@@ -1007,7 +1119,8 @@ EOF
           ads="${TMP_DIR}/${file_name}.ads"
           wav="${TMP_DIR}/${file_name}.wav"
         else
-          echo "Warning: Skipping video - Failed to convert ${f##*/} with ffmpeg." | tee -a "${LOG_FILE}"
+          echo "Warning: Skipping video - Failed to encode: ${f##*/}" >> "${LOG_FILE}"
+          echo "${UI_TEXT[WARN_MOVIE_INSTALLER_10]} ${f##*/}"
           failure=1
           rm -f "$wav" "$m2v"
         fi
@@ -1041,7 +1154,8 @@ EOF
           fi
         fi
 
-        echo -n "Encoding $file_name.pss..." | tee -a "${LOG_FILE}"
+        echo "Encoding: $file_name.pss..." >> "${LOG_FILE}"
+        echo -n "${UI_TEXT[MOVIE_INSTALLER_11]} $file_name.pss..."
         echo >> "${LOG_FILE}"
 
         # Create .pss file
@@ -1053,7 +1167,8 @@ cd /d "${display_path}movie\tmp
 EOF
           if ! cmd.exe /c "${display_path}movie/tmp/${file_name}.bat" >> "${LOG_FILE}" 2>&1; then
             echo
-            echo "Warning: Skipping video - Failed to create $pss" | tee -a "${LOG_FILE}"
+            echo "[!] Warning: Skipping video - Failed to encode: $pss" >> "${LOG_FILE}"
+            echo "${UI_TEXT[WARN_MOVIE_INSTALLER_10]} $pss"
             failure=1
             rm -f "$ads" "$m2v" "$mux" "$pss" "$BAT_FILE"
             continue
@@ -1061,7 +1176,8 @@ EOF
         else
           if ! "${PS2STR}" mux -v "$mux" >> "${LOG_FILE}" 2>&1; then
             echo
-            echo "Warning: Skipping video - Failed to create $pss" | tee -a "${LOG_FILE}"
+            echo "[!] Warning: Skipping video - Failed to encode: $pss" >> "${LOG_FILE}"
+            echo "${UI_TEXT[WARN_MOVIE_INSTALLER_10]} $pss"
             failure=1
             rm -f "$ads" "$m2v" "$mux" "$pss"
             continue
@@ -1104,7 +1220,8 @@ EOF
           echo
           if ! python3 "${HELPER_DIR}/psmbuild.py" "$pss" "$thumbnail" "$psm" "$base" 2>> "${LOG_FILE}"; then
             echo
-            echo "Warning: Skipping video - Failed to create $psm" | tee -a "${LOG_FILE}"
+            echo "[!] Warning: Skipping video - Failed to encode: $psm" >> "${LOG_FILE}"
+            echo "${UI_TEXT[WARN_MOVIE_INSTALLER_10]} $psm"
             failure=1
             if [[ $f != *.pss && $f != *.PSS ]]; then
               rm -f "$pss"
@@ -1115,14 +1232,16 @@ EOF
           echo "Created $psm" >> "${LOG_FILE}"
         else
           echo
-          echo "Warning: Skipping video - Failed to create $psm"| tee -a "${LOG_FILE}"
+          echo "[!] Warning: Skipping video - Failed to encode: $psm" >> "${LOG_FILE}"
+          echo "${UI_TEXT[WARN_MOVIE_INSTALLER_10]} $psm"
           failure=1
         fi
       fi
 
       if [[ $f == *.psm || $f == *.PSM ]]; then
         echo
-        echo -n "Copying $file_name.psm..."
+        echo "Copying  $file_name.psm..." >> "${LOG_FILE}"
+        echo -n "${UI_TEXT[COPYING]} $file_name.psm..."
 
         #extract title from header
         psm_title=$(
@@ -1140,7 +1259,8 @@ EOF
 
         if ! cp -f "$f" "${STORAGE_DIR}/__contents/contents/video/${MOVIE_DIR}/${database_file}.psm" 2>> "${LOG_FILE}"; then
           echo
-          echo "Warning: Skipping video - Failed to copy $f"| tee -a "${LOG_FILE}"
+          echo "[!] Warning: Skipping video - Failed to copy: $f" >> "${LOG_FILE}"
+          echo "${UI_TEXT[WARN_MOVIE_INSTALLER_11]} $f"
           failure=1
         else
           echo
@@ -1163,35 +1283,35 @@ EOF
 
     if [[ -n $sql_out ]]; then
       printf '%s\n' "$sql_out" >> "${LOG_FILE}"
-      error_msg "Failed to create database."
+      echo "[X] Error: Failed to create movie database." >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_MOVIE_INSTALLER_3]}"
       return 1
     fi
 
     if ! cp -f "${TMP_DIR}/movie.db" "${STORAGE_DIR}/__contents/contents/database/movie.db" 2>> "${LOG_FILE}" ||
         ! sudo cp "${TMP_DIR}/movie.db" "${STORAGE_DIR}/__linux.7/database/sqlite/movie.db" 2>> "${LOG_FILE}"
     then
-      error_msg "Failed to copy database."
+    echo "[X] Error: Failed to copy movie database." >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_MOVIE_INSTALLER_4]}"
       return 1
     fi
 
     echo
     if [ "$failure" -ne 0 ]; then
-      echo "[✓] Movies converted with warnings and database updated." | tee -a "${LOG_FILE}"
+      echo "[✓] Movies converted with warnings and database updated." >> "${LOG_FILE}"
+      echo "[✓] ${UI_TEXT[MOVIE_INSTALLER_12]}"
     else
-      echo "[✓] Movies successfully converted and database updated." | tee -a "${LOG_FILE}"
+      echo "[✓] Movies successfully converted and database updated." >> "${LOG_FILE}"
+      echo "[✓] ${UI_TEXT[MOVIE_INSTALLER_13]}"
     fi
     echo
-    read -n 1 -s -r -p "Press any key to return to the menu..."
+    read -n 1 -s -r -p "${UI_TEXT[MENU_RETURN]}"
     echo
-
-    # Deactivate the virtual environment
-    if [[ -n "$VIRTUAL_ENV" ]]; then
-      deactivate
-    fi
 
     clean_up || return 1
   else
-    error_msg "No movies to install." | tee -a "${LOG_FILE}"
+    echo "[X] Error: No movies to install." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_MOVIE_INSTALLER_5]}"
   fi
 }
 
@@ -1203,20 +1323,17 @@ option_three() {
   echo "Photo Path ${MEDIA_DIR}/photo" >> "$LOG_FILE"
   get_display_path
 
-  cat << EOF
+  center_title "${UI_TEXT[PHOTO_INSTALLER_1]}"
 
-======================================== Using the Photo Installer =========================================
+  printf '\n  %s\n'    "${UI_TEXT[PHOTO_INSTALLER_2]}"
+  printf '  %s\n\n'    "${UI_TEXT[PHOTO_INSTALLER_3]}"
+  printf '  %s\n'    "${UI_TEXT[PHOTO_INSTALLER_4]}"
+  printf '  %s\n\n'  "${display_path}photo"
+  printf "==============================================================================================================\n\n"
 
-    Supported formats:
-    The photo installer supports most common image formats including jpg, png, tif, gif, and bmp
+  center_text "${UI_TEXT[CONTINUE]}"
+  read -n 1 -s -r -p "$text" </dev/tty
 
-    Place your photos files in:
-    ${display_path}photo
-
-============================================================================================================
-
-EOF
-  read -n 1 -s -r -p "                                   Press any key to return to continue..."
   PHOTO_SPLASH
 
   # Collect top-level photo files
@@ -1228,7 +1345,7 @@ EOF
   )
 
   if (( ${#photos[@]} )); then
-    echo "Photos found. Processing photos $MEDIA_DIR/photo..." | tee -a "${LOG_FILE}"
+    echo "Photos found. Processing photos $MEDIA_DIR/photo..." >> "${LOG_FILE}"
 
     failure=0
     PHOTO_DIR=""
@@ -1238,7 +1355,11 @@ EOF
     TMP_DIR="${SCRIPTS_DIR}/tmp"
     SQL_FILE="${TMP_DIR}/photo.sql"
 
-    mkdir -p "$TMP_DIR" || { error_msg "Failed to create $TMP_DIR"; return 1; }
+    mkdir -p "$TMP_DIR" || {
+        echo "[X] Error: Failed to create folder: $TMP_DIR" >> "${LOG_FILE}"
+        error_msg "${UI_TEXT[ERROR_CREATE_FOLDER]} $TMP_DIR"
+        return 1
+      }
 
     mapper_probe
   
@@ -1255,13 +1376,15 @@ EOF
     if [[ -f  "${STORAGE_DIR}/__linux.7/database/sqlite/photo.db" ]]; then
       sql_out="$("${SQLITE}" "${STORAGE_DIR}/__linux.7/database/sqlite/photo.db" .dump > "${SQL_FILE}" 2>&1)"
     else
-      error_msg "Failed to extract photo database."
+      echo "[X] Error: Failed to extract photo database." >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_PHOTO_INSTALLER_1]}"
       return 1
     fi
 
     if [[ -n $sql_out ]]; then
       printf '%s\n' "$sql_out" >> "${LOG_FILE}"
-      error_msg "Failed to extract database."
+      echo "[X] Error: Failed to extract photo database." >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_PHOTO_INSTALLER_1]}"
       return 1
     fi
 
@@ -1290,7 +1413,8 @@ EOF
     fi
 
     mkdir -p "${STORAGE_DIR}/__contents/contents/photo/${PHOTO_DIR}" || {
-      error_msg "Failed to create $STORAGE_DIR/__contents/contents/video/$PHOTO_DIR"
+      echo "[X] Error: Failed to create folder: $STORAGE_DIR/__contents/contents/video/$PHOTO_DIR" >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_CREATE_FOLDER]} $STORAGE_DIR/__contents/contents/video/$PHOTO_DIR"
       return 1
     }
 
@@ -1336,7 +1460,8 @@ EOF
 
       # Skip if .png already exists
       if [[ -f "$OUTPUT" ]]; then
-        echo "Skipping (already processed): ${photo##*/}" | tee -a "${LOG_FILE}"
+        echo "Skipping (already processed): ${photo##*/}" >> "${LOG_FILE}"
+        echo "${UI_TEXT[PHOTO_INSTALLER_5]} ${photo##*/}"
         continue
       fi
 
@@ -1352,8 +1477,6 @@ EOF
       then
         echo "Processed: ${photo##*/}"
         echo "Processed: $photo -> $TMP_PIC" >> "$LOG_FILE"
-      else
-        echo "Warning: Failed to process ${photo##*/}" | tee -a "$LOG_FILE"
       fi
 
       cp "${TMP_PIC}" "${OUTPUT}" >> "${LOG_FILE}" 2>&1
@@ -1362,7 +1485,8 @@ EOF
         echo "Created $OUTPUT" >> "${LOG_FILE}"
         sed -i "/^COMMIT;/i INSERT INTO sce_photo VALUES(1,0,'$DATABASE_NAME','Your Photos','pfs:/__contents/contents/photo/${PHOTO_DIR}/${DATABASE_FILE}','pfs:/__contents/contents/photo/${PHOTO_DIR}/','$timestamp',0,'BNIMG-00000',200);" "${SQL_FILE}" >> "${LOG_FILE}" 2>&1
       else
-        echo "Warning: Skipping photo - Failed to process ${photo##*/}"
+        echo "[!] Warning: Failed to process photo: ${photo##*/}" >> "$LOG_FILE"
+        echo "${UI_TEXT[WARN_PHOTO_INSTALLER]} ${photo##*/}"
         failure=1
       fi
     done
@@ -1435,43 +1559,46 @@ EOF
 
     if [[ -n $sql_out ]]; then
       printf '%s\n' "$sql_out" >> "${LOG_FILE}"
-      error_msg "Failed to create database."
+      echo "[X] Error: Failed to create photo database." >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_PHOTO_INSTALLER_2]}"
       return 1
     fi
 
     if ! cp -f "${TMP_DIR}/photo.db" "${STORAGE_DIR}/__contents/contents/database/photo.db" 2>> "${LOG_FILE}" ||
         ! sudo cp "${TMP_DIR}/photo.db" "${STORAGE_DIR}/__linux.7/database/sqlite/photo.db" 2>> "${LOG_FILE}"
     then
-      error_msg "Failed to copy database."
+      echo "[X] Error: Failed to copy photo database." >> "${LOG_FILE}"
+      error_msg "${UI_TEXT[ERROR_PHOTO_INSTALLER_3]}"
       return 1
     fi
 
     echo
     if [ "$failure" -ne 0 ]; then
-      echo "[✓] Photos processed with warnings. Database updated." | tee -a "${LOG_FILE}"
+      echo "[✓] Photos processed with warnings. Database updated." >> "${LOG_FILE}"
+      echo "[✓] ${UI_TEXT[PHOTO_INSTALLER_5]}"
     else
-      echo "[✓] Photos successfully processed and database updated." | tee -a "${LOG_FILE}"
+      echo "[✓] Photos successfully processed and database updated." >> "${LOG_FILE}"
+      echo "[✓] ${UI_TEXT[PHOTO_INSTALLER_6]}"
     fi
     echo
-    read -n 1 -s -r -p "Press any key to return to the menu..."
+    read -n 1 -s -r -p "${UI_TEXT[MENU_RETURN]}"
     echo
 
     clean_up || return 1
   else
-    error_msg "No photos to process." | tee -a "${LOG_FILE}"
+    echo "[X] Error: No photos to install." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_PHOTO_INSTALLER_4]}"
   fi
 }
 
 option_four() {
   while true; do
     LOCATION_SPLASH
-    get_display_path
-    echo
-    echo
     echo "Current Linux Media Folder: $MEDIA_DIR" >> "${LOG_FILE}"
-    echo "Current Media Folder: $display_path" | tee -a "${LOG_FILE}"
-    echo
-    read -r -p "Enter new path for media folder: " new_path
+    get_display_path
+
+    printf '\n%s\n\n'    "${UI_TEXT[MEDIA_LOCATION_1]} $display_path"
+    read -r -p "${UI_TEXT[MEDIA_LOCATION_2]} " new_path
 
     # --- Detect & convert Windows path ---
     if [[ "$new_path" =~ ^[A-Za-z]: ]]; then
@@ -1504,37 +1631,36 @@ option_four() {
         break
     else
         echo
-        echo -n "Invalid path. Please try again." | tee -a "${LOG_FILE}"
+        echo -n "${UI_TEXT[MEDIA_LOCATION_3]}" | tee -a "${LOG_FILE}"
         sleep 3
     fi
   done
   mkdir -p "${MEDIA_DIR}"/{music,movie,photo} &>> "${LOG_FILE}" || {
-    error_msg "Failed to create media directories."
+    echo "[X] Error: Failed to create media directories." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_MEDIA_LOCATION]}"
     return 1
   }
     get_display_path
     echo
     echo "Linux Media Folder set to: $MEDIA_DIR" >> "${LOG_FILE}"
-    echo "Media path set to $display_path" | tee -a "${LOG_FILE}"
+    echo "${UI_TEXT[MEDIA_LOCATION_4]} $display_path" | tee -a "${LOG_FILE}"
     echo
-    read -n 1 -s -r -p "Press any key to return to the menu..."
+    read -n 1 -s -r -p "${UI_TEXT[MENU_RETURN]}"
 }
 
 option_five() {
+  echo "########################################################################################################" >> "$LOG_FILE"
+  echo "Running Initialise Music Partition" >> "$LOG_FILE"
 
   PARTITION_NAMES=("__linux.7" "__linux.8")
 
   while true; do
     INI_SPLASH
-    echo "                    Do you want to initialise the Music Partition?" | tee -a "${LOG_FILE}"
-    echo
-    echo "                    ============================ WARNING ==============================="
-    echo
-    echo "                    Initialising the Music Partition will erase all existing music data." | tee -a "${LOG_FILE}"
-    echo
-    echo "                    ===================================================================="   
-    echo
-    read -p "                     Are you sure? (y/n): " answer
+    center_title "${UI_TEXT[WARNING]}"
+    center_text "${UI_TEXT[MUSIC_INI_3]}"
+    printf '\n  %s\n\n' "$text"
+    printf "==============================================================================================================\n\n"
+    read -rp "${UI_TEXT[MUSIC_INI_1]} (y/n): " answer
     case "$answer" in
       [Yy])
           break
@@ -1544,7 +1670,7 @@ option_five() {
           ;;
       *)
           echo
-          echo -n "                     Please enter y or n."
+          echo -n "${UI_TEXT[MENU_INVALID]}"
           sleep 3
           ;;
     esac
@@ -1559,19 +1685,22 @@ option_five() {
   done
   
   if [ -z "$linux8" ]; then
-    error_msg "Could not find music partition."
+    echo "[X] Error: Could not find music partition." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_MUSIC_INI_1]}"
     return 1
   else
-    echo -n "Initialising music partition..."
+    echo -n "${UI_TEXT[MUSIC_INI_4]}"
   fi
 
   sudo wipefs -a $linux8 &>> "${LOG_FILE}" || {
-    error_msg "Failed to erase the music partition."
+    echo "[X] Error: Failed to erase the music partition." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_MUSIC_INI_2]}"
     return 1
   }
 
   sudo mkfs.vfat -F 32 $linux8 &>> "${LOG_FILE}" || {
-    error_msg "Failed to create the music filesystem."
+    echo "[X] Error: Failed to create the music filesystem." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_MUSIC_INI_3]}"
     return 1
   }
 
@@ -1581,24 +1710,26 @@ option_five() {
   fi
 
   sudo mkdir -p "${STORAGE_DIR}/__linux.8/MusicCh/contents" &>> "${LOG_FILE}" || {
-    error_msg "Failed to create music directory."
+    echo "[X] Error: Failed to create music directory." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_MUSIC_INI_4]}"
     return 1
   }
 
   if [ -f "${STORAGE_DIR}/__linux.7/database/sqlite/music.db" ]; then
     sudo cp "${ASSETS_DIR}/music/music.db" "${STORAGE_DIR}/__linux.7/database/sqlite/music.db" &>> "${LOG_FILE}" || {
-    error_msg "Failed to reset music database."
+    echo "[X] Error: Failed to reset music database." >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_MUSIC_INI_5]}"
     return 1
     }
   fi
 
   clean_up || return 1
 
+  INI_SPLASH
+  center_title "[✓] ${UI_TEXT[MUSIC_INI_5]}"
   echo
-  echo
-  echo "[✓] The music partitions has been successfully initialisied."
-  echo
-  read -n 1 -s -r -p "Press any key to return to the menu..."
+  center_text "${UI_TEXT[MENU_RETURN]}"
+  read -n 1 -s -r -p "$text"
 
 }
 
@@ -1612,10 +1743,7 @@ if [ $? -ne 0 ]; then
     sudo rm -f "${LOG_FILE}"
     echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
     if [ $? -ne 0 ]; then
-        echo
-        echo "Error: Cannot to create log file."
-        read -n 1 -s -r -p "Press any key to return to the menu..."
-        echo
+        error_msg "${UI_TEXT[ERROR_LOG]}"
         exit 1
     fi
 fi
@@ -1624,6 +1752,8 @@ date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 echo "Tootkit path: $TOOLKIT_PATH" >> "${LOG_FILE}"
 echo  >> "${LOG_FILE}"
+echo -n "PSBBN Definitive Project Version: " >> "${LOG_FILE}"
+git rev-parse --short HEAD >> "${LOG_FILE}"
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
 echo >> "${LOG_FILE}"
 echo "WSL: $wsl" >> "${LOG_FILE}"
@@ -1633,7 +1763,8 @@ echo >> "${LOG_FILE}"
 MEDIA_SPLASH
 
 if ! sudo rm -rf "${STORAGE_DIR}"; then
-    error_msg "Failed to remove $STORAGE_DIR folder."
+    echo "[X] Error: Failed to delete: $STORAGE_DIR" >> "${LOG_FILE}"
+    error_msg "${UI_TEXT[ERROR_DELETE]} $STORAGE_DIR"
     exit 1
 fi
 
@@ -1649,7 +1780,8 @@ upper_bound="3.0"
 if [[ "$(printf '%s\n' "$psbbn_version" "$lower_bound" | sort -V | head -n1)" == "$psbbn_version" ]] && \
   [[ "$psbbn_version" != "$lower_bound" ]]; then
   UNMOUNT_OPL
-  error_msg "PSBBN Definitive Patch version is $psbbn_version (below $upper_bound)." "Please update by selecting 'Install PSBBN from the main menu."
+  echo "PSBBN Definitive Patch version is $psbbn_version (below $upper_bound). Please update by selecting 'Install PSBBN from the main menu." >> "${LOG_FILE}"
+  error_msg "${UI_TEXT[ERROR_VERSION_3]} ($psbbn_version)" "${UI_TEXT[ERROR_VERSION_4]} ($upper_bound)" " " "${UI_TEXT[ERROR_VERSION_5]}"
   exit 1
     
 # Version is >= 2.10 but < 3.0
@@ -1657,22 +1789,19 @@ elif [[ "$(printf '%s\n' "$lower_bound" "$psbbn_version" | sort -V | head -n1)" 
   [[ "$(printf '%s\n' "$psbbn_version" "$upper_bound" | sort -V | head -n1)" == "$psbbn_version" ]] && \
   [[ "$psbbn_version" != "$upper_bound" ]]; then
   UNMOUNT_OPL
-  error_msg "PSBBN version is $psbbn_version (below $upper_bound)." "Please update by selecting 'Update PSBBN Software' from the main menu."
+  echo "PSBBN version is $psbbn_version (below $upper_bound). Please update by selecting 'Update PSBBN Software' from the main menu." >> "${LOG_FILE}"
+  error_msg "${UI_TEXT[ERROR_VERSION_3]} ($psbbn_version)" "${UI_TEXT[ERROR_VERSION_4]} ($upper_bound)" " " "${UI_TEXT[ERROR_VERSION_6]}"
   exit 1
 fi
 
 UNMOUNT_OPL
 
-if ! command -v dmsetup &>/dev/null; then
-  error_msg "Please run the setup script to install dependencies before using this script."
-  exit 1
-fi
-
 # Main loop
 
 while true; do
+    center_menu
     display_menu
-    read -p "                                        Select an option: " choice
+    read -rp "" choice
 
     case $choice in
         1)
@@ -1693,9 +1822,7 @@ while true; do
         b|B)
             break
             ;;
-        *)
-            echo
-            echo -n "                                        Invalid option, please try again."
+        *)  printf "%*s%s " "$((padding - 3))" "" "${UI_TEXT[MENU_INVALID]}"
             sleep 2
             ;;
     esac
