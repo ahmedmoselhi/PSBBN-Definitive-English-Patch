@@ -114,16 +114,16 @@ case "$SYS_LANG" in
     fr*)
         LANG_FILE="fre"
         ;;
-    es*)
+    es*|sp*)
         LANG_FILE="spa"
         ;;
-    de*)
+    de*|ge*)
         LANG_FILE="ger"
         ;;
     it*)
         LANG_FILE="ita"
         ;;
-    pt*)
+    pt*|po*)
         LANG_FILE="por"
         ;;
     #hu*)
