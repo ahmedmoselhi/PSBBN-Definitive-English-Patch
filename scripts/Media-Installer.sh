@@ -489,7 +489,7 @@ CHECK_PARTITIONS() {
     fi
 
     # List of required partitions
-    required=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.9 __contents __system __sysconf __.POPS __common)
+    required=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.9 __contents __system __sysconf __common)
 
     # Check all required partitions
     for part in "${required[@]}"; do

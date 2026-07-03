@@ -435,7 +435,7 @@ CHECK_PARTITIONS() {
         }
 
     psbbn_parts=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.8 __linux.9 __contents)
-    hosd_parts=(__system __sysconf __.POPS __common)
+    hosd_parts=(__system __sysconf __common)
 
     if has_all "${psbbn_parts[@]}"; then
         echo "PSBBN Detected" >> "${LOG_FILE}"
