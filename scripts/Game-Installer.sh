@@ -2470,7 +2470,7 @@ if { find "${GAMES_PATH}/POPS" -maxdepth 1 -type f \( -iname "*.vcd" -o -iname "
    { [ "$INSTALL_TYPE" = "copy" ] && find "${OPL}/POPS" -maxdepth 1 -type f -iname "*.vcd" | grep -q .; } ||
    [ "$ps1_games_found" = true ]
 then
-    POPS_PRESENT=1
+    ps1_games_found=true
     SPLASH
     echo "${UI_TEXT[GAME_INSTALLER_22]}"
     echo
@@ -4309,7 +4309,7 @@ SPLASH
 echo "================================== [✓] Game Installer Completed Successfully =================================" >> "${LOG_FILE}"
 center_title "[✓] ${UI_TEXT[GAME_INSTALLER_60]}"
 echo
-if [ "$POPS_PRESENT" = "1" ]; then
+if [ "$ps1_games_found" = true ]; then
     center_title "${UI_TEXT[MUSIC_INSTALLER_5]}"
     printf '\n  %s\n\n  %s\n  %s\n\n' \
         "${UI_TEXT[GAME_INSTALLER_67]}" \
