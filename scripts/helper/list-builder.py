@@ -155,7 +155,7 @@ def extract_game_id_from_disc(fin, sector_reader):
 
             for line in cnf_text.splitlines():
                 if line.strip().upper().startswith("BOOT2"):
-                    return line.split("\\")[-1].split(";")[0].upper()
+                    return line.split("\\")[-1].split(";")[0].upper().replace('-', '_')
     return None
 
 def clean_name_from_filename(name, game_id):
