@@ -2470,6 +2470,7 @@ if { find "${GAMES_PATH}/POPS" -maxdepth 1 -type f \( -iname "*.vcd" -o -iname "
    { [ "$INSTALL_TYPE" = "copy" ] && find "${OPL}/POPS" -maxdepth 1 -type f -iname "*.vcd" | grep -q .; } ||
    [ "$ps1_games_found" = true ]
 then
+    POPS_PRESENT=1
     SPLASH
     echo "${UI_TEXT[GAME_INSTALLER_22]}"
     echo
