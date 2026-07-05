@@ -2230,7 +2230,6 @@ if [ "$POPS_PRESENT" = "1" ]; then
     if echo "$ps1_games" | grep -qi '\.vcd$'; then
         SPLASH
         echo "Games found in __.POPS" >> "${LOG_FILE}"
-        ps1_games_found=true
         mount_pfs
         echo "PS1 games on __.POPS:" >> "${LOG_FILE}"
         ls -l "${STORAGE_DIR}/__.POPS" >> "${LOG_FILE}"
@@ -2246,7 +2245,6 @@ if [ "$POPS_PRESENT" = "1" ]; then
         sleep 3
     else
         echo "No games found in __.POPS" >> "${LOG_FILE}"
-        ps1_games_found=false
     fi
 fi
 
@@ -2282,20 +2280,6 @@ echo "Language: $lang" >> "${LOG_FILE}"
 if [ -z "$APA_SIZE" ] || [ -z "$lang" ]; then
     echo "[X] Error: Missing required value(s): ${OPL}/version.txt" >> "${LOG_FILE}"
     error_msg "Error" "${UI_TEXT[ERROR_VERSION_7]} ${OPL}/version.txt"
-fi
-
-# Check for existing PS2 games on the OPL partition
-if find "${OPL}/CD" "${OPL}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) -print -quit 2>/dev/null | grep -q .; then
-    PS2_GAMES_ON_OPL=true
-else
-    PS2_GAMES_ON_OPL=false
-fi
-
-# Check for existing PS1 games on the OPL partition
-if find "${OPL}/POPS" -maxdepth 1 -type f \( -iname "*.vcd" \) -print -quit 2>/dev/null | grep -q .; then
-    ps1_games_found=true
-else
-    ps1_games_found=false
 fi
 
 if [[ -n "$path_arg" ]]; then
@@ -2467,8 +2451,7 @@ while true; do
 done
 
 if { find "${GAMES_PATH}/POPS" -maxdepth 1 -type f \( -iname "*.vcd" -o -iname "*.bin" \) | grep -q .; } ||
-   { [ "$INSTALL_TYPE" = "copy" ] && find "${OPL}/POPS" -maxdepth 1 -type f -iname "*.vcd" | grep -q .; } ||
-   [ "$ps1_games_found" = true ]
+   { [ "$INSTALL_TYPE" = "copy" ] && find "${OPL}/POPS" -maxdepth 1 -type f -iname "*.vcd" | grep -q .; }
 then
     ps1_games_found=true
     SPLASH
