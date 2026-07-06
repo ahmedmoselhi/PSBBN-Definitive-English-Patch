@@ -75,15 +75,19 @@ Both installation options offer:
 - **OSDMenu Configurator** has been replaced with [R3CONFIGURATOR](#r3configurator), adding multilingual support.
 
 **Enhancements:**
-- The [PSBBN](#install-psbbn-and-hosdmenu) and [HOSDMenu](#install-hosdmenu-only) installers no longer create a `POPS` partition, allowing for larger Music and Contents partitions or a larger exFAT partition.
-- Language selection has been removed from the [PSBBN](#install-psbbn-and-hosdmenu) and [HOSDMenu](#install-hosdmenu-only) installers. It now automatically installs in the same language as your operating system, defaulting to English if that language is unavailable.
-- Language and button configuration is now automatically set in [OPL](#open-ps2-loader-opl) and [R3CONFIGURATOR](#r3configurator) to match the install settings.
-- PS2 games are now displayed first in the [Game Collection](#game-collection) and [Browser](#hosdmenu), followed by PS1 games and homebrew apps.
-- The [Game Installer](#install-games-and-apps) output has been streamlined and now includes progress bars.
-- You now have the option to disable [PS2 VMCs](#virtual-memory-cards) if they were previously enabled.
-- The [Game Installer](#install-games-and-apps) now displays required and available space in MB, GB, or TB depending on size.
-- OPL artwork is now saved directly to the PS2 drive.
-- Instructions have been added for **Linux** users on where to put supported files for install when [installing games](#install-games-and-apps), mirroring the [PSBBN Launcher for Windows](#installing-on-windows).
+- [PSBBN and HOSDMenu installer](#install-psbbn-and-hosdmenu), and [HOSDMenu only installer](#install-hosdmenu-only):
+  - No longer creates a `POPS` partition, allowing for larger Music and Contents partitions or a larger exFAT partition.
+  - Language selection has been removed. It now automatically installs in the same language as your operating system, defaulting to English if that language is unavailable.
+- [HOSDMenu only installer](#install-hosdmenu-only):
+  - Allows you to reserve space for future APA partitions. Up to 50% of the drive’s capacity (maximum 2 TB) can be reserved.
+- [Game Installer](#install-games-and-apps):
+  - Language and button configuration is now automatically set in [OPL](#open-ps2-loader-opl) and [R3CONFIGURATOR](#r3configurator) to match the install settings.
+  - PS2 games are now displayed first in the [Game Collection](#game-collection) and [Browser](#hosdmenu), followed by PS1 games and homebrew apps.
+  - The [Game Installer](#install-games-and-apps) output has been streamlined and now includes progress bars.
+  - You now have the option to disable [PS2 VMCs](#virtual-memory-cards) if they were previously enabled.
+  - Available space is now displayed in MB, GB, or TB depending on size.
+  - OPL artwork is now saved directly to the PS2 drive.
+  - Instructions have been added for **Linux** users on where to put supported files, mirroring the [PSBBN Launcher for Windows](#installing-on-windows).
 - All log files are now truncated when they exceed 4 MB.
 - The current **PSBBN Definitive Project** commit number is logged in the log files.
 - A link to the [troubleshooting guide](#troubleshooting) has been added to all error messages.
