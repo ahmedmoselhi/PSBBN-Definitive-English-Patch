@@ -912,42 +912,42 @@ if [ "$MODE" = "install" ]; then
     case "$LANG_FILE" in
         eng)
             lang="eng"
-            LANG_DISPLAY="English"
+            LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_2]}"
             ;;
         jpn)
             lang="jpn"
-            LANG_DISPLAY="Japanese"
+            LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_3]}"
             CHAN_UPDATE="yes"
             ;;
         fre)
             lang="fre"
-            LANG_DISPLAY="French"
+            LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_4]}"
             ;;
         ger)
             lang="ger"
-            LANG_DISPLAY="German"
+            LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_5]}"
             ;;
         ita)
             lang="ita"
-            LANG_DISPLAY="Italian"
+            LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_7]}"
             ;;
         por)
             lang="por"
-            LANG_DISPLAY="Portuguese (Brazil)"
+            LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_8]}"
             ;;
         spa)
             lang="spa"
-            LANG_DISPLAY="Spanish"
+            LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_9]}"
             ;;
         hun)
             lang="hun"
-            LANG_DISPLAY="Hungarian"
+            LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_6]}"
             ;;
         *)
             echo
             echo "Unsupported language. Defaulting to English." >> "${LOG_FILE}"
             lang="eng"
-            LANG_DISPLAY="English"
+            LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_2]}"
             ;;
     esac
 
@@ -986,6 +986,40 @@ else
         if [[ "$lang" != "jpn" && "$lang" != "ger" && "$lang" != "ita" && "$lang" != "por" && "$lang" != "spa" && "$lang" != "fre" && "$lang" != "hun" ]]; then
             lang="eng"
         fi
+
+        case "$lang" in
+            eng)
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_2]}"
+                ;;
+            jpn)
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_3]}"
+                CHAN_UPDATE="yes"
+                ;;
+            fre)
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_4]}"
+                ;;
+            ger)
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_5]}"
+                ;;
+            ita)
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_7]}"
+                ;;
+            por)
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_8]}"
+                ;;
+            spa)
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_9]}"
+                ;;
+            hun)
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_6]}"
+                ;;
+            *)
+                echo
+                echo "Unsupported language. Defaulting to English." >> "${LOG_FILE}"
+                lang="eng"
+                LANG_DISPLAY="${UI_TEXT[CHANGE_LANGUAGE_2]}"
+                ;;
+        esac
 
         LANG_VER=$(awk -F' *= *' '$1=="LANG_VER"{print $2}' "${OPL}/version.txt")
         CHAN_VER=$(awk -F' *= *' '$1=="CHAN_VER"{print $2}' "${OPL}/version.txt")
@@ -1044,10 +1078,10 @@ if [ "$OS" = "PSBBN" ]; then
 
     get_latest_file "language-pak-$lang" "$LANG_DISPLAY ${UI_TEXT[LANG_PACK]}"
 
-    echo "Current language pack version: $lang_VER" >> "${LOG_FILE}"
-    echo "${UI_TEXT[VERSION_CURRENT_LANG]} $lang_VER"
+    echo "Current language pack version: $LANG_VER" >> "${LOG_FILE}"
+    echo "${UI_TEXT[VERSION_CURRENT_LANG]} $LANG_VER"
 
-    if [ "$(printf '%s\n' "$LATEST_LANG" "$lang_VER" | sort -V | tail -n1)" = "$lang_VER" ]; then
+    if [ "$(printf '%s\n' "$LATEST_LANG" "$LANG_VER" | sort -V | tail -n1)" = "$LANG_VER" ]; then
         echo
         echo "You already have the latest language pack installed." >> "${LOG_FILE}"
         echo "${UI_TEXT[VERSION_UPTODATE_LANG]}"
@@ -1839,11 +1873,11 @@ else
     fi
 
     if [ "$LANG_UPDATE" != "no" ]; then
-        echo "  ${UI_TEXT[UPDATE_SUCCESS_3]} $lang $LATEST_LANG" | tee -a "${LOG_FILE}"
+        echo "  ${UI_TEXT[UPDATE_SUCCESS_3]} $LANG_DISPLAY $LATEST_LANG" | tee -a "${LOG_FILE}"
     fi
 
     if [ "$CHAN_UPDATE" == "yes" ]; then
-        echo "  ${UI_TEXT[UPDATE_SUCCESS_4]} $lang $LATEST_CHAN" | tee -a "${LOG_FILE}"
+        echo "  ${UI_TEXT[UPDATE_SUCCESS_4]} $LANG_DISPLAY $LATEST_CHAN" | tee -a "${LOG_FILE}"
     fi
 
     echo

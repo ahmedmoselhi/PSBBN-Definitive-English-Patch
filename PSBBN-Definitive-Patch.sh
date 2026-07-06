@@ -907,13 +907,13 @@ else
     echo "psbbn_version = $psbbn_version" >> "${LOG_FILE}"
     echo "osdmenu_version = $osdmenu_version" >> "${LOG_FILE}"
     echo "LANG = $lang" >> "${LOG_FILE}"
-    echo "LANG_VER = $lang_VER" >> "${LOG_FILE}"
+    echo "LANG_VER = $LANG_VER" >> "${LOG_FILE}"
     echo "CHAN_VER = $CHAN_VER" >> "${LOG_FILE}"
 
 
     UNMOUNT_OPL
 
-    if [[ -n "$psbbn_version" || -n $osdmenu_version || -n "$lang_VER" || -n "$CHAN_VER" ]]; then
+    if [[ -n "$psbbn_version" || -n $osdmenu_version || -n "$LANG_VER" || -n "$CHAN_VER" ]]; then
 
         HTML_FILE=$(mktemp)
         timeout 20 wget -O "$HTML_FILE" "$URL" -o - >> "$LOG_FILE" 2>&1
@@ -926,11 +926,12 @@ else
             fi
         fi
 
-        if [[ -n "$lang_VER" ]]; then
+        if [[ -n "$LANG_VER" ]]; then
             get_latest_file "language-pak-$lang" "$lang language pack"
 
-            if [ "$(printf '%s\n' "$LATEST_LANG" "$lang_VER" | sort -V | tail -n1)" != "$lang_VER" ]; then
+            if [ "$(printf '%s\n' "$LATEST_LANG" "$LANG_VER" | sort -V | tail -n1)" != "$LANG_VER" ]; then
                 LANG_UPDATE="YES"
+                echo "Lang Update: $LANG_UPDATE" >> "${LOG_FILE}"
             fi
         fi
 
@@ -950,7 +951,7 @@ else
             fi
         fi
 
-        if [ "$PSBBN_UPDATE" == "YES" ] || [ "$OSD_UPDATE" == "YES" ] || [ "$lang_UPDATE" == "YES" ] || [ "$CHAN_UPDATE" == "YES" ]; then
+        if [ "$PSBBN_UPDATE" == "YES" ] || [ "$OSD_UPDATE" == "YES" ] || [ "$LANG_UPDATE" == "YES" ] || [ "$CHAN_UPDATE" == "YES" ]; then
             UPDATE="YES"
         else
             UPDATE="NO"
