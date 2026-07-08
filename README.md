@@ -51,8 +51,8 @@ Both installation options offer:
 - **PSBBN Definitive Patch** — an enhanced version of Sony's [PSBBN](#psbbn) software that offers [many advantages](#psbbn) over the stock version
 - View, browse, and launch your games and apps directly from the [Game Collection](#game-collection) with a cover-flow-style interface
 - [Music Channel](#music-channel) for music playback and CD ripping. Use the [Music Installer](#install-music) to install music files from your PC (`.mp3`, `.m4a`, `.flac`, `.ogg`)
-- [Movie Channel](#movie-channel) for video playback. Download videos from the [online channels](#internet-channel), or use the [Movie Installer](#install-movies) to install video files from your PC (`.mp4,` `.m4v`, `.mkv`, `.vob`, `.pss`, `.psm` and other popular formats).
-- [Photo Channel](#photo-channel) for viewing image. Import images from USB drives or digital cameras, or install them from your PC using the [Photo Installer](#install-photos) (`.jpg`, `.png`, `.tif`, `.gif`, `.bmp`, and other common formats).
+- [Movie Channel](#movie-channel) for video playback. Download videos from the [online channels](#internet-channel), or use the [Movie Installer](#install-movies) to install video files from your PC (`.mp4,` `.m4v`, `.mkv`, `.vob`, `.pss`, `.psm` and other popular formats)
+- [Photo Channel](#photo-channel) for viewing image. Import images from USB drives or digital cameras, or install them from your PC using the [Photo Installer](#install-photos) (`.jpg`, `.png`, `.tif`, `.gif`, `.bmp`, and other common formats)
 - [Internet Channel](#internet-channel) offering access to mirrors of the original online game channels from various publishers, allowing you to download game trailers and screenshots, and play classic retro games
 - [Optional extras](#optional-extras) such as installing [PS2 Linux](#install-ps2-linux)
 
@@ -984,9 +984,9 @@ You can find the **Game Collection** on the PSBBN **Top Menu**. This is the firs
 - You can set shortcuts for up to four items by pressing **△** on a highlighted game and selecting *Add to Navigator Menu*. You can quickly access your shortcuts by pressing **SELECT**.
 
 ### Music Channel
-The **Music Channel** allows you to play back music stored on your PS2's internal drive and create playlists. Music can be ripped directly on the PS2 from an audio CD, and installed using the [Music Installer](#install-music).
+The **Music Channel** lets you play audio CDs, listen to music stored on your PS2’s internal drive, and create custom playlists. Music can be ripped directly on the PS2 from an audio CD, and installed using the [Music Installer](#install-music).
 
-It also supports exporting music to a NetMD-compatible MiniDisc recorder. However, MiniDisc support is broken in the current version of the PSBBN Definitive Patch. If you want to try the MiniDisc functionality, you can use a [legacy version of the PSBBN Definitive English Patch](#legacy-versions-of-the-psbbn-definitive-english-patch).
+It also supports exporting music to a NetMD-compatible MiniDisc recorder. However, MiniDisc support is broken in the current version of the PSBBN Definitive Patch. If you want to try the MiniDisc functionality, you can use a [legacy version of the PSBBN Definitive English Patch](https://github.com/CosmicScale/PSBBN-Definitive-Project/tree/PSBBN-Definitive-English-Patch).
 
 ### Movie Channel
 The **Movie Channel** allows you to play back movies stored on your PS2's internal drive, organise your movies, and create playlists. Movies can be downloaded from several of the [Online Channels](#internet-channel), and installed using the [Movie Installer](#install-movies).
