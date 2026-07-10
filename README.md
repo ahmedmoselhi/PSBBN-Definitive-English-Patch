@@ -701,7 +701,7 @@ Right-click on `PSBBN-Launcher-For-Windows.ps1` and select **Run with PowerShell
 The script will:
 - Automatically set up the **[Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/about)**
 - Prompt you to select the target drive for installing **[PSBBN and HOSDMenu](#install-psbbn-and-hosdmenu)**, or a drive that already has an existing installation
-- Prompt you to select a folder on your PC’s internal drive for managing games and media
+- Prompt you to select a local folder on your PC where games and media will be managed (e.g., C:\PSBBN).
 - Launch the **PSBBN Definitive Project** **[Main Menu](#main-menu)**
 
 **Accessing the PSBBN Definitive Project Main Menu in the Future:**  
