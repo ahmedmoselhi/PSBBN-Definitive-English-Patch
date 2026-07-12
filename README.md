@@ -1136,7 +1136,9 @@ You must also download the [External HDD Drivers](https://israpps.github.io/Free
 
 ## Problems Running the Script
 
-**If you are using [Windows](#installing-on-windows) and experience issues:**
+**If you are using [Windows](#installing-on-windows) and experience issues:**  
+If the [PSBBN Definitive Project menu](#main-menu) displays squares instead of text, or the [Game Selector menu](#game-selector) does not render correctly, change the PowerShell font. Right-click the PowerShell title bar, open **Properties**, and select **Cascadia Mono** (Windows 11) or **MS Gothic** (Windows 10). For other issues, continue with the troubleshooting steps below.
+
 1. Open PowerShell as an administrator and run the following command:
 ```
 wsl --unregister PSBBN
