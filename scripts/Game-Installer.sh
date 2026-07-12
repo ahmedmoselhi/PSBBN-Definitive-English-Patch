@@ -2212,10 +2212,10 @@ if [ "$POPS_PRESENT" = "1" ]; then
 
     printf '%*s\n\n' 110 '' | tr ' ' '='
     while true; do
-        read -rp "  ${UI_TEXT[CONTINUE_PROMPT]} (y/n): " confirm
+        read -rp "  ${UI_TEXT[GAME_INSTALLER_69]} (y/n): " confirm
         case "$confirm" in
             [Yy]) break ;;
-            [Nn]) echo "  ${UI_TEXT[CANCELLED]}"; exit 1 ;;
+            [Nn]) exit 1 ;;
             *) echo; echo "  ${UI_TEXT[MENU_INVALID]}" ;;
         esac
     done
@@ -2305,7 +2305,7 @@ if [[ -z "$path_arg" ]]; then
     echo "💿 PS2 CD → /CD (.bin+.cue, .iso, .zso)"
     echo "💿 PS1 → /POPS (.bin+.cue, .VCD)"
     echo "🎮 POPStarter → /POPS (SB.*.ELF)"
-    echo "🛠️ Homebrew → /APPS (.elf, SAS .psu)"
+    echo "🔧 Homebrew → /APPS (.elf, SAS .psu)"
     echo
 
     while true; do
@@ -2420,7 +2420,7 @@ if [ "$INSTALL_TYPE" = "sync" ] && \
         read -rp "${UI_TEXT[CONTINUE_PROMPT]} (y/n): " confirm
         case "$confirm" in
             [Yy]) break ;;
-            [Nn]) echo "${UI_TEXT[CANCELLED]}"; exit 1 ;;
+            [Nn]) exit 1 ;;
             *) echo; echo "${UI_TEXT[MENU_INVALID]}" ;;
         esac
     done
