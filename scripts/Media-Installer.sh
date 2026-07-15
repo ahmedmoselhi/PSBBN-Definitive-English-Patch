@@ -723,6 +723,7 @@ option_one() {
     return 1
   }
 
+  echo "Music Path ${MEDIA_DIR}/music" >> "$LOG_FILE"
   get_display_path
 
   center_title "${UI_TEXT[MUSIC_INSTALLER_1]}"
