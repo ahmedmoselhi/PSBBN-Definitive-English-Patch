@@ -740,6 +740,10 @@ option_one() {
   read -n 1 -s -r -p "$text" </dev/tty
   MUSIC_SPLASH
 
+  echo "Contents of music folder:" >> "${LOG_FILE}"
+  find "${MEDIA_DIR}/music/" -type f >> "${LOG_FILE}"
+  echo >> "${LOG_FILE}"
+
   if find "${MEDIA_DIR}/music/" -type f ! -name ".*" \( -iname "*.mp3" -o -iname "*.m4a" -o -iname "*.flac" -o -iname "*.ogg" \) | grep -q .; then
     echo "Preparing to installing music..." >> "${LOG_FILE}"
     echo -n "${UI_TEXT[MUSIC_INSTALLER_7]}"
@@ -850,6 +854,10 @@ option_two() {
   read -n 1 -s -r -p "$text" </dev/tty
 
   MOVIE_SPLASH
+
+  echo "Contents of movie folder:" >> "${LOG_FILE}"
+  find "${MEDIA_DIR}/movie/" -type f >> "${LOG_FILE}"
+  echo >> "${LOG_FILE}"
 
   # Collect movie files (case-insensitive, no hidden files, top-level only)
   mapfile -d '' movies < <(
@@ -1335,6 +1343,10 @@ option_three() {
   read -n 1 -s -r -p "$text" </dev/tty
 
   PHOTO_SPLASH
+
+  echo "Contents of photo folder:" >> "${LOG_FILE}"
+  find "${MEDIA_DIR}/photo/" -type f >> "${LOG_FILE}"
+  echo >> "${LOG_FILE}"
 
   # Collect top-level photo files
   mapfile -d '' photos < <(
