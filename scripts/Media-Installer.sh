@@ -740,7 +740,7 @@ option_one() {
   read -n 1 -s -r -p "$text" </dev/tty
   MUSIC_SPLASH
 
-  if find "${MEDIA_DIR}/music" -type f ! -name ".*" \( -iname "*.mp3" -o -iname "*.m4a" -o -iname "*.flac" -o -iname "*.ogg" \) | grep -q .; then
+  if find "${MEDIA_DIR}/music/" -type f ! -name ".*" \( -iname "*.mp3" -o -iname "*.m4a" -o -iname "*.flac" -o -iname "*.ogg" \) | grep -q .; then
     echo "Preparing to installing music..." >> "${LOG_FILE}"
     echo -n "${UI_TEXT[MUSIC_INSTALLER_7]}"
 
@@ -853,7 +853,7 @@ option_two() {
 
   # Collect movie files (case-insensitive, no hidden files, top-level only)
   mapfile -d '' movies < <(
-    find "${MEDIA_DIR}/movie" -maxdepth 1 -type f ! -name ".*" \
+    find "${MEDIA_DIR}/movie/" -maxdepth 1 -type f ! -name ".*" \
         \( -iname "*.mp4" -o -iname "*.m4v" -o -iname "*.mov" -o -iname "*.mkv" \
         -o -iname "*.avi" -o -iname "*.webm" -o -iname "*.mpg" -o -iname "*.mpeg"\
         -o -iname "*.vob" -o -iname "*.ts" -o -iname "*.m2ts" -o -iname "*.mts" \
@@ -1338,7 +1338,7 @@ option_three() {
 
   # Collect top-level photo files
   mapfile -d '' photos < <(
-    find "$MEDIA_DIR/photo" -maxdepth 1 -type f ! -name ".*" \
+    find "$MEDIA_DIR/photo/" -maxdepth 1 -type f ! -name ".*" \
         \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.bmp" \
         -o -iname "*.gif" -o -iname "*.tif" -o -iname "*.tiff" -o -iname "*.webp" \
         -o -iname "*.heic" -o -iname "*.heif" \) -print0
