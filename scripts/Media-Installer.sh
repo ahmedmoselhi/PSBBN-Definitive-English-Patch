@@ -702,8 +702,8 @@ movie_space_check() {
 }
 
 option_one() {
-  echo "########################################################################################################" >> "$LOG_FILE"
-  echo "Running Music Installer" >> "$LOG_FILE"
+  echo >> "$LOG_FILE"
+  echo "########################### Running Music Installer ###########################" >> "$LOG_FILE"
 
   MUSIC_SPLASH
 
@@ -808,8 +808,8 @@ option_one() {
 }
 
 option_two() {
-  echo "########################################################################################################" >> "$LOG_FILE"
-  echo "Running Movie Installer" >> "$LOG_FILE"
+  echo >> "$LOG_FILE"
+  echo "########################### Running Movie Installer ###########################" >> "$LOG_FILE"
   MOVIE_SPLASH
 
   if [[ "$arch" != "x86_64" ]]; then
@@ -1325,8 +1325,8 @@ EOF
 }
 
 option_three() {
-  echo "########################################################################################################" >> "$LOG_FILE"
-  echo "Running Photo Installer" >> "$LOG_FILE"
+  echo >> "$LOG_FILE"
+  echo "########################### Running Photo Installer ###########################" >> "$LOG_FILE"
   PHOTO_SPLASH
 
   echo "Photo Path ${MEDIA_DIR}/photo" >> "$LOG_FILE"
@@ -1604,7 +1604,11 @@ option_three() {
   fi
 }
 
+
+
 option_four() {
+  echo >> "$LOG_FILE"
+  echo "########################### Set Media Location ###########################" >> "$LOG_FILE"
   while true; do
     LOCATION_SPLASH
     echo "Current Linux Media Folder: $MEDIA_DIR" >> "${LOG_FILE}"
@@ -1612,6 +1616,7 @@ option_four() {
 
     printf '\n%s\n\n'    "${UI_TEXT[MEDIA_LOCATION_1]} $display_path"
     read -r -p "${UI_TEXT[MEDIA_LOCATION_2]} " new_path
+    echo "Path entered: $new_path" >> "${LOG_FILE}"
 
     # --- Detect & convert Windows path ---
     if [[ "$new_path" =~ ^[A-Za-z]: ]]; then
@@ -1662,8 +1667,8 @@ option_four() {
 }
 
 option_five() {
-  echo "########################################################################################################" >> "$LOG_FILE"
-  echo "Running Initialise Music Partition" >> "$LOG_FILE"
+  echo >> "$LOG_FILE"
+  echo "########################### Initialise Music Partition ###########################" >> "$LOG_FILE"
 
   PARTITION_NAMES=("__linux.7" "__linux.8")
 
