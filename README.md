@@ -1174,12 +1174,18 @@ If your console boots to the regular OSD, freezes, or displays an error, you sho
 8. Use a different official Sony Network Adapter or third-party HDD adapter
 9. Use a different PS2 console
 
-## Problems Launching Games
+## Games Not Working
+Some games may fail to launch or exhibit compatibility issues. First, make sure your game image is a verified good dump. Check the MD5 or SHA-1 checksum of your `ISO` or `BIN` file and confirm that it matches the corresponding entry on [redump.org](http://redump.org/disc/16197/).
+
+For issues with PS2 games, if you selected OPL as your game launcher, you can check for existing issues or report a new one [here](https://github.com/ps2homebrew/Open-PS2-Loader/issues). If you selected NHDDL, you can do so [here](https://github.com/rickgaiser/neutrino/issues).
+
+If all PS1 or PS2 games fail to launch, follow the steps below:
+
 If you experience problems launching PS1 games, make sure you have correctly installed the **ATA BDM Assault drivers** on a PS2 Memory Card and that the card is inserted into your console. Installation instructions and a download link can be found [here](#installing-ata-bdm-assault).
 
 If games fail to launch from the [Game Collection](#game-collection) or [Browser](#hosdmenu), try the following:
 1. If you have a [mod chip](#known-issues), disable it
-2. Remove all PS2 Memory Cards from your console
+2. If you're having trouble launching PS2 games, remove all PS2 Memory Cards from your console and try again. If this resolves the issue, delete any `Your System Configuration` save files from the memory cards, as corrupted configuration data can prevent games from launching.
 3. Check that the connectors on the console and Network or HDD Adapter are clean and free of dust or debris
 4. Ensure the Network or HDD adapter and drive are securely connected to the console
 5. If using a SATA mod, make sure it has been installed correctly
@@ -1211,7 +1217,7 @@ Please include all relevant log files:
 - `extras.log`
 - `media.log`
 
-**Linux** users can find these log files in `PSBBN-Definitive-Project/logs`. **Windows** users can find these log files in the folder where their games and media are stored.
+**Linux** users can find these logs in `PSBBN-Definitive-Project/logs`. **Windows** users can find these logs in the folder where their games and media files are stored.
 
 # Known Issues
 - PSBBN will freeze at the "PlayStation 2" logo when booting, if a third-party, unofficial HDD adapter is used. **An official Sony Network Adapter is required**.
