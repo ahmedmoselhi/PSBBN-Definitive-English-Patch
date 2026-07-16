@@ -1136,9 +1136,17 @@ You must also download the [External HDD Drivers](https://israpps.github.io/Free
 
 ## Problems Running the Script
 
-**If you are using [Windows](#installing-on-windows) and experience issues:**  
+**If you receive the "Failed to create games list" error:**
 
-If the [PSBBN Definitive Project menu](#main-menu) displays squares instead of text, or the [Game Selector menu](#game-selector) does not render correctly, change the PowerShell font. Right-click the PowerShell title bar, open **Properties**, and select **Cascadia Mono** (Windows 11) or **MS Gothic** (Windows 10). For other issues, continue with the troubleshooting steps below.
+The `ISO`, `ZSO`, or `VCD` file being processed is likely invalid or corrupted. Remove the file from both the local folder on your PC and your PS2 drive, then try again.
+
+To avoid this issue, make sure your game image is a verified good dump. Check the MD5 or SHA-1 checksum of your `ISO` or `BIN` file and confirm that it matches the corresponding entry on [redump.org](http://redump.org).
+
+**If you are using [Windows](#installing-on-windows) and experience issues:**
+
+If the [PSBBN Definitive Project menu](#main-menu) displays squares instead of text, or the [Game Selector menu](#game-selector) does not render correctly, change the PowerShell font. Right-click the PowerShell title bar, open **Properties**, and select **Cascadia Mono** (Windows 11) or **MS Gothic** (Windows 10).
+
+For other issues, continue with the troubleshooting steps below:
 
 1. Open PowerShell as an administrator and run the following command:
 ```
@@ -1175,9 +1183,9 @@ If your console boots to the regular OSD, freezes, or displays an error, you sho
 9. Use a different PS2 console
 
 ## Games Not Working
-Some games may fail to launch or exhibit compatibility issues. First, make sure your game image is a verified good dump. Check the MD5 or SHA-1 checksum of your `ISO` or `BIN` file and confirm that it matches the corresponding entry on [redump.org](http://redump.org/disc/16197/).
+Some games may fail to launch or exhibit compatibility issues. First, make sure your game image is a verified good dump. Check the MD5 or SHA-1 checksum of your `ISO` or `BIN` file and confirm that it matches the corresponding entry on [redump.org](http://redump.org).
 
-For issues with PS2 games, if you selected OPL as your game launcher, you can check for existing issues or report a new one [here](https://github.com/ps2homebrew/Open-PS2-Loader/issues). If you selected NHDDL, you can do so [here](https://github.com/rickgaiser/neutrino/issues).
+For issues with PS2 games, if you selected [OPL](#open-ps2-loader-opl) as your game launcher, you can check for existing issues or report a new one [here](https://github.com/ps2homebrew/Open-PS2-Loader/issues). If you selected [NHDDL](#nhddl), you can do so [here](https://github.com/rickgaiser/neutrino/issues).
 
 If all PS1 or PS2 games fail to launch, follow the steps below:
 
