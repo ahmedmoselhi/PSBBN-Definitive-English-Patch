@@ -1,4 +1,7 @@
 # PSBBN Definitive Project
+
+| **English** | [Português (Brasil)](https://github.com/CosmicScale/PSBBN-Definitive-Project/blob/main/README-PT-BR.md) |
+
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch/blob/main/LICENSE)  
 This is the Definitive Project for Sony's "PlayStation Broadband Navigator" software (also known as BB Navigator or PSBBN) for the "PlayStation 2" (PS2) video game console.
 
