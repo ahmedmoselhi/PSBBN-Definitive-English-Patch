@@ -259,7 +259,7 @@ Quando o idioma está definido como japonês, os títulos dos jogos da região j
 - Atualizado para lidar com títulos de jogos em japonês
 
 **PSBBN Definitive Patch atualizado para a versão v4.1.0**
-- Atulizado o link para o novo Canal Konami em instalações não japonesas
+- Atualizado o link para o novo Canal Konami em instalações não japonesas
 - Modificado o arquivo `fstab` para montar a partição `channels`
 
 **Geral**:  
